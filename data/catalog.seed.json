@@ -1,0 +1,2594 @@
+{
+  "updatedAt": "2026-08-17T18:13:00+06:00",
+  "categories": [
+    {
+      "slug": "lpg-filling-plant",
+      "name": "LPG Filling Plant",
+      "shortName": "Filling Plant",
+      "summary": "Storage, filling and transfer systems for LPG bottling operations.",
+      "description": "Complete LPG filling plant equipment covering bulk storage, cylinder filling, LPG transfer, safety equipment, instrumentation, auxiliary machinery and operating consumables.",
+      "image": "/media/hero-products.jpg",
+      "heroImage": "/media/hero-products.jpg",
+      "groups": [
+        "Storage Tanks",
+        "Tank Accessories",
+        "Filling Machines",
+        "LPG Transfer Machinery",
+        "Auxiliary Machinery",
+        "Hose & Accessories",
+        "Instrumentation",
+        "Consumables"
+      ]
+    },
+    {
+      "slug": "lpg-transport-distribution",
+      "name": "LPG Transport & Distribution",
+      "shortName": "Transport & Distribution",
+      "summary": "Road tankers, transfer machinery, measuring equipment, hose systems and tank accessories.",
+      "description": "Equipment for safe LPG transportation, tanker loading and unloading, transfer operations, measurement, hose management and bulk distribution.",
+      "image": "/media/trading-terminal.jpg",
+      "heroImage": "/media/hero-trading.jpg",
+      "groups": [
+        "Road Tankers / Bobtails",
+        "LPG Transfer Machinery",
+        "Hose & Accessories",
+        "Measuring Units",
+        "Tank Accessories",
+        "Instrumentation"
+      ]
+    },
+    {
+      "slug": "autogas-refueling-station",
+      "name": "Autogas Refueling Station",
+      "shortName": "Autogas",
+      "summary": "Storage, dispensers, pumps, controls, hoses and fittings for autogas refueling stations.",
+      "description": "Integrated equipment for LPG autogas refueling stations including storage tanks, dispensers, pumps, hose systems, couplings, safety equipment, control systems and piping.",
+      "image": "/media/hero-services.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "groups": [
+        "LPG Storage Tanks",
+        "Tank Accessories",
+        "LPG Dispensers",
+        "LPG Pumps",
+        "Hose & Fittings",
+        "Control Panels",
+        "Pipe & Fittings"
+      ]
+    },
+    {
+      "slug": "industrial-lpg-solutions",
+      "name": "Industrial LPG Solutions",
+      "shortName": "Industrial LPG",
+      "summary": "Storage, vaporization, pressure regulation, piping and instrumentation for industrial LPG users.",
+      "description": "Industrial LPG systems supporting storage, vaporization, pressure control, fuel delivery, piping, hose connections and instrumentation.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/service-epc.jpg",
+      "groups": [
+        "LPG Storage Tanks",
+        "LPG Vaporizers",
+        "Pressure Regulators",
+        "Industrial Equipment",
+        "Hose & Adaptors",
+        "Piping & Fittings",
+        "Instrumentation"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "slug": "bullet-storage-tank",
+      "name": "LPG Bullet Storage Tank",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "autogas-refueling-station",
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Storage Tanks",
+      "eyebrow": "Storage Tanks",
+      "summary": "Above-ground or underground/mounded LPG storage tank for industrial LPG storage and filling plant applications.",
+      "description": "Includes magnetic Rochester level gauge with magnetic level transmitter and temperature/pressure gauges as specified.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Capacity Range",
+          "5 MT–100 MT"
+        ],
+        [
+          "Design Temperature",
+          "−20°C / +50°C"
+        ],
+        [
+          "Type",
+          "Horizontal / Vertical"
+        ],
+        [
+          "Design Code",
+          "EN13445"
+        ],
+        [
+          "Maximum Working Pressure",
+          "17.2 Bar"
+        ],
+        [
+          "Test Pressure",
+          "24.6 Bar"
+        ],
+        [
+          "Material",
+          "P355NH"
+        ],
+        [
+          "Safety Relief Valve",
+          "Rego/SRG; pop-up pressure 17.2 Bar"
+        ]
+      ],
+      "standards": [
+        "EN13445"
+      ],
+      "applications": [
+        "LPG Filling Plants",
+        "Storage Facilities",
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Project Based",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [
+        "safety-relief-valve",
+        "magnetic-level-gauge",
+        "centrifugal-pump",
+        "pressure-gauge"
+      ],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Storage Tanks",
+        "autogas-refueling-station": "LPG Storage Tanks",
+        "industrial-lpg-solutions": "LPG Storage Tanks"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "spherical-storage-tank",
+      "name": "LPG Spherical Storage Tank",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Storage Tanks",
+      "eyebrow": "Storage Tanks",
+      "summary": "Large-capacity spherical LPG storage tank for terminal and bulk storage applications.",
+      "description": "Large-capacity spherical LPG storage tank for terminal and bulk storage applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Capacity",
+          "500 MT–3000 MT"
+        ],
+        [
+          "Design Standard",
+          "ASME Section VIII Div. 1 or Div. 2"
+        ],
+        [
+          "Maximum Working Pressure",
+          "17.2 Bar"
+        ],
+        [
+          "Test Pressure",
+          "18–20 Bar"
+        ],
+        [
+          "Shell Thickness",
+          "35–50 mm"
+        ],
+        [
+          "Safety Relief Valve",
+          "Rego/SRG; pop-up pressure 17.2 Bar"
+        ]
+      ],
+      "standards": [
+        "ASME Section VIII"
+      ],
+      "applications": [
+        "LPG Import Terminals",
+        "Bulk LPG Storage Facilities"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Project Based",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Storage Tanks"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "internal-excess-flow-valve",
+      "name": "Internal Excess Flow Valve",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution",
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Tank Accessories",
+      "eyebrow": "Tank Accessories",
+      "summary": "Excess-flow protection valve for LPG filling, vapor equalizing and withdrawal applications.",
+      "description": "The valve closes automatically when flow increases and returns to open position after inlet and outlet pressure are balanced.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Storage Tanks",
+        "Filling",
+        "Vapor Equalizing",
+        "Liquid Withdrawal"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Tank Accessories",
+        "lpg-transport-distribution": "Tank Accessories",
+        "autogas-refueling-station": "Tank Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "safety-relief-valve",
+      "name": "LPG Safety Relief Valve",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution",
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Tank Accessories",
+      "eyebrow": "Tank Accessories",
+      "summary": "Safety relief valve system for LPG storage and pressure protection applications.",
+      "description": "Safety relief valve system for LPG storage and pressure protection applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Manifold Size",
+          "4 in. – 300#"
+        ],
+        [
+          "Set Pressure",
+          "250–350 psi"
+        ],
+        [
+          "NPT Sizes",
+          "¼ in., ½ in., ¾ in., 1 in., 1.25 in., 2 in."
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "LPG Storage Tanks",
+        "Pressure Protection"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Tank Accessories",
+        "lpg-transport-distribution": "Tank Accessories",
+        "autogas-refueling-station": "Tank Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "rotogauge",
+      "name": "LPG Rotogauge",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Tank Accessories",
+      "eyebrow": "Level Gauges",
+      "summary": "Manual LPG storage tank level measurement gauge.",
+      "description": "Manual LPG storage tank level measurement gauge.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Type",
+          "Manual"
+        ],
+        [
+          "Medium",
+          "LPG"
+        ],
+        [
+          "Use",
+          "LPG Storage Tank"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "LPG Storage Tanks"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Tank Accessories",
+        "lpg-transport-distribution": "Tank Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "magnetic-level-gauge",
+      "name": "Magnetic LPG Level Gauge",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution",
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Tank Accessories",
+      "eyebrow": "Level Gauges",
+      "summary": "Mechanical float level gauge for precise LPG storage tank content measurement.",
+      "description": "Replaceable pressure-rated dials are available, including options with electronic sensors.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Measurement System",
+          "Mechanical float"
+        ],
+        [
+          "Connections",
+          "Flange / Thread"
+        ],
+        [
+          "Mounting",
+          "Horizontal / Vertical / Various Angles"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "LPG Storage Tanks"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Tank Accessories",
+        "lpg-transport-distribution": "Tank Accessories",
+        "autogas-refueling-station": "Tank Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "remote-tank-monitoring",
+      "name": "Remote LPG Tank Monitoring",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Tank Accessories",
+      "eyebrow": "Remote Monitoring",
+      "summary": "Remote cellular tank monitoring solution for remote, unattended, seasonal or fleet LPG tanks.",
+      "description": "Remote cellular tank monitoring solution for remote, unattended, seasonal or fleet LPG tanks.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "GaugeLink BLE Battery Life",
+          "Up to 10 years"
+        ],
+        [
+          "Cellular Gateway Battery Life",
+          "Up to 5 years; replaceable"
+        ],
+        [
+          "Installation",
+          "Wireless snap-on"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Remote Tanks",
+        "Unattended Tanks",
+        "Seasonal Tanks",
+        "Fleet Tanks"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Tank Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "inline-filling-machine",
+      "name": "Inline Filling Machine",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Filling Machines",
+      "eyebrow": "Filling Machines",
+      "summary": "Accurate LPG cylinder filling machine with automatic cut-off when the preset amount is reached.",
+      "description": "Accurate LPG cylinder filling machine with automatic cut-off when the preset amount is reached.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Accuracy",
+          "High accuracy level III"
+        ],
+        [
+          "Control",
+          "Automatic cut-off"
+        ],
+        [
+          "Approval",
+          "ATEX Approved"
+        ]
+      ],
+      "standards": [
+        "ATEX"
+      ],
+      "applications": [
+        "LPG Bottling Plants",
+        "Cylinder Filling"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [
+        "carousel-filling-machine",
+        "centrifugal-pump",
+        "leak-detector",
+        "pneumatic-cylinder"
+      ],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Filling Machines"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "carousel-filling-machine",
+      "name": "Carousel Filling Machine",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Filling Machines",
+      "eyebrow": "Filling Machines",
+      "summary": "High-throughput LPG carousel filling system for cylinder bottling operations.",
+      "description": "High-throughput LPG carousel filling system for cylinder bottling operations.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Configuration",
+          "12–48 filling posts"
+        ],
+        [
+          "Accuracy",
+          "High accuracy level III"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "High-Capacity LPG Bottling Plants"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Filling Machines"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "centrifugal-pump",
+      "name": "LPG Centrifugal Pump",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "LPG Transfer Machinery",
+      "eyebrow": "LPG Pumps",
+      "summary": "Multistage side-channel LPG pump with explosion-proof motor for bottling and autogas transfer applications.",
+      "description": "Flexible coupling, base and bypass valve are included as specified.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Flow Rate",
+          "5–15 m³/hr"
+        ],
+        [
+          "Pressure",
+          "15 Bar"
+        ],
+        [
+          "Motor Speed",
+          "1450 RPM"
+        ],
+        [
+          "Power",
+          "4–15 kW"
+        ],
+        [
+          "Motor",
+          "Explosion Proof IP56, IECEx Certified"
+        ]
+      ],
+      "standards": [
+        "IECEx"
+      ],
+      "applications": [
+        "LPG Bottling Operations",
+        "Autogas Stations"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [
+        "bypass-valve",
+        "lpg-hosepipe-accessories",
+        "pressure-gauge",
+        "lpg-compressor"
+      ],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "LPG Transfer Machinery",
+        "autogas-refueling-station": "LPG Pumps"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "sliding-vane-pump",
+      "name": "LPG Sliding Vane Pump",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "LPG Transfer Machinery",
+      "eyebrow": "LPG Pumps",
+      "summary": "Sliding vane LPG pump for road tanker loading and unloading operations.",
+      "description": "Sliding vane LPG pump for road tanker loading and unloading operations.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Inlet",
+          "2 in. Female NPT"
+        ],
+        [
+          "Outlet",
+          "2 in. Female NPT"
+        ],
+        [
+          "Flow Rate",
+          "41–76 GPM (155–287 LPM) at 100 psid (6.9 Bar)"
+        ],
+        [
+          "Power",
+          "4–7.5 kW"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Road Tanker Loading",
+        "Road Tanker Unloading"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "LPG Transfer Machinery",
+        "lpg-transport-distribution": "LPG Transfer Machinery"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "bypass-valve",
+      "name": "LPG Bypass Valve",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "LPG Transfer Machinery",
+      "eyebrow": "Valves",
+      "summary": "Bypass valve designed to protect pumps and LPG system components from excessive pressure.",
+      "description": "Bypass valve designed to protect pumps and LPG system components from excessive pressure.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Size",
+          "¾ in. to 2 in."
+        ],
+        [
+          "Pressure Range",
+          "1.7–10.3 Bar"
+        ],
+        [
+          "Flow Rate",
+          "6.8–57 m³/hr"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Pump Protection",
+        "LPG Transfer Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "LPG Transfer Machinery",
+        "lpg-transport-distribution": "LPG Transfer Machinery"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "lpg-compressor",
+      "name": "Oil-Free LPG Compressor",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "LPG Transfer Machinery",
+      "eyebrow": "Compressors",
+      "summary": "Oil-free piston compressor for LPG vapor handling and transfer duty.",
+      "description": "Oil-free piston compressor for LPG vapor handling and transfer duty.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Vapor Volumetric Displacement",
+          "40–110 m³/hr"
+        ],
+        [
+          "Differential Pressure",
+          "21 Bar"
+        ],
+        [
+          "Motor Speed",
+          "400–800 RPM"
+        ],
+        [
+          "Power",
+          "15–25 kW"
+        ],
+        [
+          "Motor",
+          "Explosion Proof IP56, IECEx Certified"
+        ]
+      ],
+      "standards": [
+        "IECEx"
+      ],
+      "applications": [
+        "LPG Vapor Transfer",
+        "LPG Filling Plants"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "LPG Transfer Machinery"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "air-driven-pump",
+      "name": "LPG Air Driven Pump",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "LPG Transfer Machinery",
+      "eyebrow": "LPG Pumps",
+      "summary": "Air-driven LPG pump for transfer and pressure boosting applications.",
+      "description": "Air-driven LPG pump for transfer and pressure boosting applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Drive Air Pressure",
+          "3–8 Bar (45–115 psi)"
+        ],
+        [
+          "Pressure Ratio",
+          "Typically 2:1–6:1 for transfer; up to 15:1 or 30:1"
+        ],
+        [
+          "Maximum Outlet Pressure",
+          "Typically 10–60 Bar (145–870 psi)"
+        ],
+        [
+          "Drive Air Flow Rate",
+          "0.5–2.0 m³/min"
+        ],
+        [
+          "Maximum Liquid Flow Rate",
+          "Up to 10–15 L/min"
+        ],
+        [
+          "Operating Temperature",
+          "−20°C to +80°C"
+        ],
+        [
+          "Wetted Materials",
+          "Stainless Steel 304/316 gas barrels"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "LPG Transfer",
+        "Pressure Boosting"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "LPG Transfer Machinery"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "leak-detector",
+      "name": "LPG Leak Detector",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Auxiliary Machinery",
+      "eyebrow": "Auxiliary Machinery",
+      "summary": "Leak detection equipment for LPG plant safety and operational inspection.",
+      "description": "Leak detection equipment for LPG plant safety and operational inspection.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Plants",
+        "Equipment Inspection"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Auxiliary Machinery"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "steam-generator",
+      "name": "Steam Generator",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Auxiliary Machinery",
+      "eyebrow": "Auxiliary Machinery",
+      "summary": "Auxiliary steam generation equipment for applicable LPG filling plant operations.",
+      "description": "Auxiliary steam generation equipment for applicable LPG filling plant operations.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Plants"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Auxiliary Machinery"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "lpg-hosepipe-accessories",
+      "name": "LPG Hosepipe & Accessories",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Hose & Accessories",
+      "eyebrow": "Hose Systems",
+      "summary": "LPG hosepipe and accessory solutions for plant transfer and connection requirements.",
+      "description": "LPG hosepipe and accessory solutions for plant transfer and connection requirements.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Plants",
+        "Transfer Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Hose & Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "pressure-gauge",
+      "name": "LPG Pressure Gauge",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution",
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Instrumentation",
+      "eyebrow": "Instrumentation",
+      "summary": "Pressure gauge for LPG storage, transfer and process instrumentation.",
+      "description": "Pressure gauge for LPG storage, transfer and process instrumentation.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Storage",
+        "Transfer Systems",
+        "Industrial LPG"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Instrumentation",
+        "lpg-transport-distribution": "Instrumentation",
+        "industrial-lpg-solutions": "Instrumentation"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "temperature-gauge",
+      "name": "LPG Temperature Gauge",
+      "categorySlugs": [
+        "lpg-filling-plant",
+        "lpg-transport-distribution",
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Instrumentation",
+      "eyebrow": "Instrumentation",
+      "summary": "Temperature gauge for LPG storage and process instrumentation.",
+      "description": "Temperature gauge for LPG storage and process instrumentation.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Storage",
+        "Industrial LPG"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Instrumentation",
+        "lpg-transport-distribution": "Instrumentation",
+        "industrial-lpg-solutions": "Instrumentation"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "solenoid-coil-valve",
+      "name": "Solenoid Coil & Valve",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Instrumentation",
+      "eyebrow": "Instrumentation",
+      "summary": "Solenoid coil and valve components for LPG equipment control applications.",
+      "description": "Solenoid coil and valve components for LPG equipment control applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Equipment"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Instrumentation"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "pneumatic-cylinder",
+      "name": "Pneumatic Cylinder",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Instrumentation",
+      "eyebrow": "Instrumentation",
+      "summary": "Pneumatic cylinder for applicable LPG filling and machinery automation systems.",
+      "description": "Pneumatic cylinder for applicable LPG filling and machinery automation systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Machinery"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Instrumentation"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "rubber-bush",
+      "name": "Rubber Bush",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Consumables",
+      "eyebrow": "Consumables",
+      "summary": "Replacement rubber bush consumable for applicable LPG filling equipment.",
+      "description": "Replacement rubber bush consumable for applicable LPG filling equipment.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Equipment"
+      ],
+      "commercialMode": "dealer-purchase",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Consumables"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "sealing-sleeve",
+      "name": "Sealing Sleeve",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Consumables",
+      "eyebrow": "Consumables",
+      "summary": "Replacement sealing sleeve for applicable LPG filling equipment.",
+      "description": "Replacement sealing sleeve for applicable LPG filling equipment.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Equipment"
+      ],
+      "commercialMode": "dealer-purchase",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Consumables"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "plastic-cap",
+      "name": "Plastic Cap",
+      "categorySlugs": [
+        "lpg-filling-plant"
+      ],
+      "primaryCategorySlug": "lpg-filling-plant",
+      "subcategory": "Consumables",
+      "eyebrow": "Consumables",
+      "summary": "Plastic cap consumable for LPG cylinder or filling operation applications.",
+      "description": "Plastic cap consumable for LPG cylinder or filling operation applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "LPG Filling Operations"
+      ],
+      "commercialMode": "dealer-purchase",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-filling-plant": "Consumables"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "road-tanker-bobtail",
+      "name": "Semi-Trailer LPG Road Tanker / Bobtail",
+      "categorySlugs": [
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "Road Tankers / Bobtails",
+      "eyebrow": "LPG Transport",
+      "summary": "Bulk LPG road transport system with unloading equipment, tank instrumentation and heavy-duty chassis.",
+      "description": "Tank body includes filling/discharge line, ball valves, pipe fittings, magnetic level gauge, rotogauge, safety relief valve and pressure gauge as specified. Unloading system uses vane/turbine transfer pump with explosion-proof motor and hose reel.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Storage Capacity",
+          "10 MT–30 MT"
+        ],
+        [
+          "Operating Temperature",
+          "−20°C to +50°C"
+        ],
+        [
+          "Design Pressure",
+          "17.5 Bar"
+        ],
+        [
+          "Test Pressure",
+          "26.5 Bar"
+        ],
+        [
+          "Tank Standard",
+          "EN 12493"
+        ],
+        [
+          "Shell Thickness",
+          "12–14 mm"
+        ],
+        [
+          "Chassis Support",
+          "25-ton dynamic / 50-ton static support legs"
+        ],
+        [
+          "Axle Capacity",
+          "9 ton each"
+        ]
+      ],
+      "standards": [
+        "EN 12493",
+        "TÜV / SGS / Bureau Veritas (as specified)"
+      ],
+      "applications": [
+        "Bulk LPG Distribution",
+        "Road Transportation"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Project Based",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [
+        "sliding-vane-pump",
+        "hose-reel",
+        "mass-flowmeter",
+        "dry-coupling"
+      ],
+      "active": true,
+      "categoryGroups": {
+        "lpg-transport-distribution": "Road Tankers / Bobtails"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "hose-reel",
+      "name": "LPG Hose Reel",
+      "categorySlugs": [
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "Hose & Accessories",
+      "eyebrow": "Hose Systems",
+      "summary": "LPG hose reel for road tanker and distribution transfer operations.",
+      "description": "LPG hose reel for road tanker and distribution transfer operations.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Road Tankers",
+        "Bulk LPG Distribution"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-transport-distribution": "Hose & Accessories"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "acme-coupling",
+      "name": "ACME Coupling",
+      "categorySlugs": [
+        "lpg-transport-distribution",
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "Hose & Accessories",
+      "eyebrow": "Couplings",
+      "summary": "ACME coupling for LPG hose and transfer connections.",
+      "description": "ACME coupling for LPG hose and transfer connections.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Available ACME Thread Sizes",
+          "1¼ in., 2¼ in., 3¼ in."
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "LPG Transfer",
+        "Autogas Hose Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-transport-distribution": "Hose & Accessories",
+        "autogas-refueling-station": "Hose & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "dry-coupling",
+      "name": "Dry Coupling",
+      "categorySlugs": [
+        "lpg-transport-distribution",
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "Hose & Accessories",
+      "eyebrow": "Couplings",
+      "summary": "Dry coupling for high-flow LPG transfer and hose applications.",
+      "description": "Dry coupling for high-flow LPG transfer and hose applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Flow Rate",
+          "Up to 23,000 LPM (6,075.9 GPM)"
+        ],
+        [
+          "Sizes",
+          "1 in. to 8 in."
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "LPG Transfer",
+        "Autogas Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-transport-distribution": "Hose & Accessories",
+        "autogas-refueling-station": "Hose & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "mass-flowmeter",
+      "name": "LPG Mass Flowmeter",
+      "categorySlugs": [
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "Measuring Units",
+      "eyebrow": "Measuring Equipment",
+      "summary": "Mass flow measurement equipment for LPG transfer and distribution operations.",
+      "description": "Mass flow measurement equipment for LPG transfer and distribution operations.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Bulk LPG Distribution",
+        "Transfer Measurement"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-transport-distribution": "Measuring Units"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "volumetric-flowmeter",
+      "name": "LPG Volumetric Flowmeter",
+      "categorySlugs": [
+        "lpg-transport-distribution"
+      ],
+      "primaryCategorySlug": "lpg-transport-distribution",
+      "subcategory": "Measuring Units",
+      "eyebrow": "Measuring Equipment",
+      "summary": "Volumetric LPG flow measurement equipment for distribution and transfer systems.",
+      "description": "Volumetric LPG flow measurement equipment for distribution and transfer systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Bulk LPG Distribution",
+        "Transfer Measurement"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "lpg-transport-distribution": "Measuring Units"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "autogas-bullet-tank",
+      "name": "Autogas LPG Bullet Tank",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "LPG Storage Tanks",
+      "eyebrow": "Autogas Storage",
+      "summary": "LPG bullet storage tank configured for autogas refueling station applications.",
+      "description": "LPG bullet storage tank configured for autogas refueling station applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Capacity Range",
+          "5 MT–20 MT"
+        ],
+        [
+          "Design Temperature",
+          "−20°C / +50°C"
+        ],
+        [
+          "Type",
+          "Horizontal / Vertical"
+        ],
+        [
+          "Design Code",
+          "EN13445"
+        ],
+        [
+          "Maximum Working Pressure",
+          "17.2 Bar"
+        ],
+        [
+          "Test Pressure",
+          "24.6 Bar"
+        ],
+        [
+          "Material",
+          "P355NH"
+        ]
+      ],
+      "standards": [
+        "EN13445"
+      ],
+      "applications": [
+        "Autogas Refueling Stations"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Project Based",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "LPG Storage Tanks"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "autogas-dispenser",
+      "name": "LPG Autogas Dispenser",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "LPG Dispensers",
+      "eyebrow": "Autogas Dispensing",
+      "summary": "Modular LPG dispenser with ATC temperature compensation, electronic calibration and single or dual display options.",
+      "description": "Modular LPG dispenser with ATC temperature compensation, electronic calibration and single or dual display options.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Nozzles",
+          "1–4"
+        ],
+        [
+          "Flow Rate",
+          "Up to 45–50 L/min"
+        ],
+        [
+          "Measurement Precision",
+          "±0.5%"
+        ],
+        [
+          "Operating Voltage",
+          "70–264 V AC (or AC220V ±20% at 50Hz)"
+        ],
+        [
+          "Ambient Temperature",
+          "−40°C to +55°C"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [
+        "turbine-pump",
+        "en1762-lpg-hose",
+        "breakaway-coupling",
+        "autogas-control-panel"
+      ],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "LPG Dispensers"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "autogas-dispenser-accessories",
+      "name": "Autogas Dispenser Accessories",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "LPG Dispensers",
+      "eyebrow": "Autogas Dispensing",
+      "summary": "Accessories for LPG autogas dispenser systems.",
+      "description": "Accessories for LPG autogas dispenser systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "LPG Dispensers"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "turbine-pump",
+      "name": "LPG Turbine Pump",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "LPG Pumps",
+      "eyebrow": "Autogas Pumps",
+      "summary": "LPG turbine pump for high-flow autogas transfer applications.",
+      "description": "LPG turbine pump for high-flow autogas transfer applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Maximum Flow Rate",
+          "Up to 200 L/min"
+        ],
+        [
+          "Maximum Differential Pressure",
+          "14 Bar"
+        ],
+        [
+          "Maximum Working Pressure",
+          "Up to 34 Bar"
+        ],
+        [
+          "Motor Power",
+          "4–5.5 kW"
+        ],
+        [
+          "Motor",
+          "Explosion Proof IP56, IECEx Certified"
+        ]
+      ],
+      "standards": [
+        "IECEx"
+      ],
+      "applications": [
+        "Autogas Refueling Stations"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "LPG Pumps"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "en1762-lpg-hose",
+      "name": "EN1762 LPG Hose",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Hose & Fittings",
+      "eyebrow": "Hose Systems",
+      "summary": "LPG hose range for autogas transfer and refueling applications in multiple diameters and lengths.",
+      "description": "LPG hose range for autogas transfer and refueling applications in multiple diameters and lengths.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Diameter",
+          "½ in. to 8 in."
+        ],
+        [
+          "Version",
+          "EN 1762 DΩ conductivity by internal elastomer (R<10 Ohms)"
+        ],
+        [
+          "Operating Pressure",
+          "25 Bar"
+        ],
+        [
+          "Test Pressure",
+          "37.5 Bar"
+        ],
+        [
+          "Operating Temperature",
+          "−30°C to +70°C"
+        ]
+      ],
+      "standards": [
+        "EN 1762"
+      ],
+      "applications": [
+        "Autogas Refueling Stations",
+        "LPG Transfer"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Hose & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "breakaway-coupling",
+      "name": "Breakaway Coupling",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Hose & Fittings",
+      "eyebrow": "Couplings",
+      "summary": "Safety breakaway coupling for LPG hose systems with flange or threaded connections.",
+      "description": "Safety breakaway coupling for LPG hose systems with flange or threaded connections.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Connections",
+          "Flange / Thread"
+        ],
+        [
+          "Maximum Pressure",
+          "25 Bar (362.5 psi)"
+        ],
+        [
+          "Sizes",
+          "1 in. to 12 in."
+        ],
+        [
+          "Flow Rate",
+          "Up to 44,500 LPM (11,755.6 GPM)"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Autogas Hose Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Hose & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "pull-away-coupling",
+      "name": "Pull-Away Coupling",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Hose & Fittings",
+      "eyebrow": "Couplings",
+      "summary": "Threaded pull-away coupling for protected autogas hose connection systems.",
+      "description": "Threaded pull-away coupling for protected autogas hose connection systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Connection",
+          "Thread"
+        ],
+        [
+          "Type",
+          "FNPT"
+        ],
+        [
+          "Maximum Pressure",
+          "25 Bar (362.5 psi)"
+        ],
+        [
+          "Sizes",
+          "¾ in. to 2 in."
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Autogas Hose Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Hose & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "autogas-control-panel",
+      "name": "Autogas Control Panel",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Control Panels",
+      "eyebrow": "Control Systems",
+      "summary": "Electrical control panel for LPG dispensers and pumps with integrated protection and emergency safety functions.",
+      "description": "Electrical control panel for LPG dispensers and pumps with integrated protection and emergency safety functions.",
+      "image": "",
+      "gallery": [],
+      "specs": [
+        [
+          "Dispenser / Pump Control",
+          "Controls 2 dispensers and pump"
+        ],
+        [
+          "Protection",
+          "Surge, phase failure, motor and high-voltage protection"
+        ],
+        [
+          "Safety",
+          "Emergency safety feature"
+        ]
+      ],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Control Panels"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "ball-valve",
+      "name": "LPG Ball Valve",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Pipe & Fittings",
+      "eyebrow": "Pipe & Fittings",
+      "summary": "Ball valve for LPG piping and autogas station systems.",
+      "description": "Ball valve for LPG piping and autogas station systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations",
+        "LPG Piping"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Pipe & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "lpg-flange",
+      "name": "LPG Flange",
+      "categorySlugs": [
+        "autogas-refueling-station"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Pipe & Fittings",
+      "eyebrow": "Pipe & Fittings",
+      "summary": "Flange components for LPG piping and equipment connections.",
+      "description": "Flange components for LPG piping and equipment connections.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations",
+        "LPG Piping"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Pipe & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "lpg-pipe",
+      "name": "LPG Pipe",
+      "categorySlugs": [
+        "autogas-refueling-station",
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Pipe & Fittings",
+      "eyebrow": "Pipe & Fittings",
+      "summary": "Pipe for LPG station and industrial LPG system applications.",
+      "description": "Pipe for LPG station and industrial LPG system applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations",
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Pipe & Fittings",
+        "industrial-lpg-solutions": "Piping & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "lpg-pipe-fittings",
+      "name": "LPG Pipe Fittings",
+      "categorySlugs": [
+        "autogas-refueling-station",
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "autogas-refueling-station",
+      "subcategory": "Pipe & Fittings",
+      "eyebrow": "Pipe & Fittings",
+      "summary": "Pipe fittings for LPG station and industrial piping systems.",
+      "description": "Pipe fittings for LPG station and industrial piping systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Autogas Refueling Stations",
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "autogas-refueling-station": "Pipe & Fittings",
+        "industrial-lpg-solutions": "Piping & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "industrial-lpg-storage-tank",
+      "name": "Industrial LPG Storage Tank",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "LPG Storage Tanks",
+      "eyebrow": "Industrial Storage",
+      "summary": "LPG storage system for industrial and commercial LPG supply applications.",
+      "description": "LPG storage system for industrial and commercial LPG supply applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Factories",
+        "Commercial Facilities",
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Project Based",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "LPG Storage Tanks"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "dry-type-lpg-vaporizer",
+      "name": "Dry Type LPG Vaporizer",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "LPG Vaporizers",
+      "eyebrow": "Industrial LPG",
+      "summary": "Dry-type LPG vaporizer for controlled industrial gas supply applications.",
+      "description": "Dry-type LPG vaporizer for controlled industrial gas supply applications.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Industrial LPG Systems",
+        "Factories",
+        "Commercial Facilities"
+      ],
+      "commercialMode": "rfq",
+      "dealerPriceProtected": true,
+      "featured": true,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [
+        "high-pressure-regulator",
+        "low-pressure-regulator",
+        "industrial-lpg-storage-tank",
+        "industrial-piping-fittings"
+      ],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "LPG Vaporizers"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "high-pressure-regulator",
+      "name": "High Pressure LPG Regulator",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "Pressure Regulators",
+      "eyebrow": "Pressure Regulation",
+      "summary": "High-pressure LPG regulator for industrial gas supply and pressure-control systems.",
+      "description": "High-pressure LPG regulator for industrial gas supply and pressure-control systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "Pressure Regulators"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "low-pressure-regulator",
+      "name": "Low Pressure LPG Regulator",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "Pressure Regulators",
+      "eyebrow": "Pressure Regulation",
+      "summary": "Low-pressure LPG regulator for downstream industrial and commercial LPG systems.",
+      "description": "Low-pressure LPG regulator for downstream industrial and commercial LPG systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Industrial LPG Systems",
+        "Commercial LPG"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "Pressure Regulators"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "oil-separator",
+      "name": "LPG Oil Separator",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "Industrial Equipment",
+      "eyebrow": "Industrial LPG",
+      "summary": "Oil separator for applicable industrial LPG systems.",
+      "description": "Oil separator for applicable industrial LPG systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "Industrial Equipment"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "hosepipe-with-adaptor",
+      "name": "LPG Hosepipe with Adaptor",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "Hose & Adaptors",
+      "eyebrow": "Industrial LPG",
+      "summary": "Hosepipe and adaptor assembly for applicable industrial LPG connections.",
+      "description": "Hosepipe and adaptor assembly for applicable industrial LPG connections.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "Hose & Adaptors"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "industrial-piping-fittings",
+      "name": "Industrial LPG Piping & Fittings",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "Piping & Fittings",
+      "eyebrow": "Industrial LPG",
+      "summary": "Piping and fitting components for industrial LPG distribution systems.",
+      "description": "Piping and fitting components for industrial LPG distribution systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Factories",
+        "Commercial Facilities",
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "Piping & Fittings"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    },
+    {
+      "slug": "industrial-instrumentation",
+      "name": "Industrial LPG Instrumentation",
+      "categorySlugs": [
+        "industrial-lpg-solutions"
+      ],
+      "primaryCategorySlug": "industrial-lpg-solutions",
+      "subcategory": "Instrumentation",
+      "eyebrow": "Instrumentation",
+      "summary": "Instrumentation components for monitoring and control of industrial LPG systems.",
+      "description": "Instrumentation components for monitoring and control of industrial LPG systems.",
+      "image": "",
+      "gallery": [],
+      "specs": [],
+      "standards": [],
+      "applications": [
+        "Industrial LPG Systems"
+      ],
+      "commercialMode": "dealer-purchase-rfq",
+      "dealerPriceProtected": true,
+      "featured": false,
+      "availability": "Contact Dingsheng",
+      "publicDownloads": [],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true,
+      "categoryGroups": {
+        "industrial-lpg-solutions": "Instrumentation"
+      },
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": []
+    }
+  ],
+  "services": [
+    {
+      "slug": "lpg-filling-plant-epc",
+      "name": "LPG Filling Plant EPC",
+      "shortName": "Filling Plant EPC",
+      "summary": "Complete engineering, procurement and construction solutions for LPG filling plants.",
+      "description": "Dingsheng Energy provides complete EPC solutions for LPG Filling Plants, including plant design, LPG storage systems, filling equipment, piping, electrical and instrumentation systems, installation, testing and commissioning. Solutions are customized to operational requirements and applicable safety standards.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "Plant Design",
+        "LPG Storage Systems",
+        "Filling Equipment",
+        "Piping Systems",
+        "Electrical Systems",
+        "Instrumentation",
+        "Installation",
+        "Testing",
+        "Commissioning"
+      ],
+      "process": [
+        "Requirement Review",
+        "Engineering",
+        "Procurement",
+        "Installation",
+        "Testing",
+        "Commissioning"
+      ],
+      "applications": [
+        "LPG Bottling Plants",
+        "LPG Filling Facilities"
+      ],
+      "active": true,
+      "featured": true
+    },
+    {
+      "slug": "autogas-station-epc",
+      "name": "Autogas Station EPC",
+      "shortName": "Autogas EPC",
+      "summary": "Design, supply, installation and commissioning of complete LPG autogas stations.",
+      "description": "Dingsheng Energy designs, supplies, installs and commissions complete LPG Autogas Stations for safe and efficient vehicle refueling, including dispensing systems, storage tanks, pumps, piping, electrical systems, safety equipment and associated civil and mechanical works.",
+      "image": "/media/hero-services.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "Autogas System Design",
+        "Storage Tanks",
+        "LPG Dispensers",
+        "Pumps",
+        "Piping",
+        "Electrical Systems",
+        "Safety Equipment",
+        "Civil Works",
+        "Mechanical Works",
+        "Commissioning"
+      ],
+      "process": [
+        "Site Review",
+        "Engineering",
+        "Equipment Supply",
+        "Installation",
+        "Testing",
+        "Commissioning"
+      ],
+      "applications": [
+        "Autogas Refueling Stations"
+      ],
+      "active": true,
+      "featured": true
+    },
+    {
+      "slug": "household-lpg-reticulation",
+      "name": "Household LPG Reticulation",
+      "shortName": "Household Reticulation",
+      "summary": "Centralized LPG distribution systems for residential buildings, apartments, villas and housing projects.",
+      "description": "Household LPG reticulation solutions provide safe and reliable centralized LPG distribution. Dingsheng Energy designs and installs complete cylinder bank, manifold, regulator, piping and safety systems according to site requirements.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "Cylinder Banks",
+        "Manifolds",
+        "Pressure Regulators",
+        "LPG Piping",
+        "Safety Systems",
+        "Installation",
+        "Testing"
+      ],
+      "process": [
+        "Site Assessment",
+        "System Design",
+        "Equipment Supply",
+        "Installation",
+        "Testing",
+        "Handover"
+      ],
+      "applications": [
+        "Residential Buildings",
+        "Apartments",
+        "Villas",
+        "Housing Projects"
+      ],
+      "active": true,
+      "featured": false
+    },
+    {
+      "slug": "industrial-lpg-reticulation",
+      "name": "Industrial LPG Reticulation",
+      "shortName": "Industrial Reticulation",
+      "summary": "Engineered LPG reticulation systems for factories, commercial facilities and high-demand applications.",
+      "description": "Industrial LPG reticulation systems are engineered for factories, commercial facilities, boilers, kitchens, process equipment and other high-demand applications, supporting reliable gas supply, pressure control, operational safety and efficient LPG utilization.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "System Design",
+        "Storage / Cylinder Bank Interface",
+        "Pressure Regulation",
+        "Piping",
+        "Safety Systems",
+        "Installation",
+        "Testing",
+        "Commissioning"
+      ],
+      "process": [
+        "Load Review",
+        "Engineering",
+        "Procurement",
+        "Installation",
+        "Pressure Testing",
+        "Commissioning"
+      ],
+      "applications": [
+        "Factories",
+        "Commercial Facilities",
+        "Boilers",
+        "Commercial Kitchens",
+        "Process Equipment"
+      ],
+      "active": true,
+      "featured": true
+    },
+    {
+      "slug": "pipeline-skid-systems",
+      "name": "LPG Pipeline & Skid Systems",
+      "shortName": "Pipeline & Skid",
+      "summary": "Engineered LPG pipeline and skid-mounted systems for safe plant integration.",
+      "description": "Dingsheng Energy supports LPG pipeline and skid system engineering, integration, equipment selection, controls, installation and commissioning for applicable LPG projects.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "Engineering",
+        "System Integration",
+        "LPG Piping",
+        "Skid Packages",
+        "Controls",
+        "Installation",
+        "Commissioning"
+      ],
+      "process": [
+        "Requirement Review",
+        "Engineering",
+        "Fabrication / Procurement",
+        "Integration",
+        "Testing",
+        "Commissioning"
+      ],
+      "applications": [
+        "LPG Plants",
+        "Industrial LPG Systems",
+        "Utility Systems"
+      ],
+      "active": true,
+      "featured": false
+    },
+    {
+      "slug": "engineering-consultancy",
+      "name": "Engineering Consultancy",
+      "summary": "Technical guidance, design support and engineering consultancy across LPG projects.",
+      "description": "Engineering consultancy provides technical review, design support, equipment selection, safety review and project coordination for LPG infrastructure and equipment systems.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "Technical Review",
+        "Design Support",
+        "Equipment Selection",
+        "Safety Review",
+        "Project Coordination"
+      ],
+      "process": [
+        "Requirement Review",
+        "Technical Assessment",
+        "Recommendations",
+        "Design Support",
+        "Project Follow-up"
+      ],
+      "applications": [
+        "LPG Projects",
+        "Equipment Selection",
+        "Plant Upgrades"
+      ],
+      "active": true,
+      "featured": false
+    },
+    {
+      "slug": "machinery-servicing",
+      "name": "Machinery Servicing",
+      "summary": "Inspection, maintenance, troubleshooting, repair and servicing of LPG machinery and equipment.",
+      "description": "Professional servicing covers LPG filling machines, dispensers, pumps, compressors, flow meters, vaporizers and related equipment to maintain safe, reliable and efficient operation.",
+      "image": "/media/service-epc.jpg",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [
+        "Inspection",
+        "Preventive Maintenance",
+        "Troubleshooting",
+        "Repair",
+        "Filling Machine Servicing",
+        "Dispenser Servicing",
+        "Pump Servicing",
+        "Compressor Servicing",
+        "Flowmeter Servicing",
+        "Vaporizer Servicing"
+      ],
+      "process": [
+        "Inspection",
+        "Diagnosis",
+        "Service Plan",
+        "Repair / Maintenance",
+        "Testing",
+        "Service Report"
+      ],
+      "applications": [
+        "LPG Filling Plants",
+        "Autogas Stations",
+        "Industrial LPG Systems"
+      ],
+      "active": true,
+      "featured": true
+    }
+  ],
+  "priceGroups": [
+    {
+      "slug": "standard",
+      "name": "Standard",
+      "description": "Default approved dealer pricing",
+      "active": true
+    },
+    {
+      "slug": "tier-a",
+      "name": "Tier A",
+      "description": "Preferred dealer pricing",
+      "active": true
+    },
+    {
+      "slug": "tier-b",
+      "name": "Tier B",
+      "description": "Volume dealer pricing",
+      "active": true
+    },
+    {
+      "slug": "vip",
+      "name": "VIP / Custom",
+      "description": "Strategic-account pricing",
+      "active": true
+    }
+  ],
+  "dealerPortal": {
+    "demoPriceGroupSlug": "standard",
+    "demoCompanyName": "Demo Dealer Company",
+    "demoContactName": "Demo User"
+  }
+}

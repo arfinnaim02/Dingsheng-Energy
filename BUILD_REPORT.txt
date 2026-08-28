@@ -1,0 +1,31 @@
+DINGSHENG ENERGY PREMIUM NEXT.JS LOCAL BUILD v3 — PRICING EDITION
+================================================================
+
+Validated in build workspace:
+- 84 TypeScript/TSX source files transpile with 0 syntax-error files.
+- 0 missing @/ alias imports.
+- Catalog JSON validates with 50 products, service catalogue, 4 default price groups.
+- Protected dealer-route guard audit passed.
+- Public product-page static audit confirms protected price queries are not enabled on public routes.
+- Dealer-side client payloads are filtered to the active local dealer price group.
+
+Pricing features added:
+- Admin → Pricing price-group manager and product price matrix.
+- Product editor pricing: SKU, unit, dealer commercial details, group price, currency, MOQ, lead time, protected note.
+- Admin product list pricing status.
+- Server-side local dealer session guard and logout.
+- Dealer product cards display assigned-group price only.
+- Dealer product detail displays protected price, MOQ, lead time, commercial details and technical data.
+- Functional local add-to-cart with quantity.
+- Dynamic cart unit prices, subtotals, totals and multi-currency safeguard.
+- Local checkout calculation and test-order completion state.
+- Local RFQ selected-item workflow with dealer pricing context.
+- Public product records strip dealerPrices, dealerDownloads and dealerCommercialDetails.
+- Prisma schema remains prepared for MySQL PriceGroup / ProductPrice migration.
+
+Commercial data policy:
+No dealer price amounts are pre-filled because no client-approved price list was supplied.
+Enter approved prices through /admin/pricing or an individual product editor.
+
+Build limitation:
+A full `npm install` / `next build` could not be completed in this sandbox because npm package retrieval timed out. Run `npm install`, `npm run typecheck`, and `npm run build` locally before deployment.

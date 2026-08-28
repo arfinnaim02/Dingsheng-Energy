@@ -1,0 +1,441 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  DEALER_APPLICANT
+  DEALER
+  STAFF
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum DealerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+  INACTIVE
+}
+
+enum ProductCommercialMode {
+  INFORMATION_ONLY
+  RFQ_ONLY
+  DEALER_PURCHASE
+  DEALER_PURCHASE_AND_RFQ
+}
+
+enum RfqStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWING
+  QUOTATION_PREPARED
+  QUOTATION_SENT
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+  CONVERTED_TO_ORDER
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING_PAYMENT
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  IN_PROGRESS
+  RESOLVED
+  ARCHIVED
+  SPAM
+}
+
+enum ContactPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ContactSource {
+  PUBLIC
+  DEALER
+}
+
+model User {
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  passwordHash            String
+  role                    UserRole                 @default(DEALER_APPLICANT)
+  emailVerified           DateTime?
+  dealerProfile           DealerProfile?
+  activityLogs            ActivityLog[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model DealerProfile {
+  id               String           @id @default(cuid())
+  userId           String           @unique
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName      String
+  contactName      String
+  phone            String?
+  country          String?
+  businessType     String?
+  website          String?
+  jobTitle         String?
+  interests        String?          @db.Text
+  status           DealerStatus     @default(PENDING)
+  priceGroupId     String?
+  priceGroup       PriceGroup?      @relation(fields: [priceGroupId], references: [id])
+  rfqs             Rfq[]
+  orders           Order[]
+  notes            DealerNote[]
+  contactInquiries ContactInquiry[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model PriceGroup {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  name        String          @unique
+  description String?         @db.Text
+  active      Boolean         @default(true)
+  dealers     DealerProfile[]
+  prices      ProductPrice[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model DealerPortalSetting {
+  id                 String   @id @default("default")
+  demoPriceGroupSlug String   @default("standard")
+  demoCompanyName    String   @default("Demo Dealer Company")
+  demoContactName    String   @default("Demo User")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ProductCategory {
+  id          String                      @id @default(cuid())
+  name        String
+  slug        String                      @unique
+  shortName   String?
+  summary     String?                     @db.Text
+  description String?                     @db.Text
+  image       String?
+  heroImage   String?
+  groupsJson  Json?
+  assignments ProductCategoryAssignment[]
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+}
+
+model Product {
+  id                      String                      @id @default(cuid())
+  name                    String
+  slug                    String                      @unique
+  sku                     String?                     @unique
+  subcategory             String?
+  eyebrow                 String?
+  summary                 String?                     @db.Text
+  description             String?                     @db.Text
+  primaryCategorySlug     String?
+  commercialMode          ProductCommercialMode       @default(RFQ_ONLY)
+  dealerPriceProtected    Boolean                     @default(true)
+  featured                Boolean                     @default(false)
+  availability            String?
+  unitLabel               String?                     @default("Unit")
+  dealerCommercialDetails String?                     @db.Text
+  relatedProductsJson     Json?
+  isActive                Boolean                     @default(true)
+  categories              ProductCategoryAssignment[]
+  specs                   ProductSpecification[]
+  images                  ProductImage[]
+  documents               ProductDocument[]
+  prices                  ProductPrice[]
+  applications            ProductApplication[]
+  standards               ProductStandard[]
+  rfqItems                RfqItem[]
+  orderItems              OrderItem[]
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+}
+
+model ProductCategoryAssignment {
+  productId  String
+  categoryId String
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  groupName  String?
+
+  @@id([productId, categoryId])
+}
+
+model ProductSpecification {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  value     String
+  position  Int     @default(0)
+}
+
+model ProductApplication {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  position  Int     @default(0)
+}
+
+model ProductStandard {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  position  Int     @default(0)
+}
+
+model ProductImage {
+  id                 String  @id @default(cuid())
+  productId          String
+  product            Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url                String
+  cloudinaryPublicId String?
+  alt                String?
+  position           Int     @default(0)
+
+  @@index([productId, position])
+  @@index([cloudinaryPublicId])
+}
+
+model ProductDocument {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title      String
+  filePath   String
+  dealerOnly Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model ProductPrice {
+  id           String     @id @default(cuid())
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceGroupId String
+  priceGroup   PriceGroup @relation(fields: [priceGroupId], references: [id], onDelete: Cascade)
+  currency     String     @default("USD")
+  amount       Decimal    @db.Decimal(14, 2)
+  minimumQty   Int?
+  leadTimeText String?
+  note         String?    @db.Text
+
+  @@unique([productId, priceGroupId])
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  shortName        String?
+  summary          String?  @db.Text
+  description      String?  @db.Text
+  image            String?
+  heroImage        String?
+  scopeJson        Json?
+  processJson      Json?
+  applicationsJson Json?
+  featured         Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Rfq {
+  id              String        @id @default(cuid())
+  reference       String        @unique
+  dealerId        String
+  dealer          DealerProfile @relation(fields: [dealerId], references: [id])
+  projectName     String?
+  deliveryCountry String?
+  requiredDate    DateTime?
+  requirement     String?       @db.Text
+  status          RfqStatus     @default(DRAFT)
+  items           RfqItem[]
+  quotation       Quotation?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model RfqItem {
+  id        String  @id @default(cuid())
+  rfqId     String
+  rfq       Rfq     @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  notes     String? @db.Text
+}
+
+model Quotation {
+  id          String    @id @default(cuid())
+  reference   String    @unique
+  rfqId       String    @unique
+  rfq         Rfq       @relation(fields: [rfqId], references: [id])
+  currency    String    @default("USD")
+  totalAmount Decimal?  @db.Decimal(14, 2)
+  validUntil  DateTime?
+  filePath    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  reference       String        @unique
+  dealerId        String
+  dealer          DealerProfile @relation(fields: [dealerId], references: [id])
+  status          OrderStatus   @default(PENDING)
+  currency        String        @default("USD")
+  totalAmount     Decimal?      @db.Decimal(14, 2)
+  deliveryCountry String?
+  deliveryAddress String?       @db.Text
+  items           OrderItem[]
+  payments        Payment[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal? @db.Decimal(14, 2)
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  orderId     String
+  order       Order         @relation(fields: [orderId], references: [id])
+  provider    String?
+  providerRef String?
+  status      PaymentStatus @default(PENDING)
+  amount      Decimal?      @db.Decimal(14, 2)
+  currency    String        @default("USD")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model DealerNote {
+  id        String        @id @default(cuid())
+  dealerId  String
+  dealer    DealerProfile @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  body      String        @db.Text
+  createdAt DateTime      @default(now())
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  event      String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([event, createdAt])
+}
+
+model ContactInquiry {
+  id        String @id @default(cuid())
+  reference String @unique
+
+  source ContactSource @default(PUBLIC)
+
+  dealerId String?
+  dealer   DealerProfile? @relation(fields: [dealerId], references: [id], onDelete: SetNull)
+
+  fullName String
+  company  String
+  email    String
+  phone    String?
+  country  String?
+
+  inquiryType String
+  requirement String @db.Text
+
+  status   ContactStatus   @default(NEW)
+  priority ContactPriority @default(NORMAL)
+
+  internalNotes   String?   @db.Text
+  adminLastViewed DateTime?
+  resolvedAt      DateTime?
+
+  ipAddress String?
+  userAgent String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([source, createdAt])
+  @@index([dealerId, createdAt])
+  @@index([status, createdAt])
+  @@index([priority, createdAt])
+  @@index([email])
+}

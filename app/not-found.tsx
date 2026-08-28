@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { PublicShell } from "@/components/PublicShell";
+export default function NotFound(){return <PublicShell><section className="min-h-[65vh] flex items-center bg-[#f4f8f6]"><div className="container-shell text-center"><div className="eyebrow">404 · Page not found</div><h1 className="h1 mt-4">The requested page is not available.</h1><p className="lead mt-5">Return to the Dingsheng Energy website or browse the product catalogue.</p><div className="mt-8 flex justify-center gap-3"><Link href="/" className="btn btn-primary">Home</Link><Link href="/products" className="btn btn-secondary">Products</Link></div></div></section></PublicShell>}

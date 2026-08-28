@@ -1,0 +1,5 @@
+import Link from "next/link";
+import { PublicShell } from "@/components/PublicShell";
+import { PageHero } from "@/components/PageHero";
+const docs=[["privacy","Privacy Policy"],["terms","Terms & Conditions"],["dealer-terms","Dealer Terms"],["payment","Payment Policy"],["refund","Refund / Cancellation Policy"],["cookies","Cookie Policy"]];
+export default function LegalIndex(){return <PublicShell><PageHero eyebrow="Legal & system" title="Policies and Terms" description="Policy placeholders prepared for client/legal review before production launch." image="/media/hero-about.jpg"/><section className="section"><div className="container-shell grid-3">{docs.map(([slug,title])=><Link href={`/legal/${slug}`} className="card card-hover p-7" key={slug}><h2 className="text-xl font-extrabold">{title}</h2><p className="mt-3 text-sm leading-6 text-[#71838b]">Draft structure only. Final policy text must be approved for Dingsheng Energy's actual business, payment and privacy practices.</p><div className="mt-5 text-xs font-extrabold text-[#0a9c63]">Open policy →</div></Link>)}</div></section></PublicShell>}

@@ -1,0 +1,56 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { PublicShell } from "@/components/PublicShell";
+import { ProductGallery } from "@/components/ProductGallery";
+import { ProductCard } from "@/components/ProductCard";
+import { Callout } from "@/components/Callout";
+import { Icon } from "@/components/Icon";
+import type { Product } from "@/data/site";
+import { getCategory, getProduct, getRelatedProducts } from "@/lib/catalog";
+
+export const dynamic = "force-dynamic";
+
+type Props = { params: Promise<{ category: string; product: string }> };
+
+function commercialLabel(product: Product) {
+  switch (product.commercialMode) {
+    case "rfq": return "Quotation Required";
+    case "dealer-purchase": return "Dealer Purchase";
+    case "dealer-purchase-rfq": return "Dealer Purchase / RFQ";
+    default: return "Technical Information";
+  }
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { category, product: slug } = await params;
+  const product = await getProduct(slug);
+  if (!product || !product.categorySlugs.includes(category)) return { title: "Product | Dingsheng Energy Limited" };
+  return { title: `${product.name} | Dingsheng Energy Limited`, description: product.summary };
+}
+
+export default async function ProductDetail({ params }: Props) {
+  const { category: categorySlug, product: slug } = await params;
+  const product = await getProduct(slug);
+  if (!product || product.active === false || !product.categorySlugs.includes(categorySlug)) notFound();
+  const [category, relatedAll] = await Promise.all([getCategory(categorySlug), getRelatedProducts(product)]);
+  if (!category) notFound();
+  const related = relatedAll.filter((item) => item.active !== false).slice(0, 4);
+
+  return <PublicShell>
+    <div className="border-b border-[#e3ebe7] bg-white"><div className="container-shell flex min-h-[58px] flex-wrap items-center gap-2 text-xs font-semibold text-[#7b8d94]"><Link href="/">Home</Link><span>›</span><Link href="/products">Products</Link><span>›</span><Link href={`/products/${category.slug}`}>{category.name}</Link><span>›</span><span className="text-[#18313d]">{product.name}</span></div></div>
+
+    <section className="bg-white py-14 lg:py-18"><div className="container-shell grid gap-10 lg:grid-cols-[1.05fr_.95fr] lg:gap-14"><ProductGallery product={product}/><div><div className="flex flex-wrap items-center gap-3"><span className="text-[10px] font-black uppercase tracking-[.15em] text-[#0a9c63]">{product.eyebrow || product.categoryGroups?.[category.slug] || product.subcategory}</span><span className="h-1 w-1 rounded-full bg-[#c3d0cb]"/><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#899990]">{category.name}</span></div><h1 className="mt-4 text-[38px] font-black leading-[1.08] tracking-[-.04em] text-[#0b2230] md:text-[48px]">{product.name}</h1><p className="mt-5 max-w-xl text-[15px] leading-8 text-[#687c85]">{product.summary}</p>{product.description && product.description !== product.summary && <p className="mt-3 max-w-xl text-[13px] leading-7 text-[#7a8c94]">{product.description}</p>}
+      {product.specs.length>0&&<div className="mt-8 grid grid-cols-2 gap-3">{product.specs.slice(0,4).map(([label,value])=><div key={label} className="min-h-[88px] border border-[#dfe8e4] bg-[#fafcfb] p-4"><div className="text-[9px] font-black uppercase tracking-[.1em] text-[#82948c]">{label}</div><div className="mt-2 text-[13px] font-black leading-5 text-[#17313d]">{value}</div></div>)}</div>}
+      <div className="mt-7 flex flex-wrap gap-2"><span className="rounded-full border border-[#d7e6df] bg-[#eff8f3] px-3 py-1.5 text-[9px] font-black uppercase tracking-[.1em] text-[#197456]">{commercialLabel(product)}</span>{product.availability&&<span className="rounded-full border border-[#dfe7e3] bg-[#f7f9f8] px-3 py-1.5 text-[9px] font-black uppercase tracking-[.1em] text-[#63776f]">{product.availability}</span>}</div>
+      {product.dealerPriceProtected&&<div className="mt-7 overflow-hidden rounded-xl border border-[#e8d8aa] bg-[#fffaf0]"><div className="border-b border-[#eadfbd] bg-[#fff5d9] px-5 py-4"><div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[.08em] text-[#a66f00]"><Icon name="lock" className="h-4 w-4"/>Dealer Commercial Access</div></div><div className="p-5"><div className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8b8064]">Dealer Price</div><div className="mt-1 text-2xl font-black text-[#17313d]">Login to View Pricing</div><p className="mt-3 text-[12px] leading-6 text-[#776e58]">Commercial pricing and applicable dealer information are available only to approved dealer accounts.</p><div className="mt-5 grid gap-2 sm:grid-cols-2"><Link href="/dealer/login" className="flex h-11 items-center justify-center bg-[#0a9c63] px-5 text-[10px] font-black uppercase text-white">Dealer Login →</Link><Link href="/dealer/apply" className="flex h-11 items-center justify-center border border-[#0a9c63] px-5 text-[10px] font-black uppercase text-[#0a9c63]">Apply for Access</Link></div></div></div>}
+      <div className="mt-4 border border-[#dfe8e4] bg-[#f8faf9] p-5"><div className="text-[10px] font-black uppercase tracking-[.12em] text-[#0a9c63]">Commercial Requirement</div><h3 className="mt-2 text-base font-black">{commercialLabel(product)}</h3><p className="mt-2 text-[11px] leading-5 text-[#6f838b]">Request a formal quotation for commercial terms, quantity, delivery and project-specific requirements.</p><Link href="/contact#rfq" className="mt-4 flex h-11 w-full items-center justify-between bg-[#071f2c] px-5 text-[10px] font-black uppercase text-white"><span>Request Formal Quotation</span><Icon name="arrow" className="h-4 w-4"/></Link></div>
+    </div></div></section>
+
+    <section className="bg-[#f5f8f6] py-20"><div className="container-shell grid gap-8 lg:grid-cols-[1.2fr_.8fr]"><div className="space-y-7"><div className="rounded-xl border border-[#dfe8e4] bg-white p-7"><div className="eyebrow">Product Overview</div><h2 className="mt-3 text-2xl font-black">{product.name}</h2><p className="mt-5 text-sm leading-8 text-[#687c85]">{product.description || product.summary}</p><div className="mt-7 border-l-4 border-[#0a9c63] bg-[#f2f8f5] px-5 py-4"><div className="text-[10px] font-black uppercase text-[#0a9c63]">Product System</div><div className="mt-1 text-sm font-black">{category.name}</div><p className="mt-2 text-xs leading-6 text-[#73868d]">{category.summary}</p></div></div><div id="specifications" className="scroll-mt-28 rounded-xl border border-[#dfe8e4] bg-white p-7"><div className="flex items-end justify-between gap-4"><div><div className="eyebrow">Technical Data</div><h2 className="mt-2 text-2xl font-black">Technical Specifications</h2></div><span className="text-[10px] font-bold uppercase text-[#899990]">{product.specs.length} specifications</span></div>{product.specs.length?<div className="mt-6 overflow-hidden border border-[#dfe8e4]">{product.specs.map(([label,value],i)=><div key={`${label}-${value}`} className={`grid gap-2 px-5 py-4 sm:grid-cols-[.42fr_.58fr] ${i!==product.specs.length-1?"border-b border-[#e5ece8]":""} ${i%2===0?"bg-[#fafcfb]":"bg-white"}`}><div className="text-[11px] font-black text-[#536b75]">{label}</div><div className="text-[12px] font-bold leading-6 text-[#1e3741]">{value}</div></div>)}</div>:<div className="mt-6 rounded-lg border border-[#dfe8e4] bg-[#fafcfb] p-5 text-xs leading-6 text-[#71858d]">Detailed specifications have not yet been supplied in the client technical material. Contact Dingsheng Energy for product-specific information.</div>}</div></div>
+      <aside className="space-y-6"><div className="rounded-xl border border-[#dfe8e4] bg-white p-6"><Icon name="factory" className="h-7 w-7 text-[#0a9c63]"/><div className="eyebrow mt-5">Applications</div><div className="mt-4 flex flex-wrap gap-2">{(product.applications?.length?product.applications:[category.name]).map((item)=><span key={item} className="pill">{item}</span>)}</div></div><div className="rounded-xl border border-[#dfe8e4] bg-white p-6"><Icon name="shield" className="h-7 w-7 text-[#0a9c63]"/><div className="eyebrow mt-5">Standards / References</div><p className="mt-3 text-[11px] leading-6 text-[#71838b]">Displayed standards are product-specific references from supplied technical material, not company-wide certifications.</p><div className="mt-4 grid gap-2">{product.standards?.length?product.standards.map((standard)=><div key={standard} className="flex items-center gap-3 border border-[#dfe8e4] bg-[#f8fbf9] px-4 py-3 text-[11px] font-black"><Icon name="check" className="h-4 w-4 text-[#0a9c63]"/>{standard}</div>):<div className="border border-[#e1e8e4] bg-[#fafcfb] p-4 text-[11px] text-[#75878f]">Product-specific standard information has not yet been provided.</div>}</div></div><div className="rounded-xl border border-[#dfe8e4] bg-white p-6"><Icon name="download" className="h-7 w-7 text-[#0a9c63]"/><div className="eyebrow mt-5">Product Downloads</div>{product.publicDownloads?.length?<div className="mt-4 grid gap-2">{product.publicDownloads.map((url)=><a key={url} href={url} target="_blank" className="flex items-center justify-between border border-[#d9e7df] bg-[#eff8f3] px-4 py-3 text-[11px] font-black"><span>Public document</span><span>Open →</span></a>)}</div>:<div className="mt-4 border border-[#dfe8e4] bg-[#fafcfb] p-4 text-[11px] leading-6 text-[#71838b]">Public product documents have not yet been added.</div>}<div className="mt-3 border border-[#eadfbd] bg-[#fff9e9] p-4"><div className="flex items-center gap-2 text-[11px] font-black text-[#9a6900]"><Icon name="lock" className="h-4 w-4"/>Dealer Resources</div><p className="mt-2 text-[10px] leading-5 text-[#81765d]">Protected commercial documents require an approved dealer account.</p></div></div><div className="rounded-xl bg-[#071f2c] p-6 text-white"><Icon name="handshake" className="h-8 w-8 text-[#4fdba4]"/><h3 className="mt-5 text-lg font-black">Need Technical Assistance?</h3><p className="mt-3 text-[11px] leading-6 text-white/60">Contact Dingsheng Energy with operating conditions, project scope or equipment requirements.</p><Link href="/contact" className="mt-5 flex h-10 items-center justify-between border border-white/20 px-4 text-[10px] font-black uppercase">Contact Our Team <Icon name="arrow" className="h-4 w-4"/></Link></div></aside></div></section>
+
+    {related.length>0&&<section className="section bg-white"><div className="container-shell"><div className="flex items-end justify-between gap-5"><div><div className="eyebrow">Related Equipment</div><h2 className="h2 mt-3">Related Products</h2></div><Link href={`/products/${category.slug}`} className="text-xs font-black uppercase text-[#0a9c63]">View {category.shortName || category.name} →</Link></div><div className="grid-4 mt-9">{related.map((item)=><ProductCard key={item.slug} product={item} contextCategorySlug={category.slug}/>)}</div></div></section>}
+    <section className="section-sm soft-section"><div className="container-shell"><Callout title={`Interested in ${product.name}?`} copy="Share technical, commercial or project requirements with Dingsheng Energy for product selection and quotation support."/></div></section>
+  </PublicShell>;
+}
