@@ -103,6 +103,9 @@ export function RfqManager({
   const [workingId, setWorkingId] = useState<
     string | null
   >(null);
+  const [deletingId, setDeletingId] = useState<
+  string | null
+>(null);
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -152,6 +155,69 @@ export function RfqManager({
       setWorkingId(null);
     }
   }
+
+  async function deleteRfq(
+  rfq: Rfq,
+) {
+  if (
+    rfq.status !== "REJECTED"
+  ) {
+    setError(
+      "Reject this RFQ before permanently deleting it.",
+    );
+
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Permanently delete RFQ ${rfq.reference}?\n\nThis will remove the RFQ and its requested product items. This action cannot be undone.`,
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setDeletingId(rfq.id);
+  setMessage("");
+  setError("");
+
+  try {
+    const response = await fetch(
+      `/api/admin/rfqs/${encodeURIComponent(
+        rfq.id,
+      )}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    const result =
+      await response
+        .json()
+        .catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+          "Unable to delete RFQ.",
+      );
+    }
+
+    setMessage(
+      `${result.deleted.reference} was permanently deleted.`,
+    );
+
+    router.refresh();
+  } catch (deleteError) {
+    setError(
+      deleteError instanceof Error
+        ? deleteError.message
+        : "Unable to delete RFQ.",
+    );
+  } finally {
+    setDeletingId(null);
+  }
+}
 
   if (!rfqs.length) {
     return (
@@ -339,7 +405,10 @@ export function RfqManager({
 
               <select
                 value={selectedStatuses[rfq.id]}
-                disabled={workingId === rfq.id}
+                disabled={
+                  workingId === rfq.id ||
+                  deletingId === rfq.id
+                }
                 onChange={(event) =>
                   setSelectedStatuses((current) => ({
                     ...current,
@@ -361,7 +430,10 @@ export function RfqManager({
 
               <button
                 type="button"
-                disabled={workingId === rfq.id}
+                disabled={
+                  workingId === rfq.id ||
+                  deletingId === rfq.id
+                }
                 onClick={() =>
                   updateStatus(rfq.id)
                 }
@@ -371,6 +443,29 @@ export function RfqManager({
                   ? "Updating RFQ..."
                   : "Update RFQ Status"}
               </button>
+
+              {rfq.status === "REJECTED" ? (
+                <button
+                  type="button"
+                  disabled={
+                    workingId === rfq.id ||
+                    deletingId === rfq.id
+                  }
+                  onClick={() =>
+                    void deleteRfq(rfq)
+                  }
+                  className="mt-3 w-full rounded-md border border-red-200 bg-white px-4 py-3 text-xs font-black text-red-600 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {deletingId === rfq.id
+                    ? "Deleting RFQ..."
+                    : "Delete RFQ Permanently"}
+                </button>
+              ) : (
+                <div className="mt-3 rounded-md border border-[#eadfbd] bg-[#fffaf0] p-3 text-[10px] leading-5 text-[#81765d]">
+                  Reject this RFQ before permanent deletion becomes
+                  available.
+                </div>
+              )}
 
               <div className="mt-5 rounded-lg border border-[#dfe8e4] bg-[#f8fbf9] p-4 text-xs leading-6 text-[#657983]">
                 <strong>Dealer contact</strong>

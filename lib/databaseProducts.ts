@@ -892,61 +892,21 @@ export async function applyProductBulkAction(
               featured: false,
             };
 
-  await prisma.product.updateMany({
-    where: {
-      slug: {
-        in: foundSlugs,
+  const databaseUpdateResult =
+    await prisma.product.updateMany({
+      where: {
+        slug: {
+          in: foundSlugs,
+        },
       },
-    },
 
-    data: databaseUpdate,
-  });
+      data: databaseUpdate,
+    });
 
-  catalog.products =
-    catalog.products.map(
-      (product) => {
-        if (
-          !foundSlugs.includes(
-            product.slug,
-          )
-        ) {
-          return product;
-        }
-
-        switch (action) {
-          case "activate":
-            return {
-              ...product,
-              active: true,
-            };
-
-          case "hide":
-            return {
-              ...product,
-              active: false,
-            };
-
-          case "feature":
-            return {
-              ...product,
-              featured: true,
-            };
-
-          case "unfeature":
-            return {
-              ...product,
-              featured: false,
-            };
-        }
-      },
-    );
-
-  await writeCatalog(catalog);
-
-  return {
+    return {
     action,
     affected:
-      foundSlugs.length,
+      databaseUpdateResult.count,
     slugs: foundSlugs,
   };
 }

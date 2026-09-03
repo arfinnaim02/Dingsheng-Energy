@@ -42,6 +42,7 @@ export default async function EditProductPage({
   ] = await Promise.all([
     getProduct(slug, {
       includeProtected: true,
+      activeOnly: false,
     }),
 
     getCategories(),

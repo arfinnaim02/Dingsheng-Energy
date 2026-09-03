@@ -4,11 +4,15 @@ import Link from "next/link";
 type BrandProps = {
   inverse?: boolean;
   compact?: boolean;
+  href?: string;
+  ariaLabel?: string;
 };
 
 export function Brand({
   inverse = false,
   compact = false,
+  href = "/",
+  ariaLabel = "Dingsheng Energy Limited home",
 }: BrandProps) {
   const logoSize = compact
     ? 38
@@ -16,8 +20,8 @@ export function Brand({
 
   return (
     <Link
-      href="/"
-      aria-label="Dingsheng Energy Limited home"
+      href={href}
+      aria-label={ariaLabel}
       className="flex shrink-0 items-center gap-3"
     >
       <span

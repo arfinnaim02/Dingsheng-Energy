@@ -14,7 +14,11 @@ import {
   enrichProductsWithDatabasePricing,
   getDatabasePriceGroups,
   updateDatabasePricing,
-} from "@/lib/databasePricing";
+} 
+
+from "@/lib/databasePricing";
+
+import { prisma } from "@/lib/prisma";
 
 const DEFAULT_PATH = path.join(
   process.cwd(),
@@ -191,6 +195,60 @@ function publicProduct(
     dealerDownloads: [],
   };
 }
+async function applyDatabaseProductState(
+  products: Product[],
+): Promise<Product[]> {
+  if (!products.length) {
+    return products;
+  }
+
+  const databaseProducts =
+    await prisma.product.findMany({
+      where: {
+        slug: {
+          in: products.map(
+            (product) => product.slug,
+          ),
+        },
+      },
+
+      select: {
+        slug: true,
+        isActive: true,
+        featured: true,
+      },
+    });
+
+  const stateBySlug = new Map(
+    databaseProducts.map(
+      (product) => [
+        product.slug,
+        product,
+      ],
+    ),
+  );
+
+  return products.map((product) => {
+    const databaseState =
+      stateBySlug.get(product.slug);
+
+    /*
+     * Keep the JSON value for legacy products that
+     * have not yet been synchronized with Neon.
+     */
+    if (!databaseState) {
+      return product;
+    }
+
+    return {
+      ...product,
+      active:
+        databaseState.isActive,
+      featured:
+        databaseState.featured,
+    };
+  });
+}
 
 export async function getProducts(options?: {
   activeOnly?: boolean;
@@ -199,7 +257,9 @@ export async function getProducts(options?: {
   includeProtected?: boolean;
 }): Promise<Product[]> {
   let products =
-    (await readCatalog()).products;
+    await applyDatabaseProductState(
+      (await readCatalog()).products,
+    );
 
   if (options?.activeOnly !== false) {
     products = products.filter(
@@ -209,10 +269,11 @@ export async function getProducts(options?: {
   }
 
   if (options?.categorySlug) {
-    products = products.filter((product) =>
-      product.categorySlugs.includes(
-        options.categorySlug!,
-      ),
+    products = products.filter(
+      (product) =>
+        product.categorySlugs.includes(
+          options.categorySlug!,
+        ),
     );
   }
 
@@ -236,15 +297,42 @@ export async function getProduct(
   slug: string,
   options?: {
     includeProtected?: boolean;
+    activeOnly?: boolean;
   },
 ): Promise<Product | undefined> {
-  const product = (
+  const catalogProduct = (
     await readCatalog()
   ).products.find(
-    (item) => item.slug === slug,
+    (item) =>
+      item.slug === slug,
   );
 
-  if (!product) return undefined;
+  if (!catalogProduct) {
+    return undefined;
+  }
+
+  const [product] =
+    await applyDatabaseProductState([
+      catalogProduct,
+    ]);
+
+  if (!product) {
+    return undefined;
+  }
+
+  /*
+   * Public and dealer product pages cannot open a
+   * hidden product directly through its old URL.
+   *
+   * Admin pages can explicitly request:
+   * activeOnly: false
+   */
+  if (
+    options?.activeOnly !== false &&
+    product.active === false
+  ) {
+    return undefined;
+  }
 
   if (options?.includeProtected) {
     const [enrichedProduct] =

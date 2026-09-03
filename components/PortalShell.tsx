@@ -141,10 +141,20 @@ export function PortalShell({
   return (
     <div className="sidebar-shell portal-grid">
       <aside className="portal-side">
-        <Brand
-          inverse
-          compact
-        />
+      <Brand
+        inverse
+        compact
+        href={
+          admin
+            ? "/admin"
+            : "/dealer/dashboard"
+        }
+        ariaLabel={
+          admin
+            ? "Return to admin dashboard"
+            : "Return to dealer dashboard"
+        }
+      />
 
         <div className="mt-6 text-[10px] font-extrabold uppercase tracking-[.16em] text-white/35">
           {admin
@@ -181,9 +191,12 @@ export function PortalShell({
             method="post"
             className="mt-3"
           >
-            <button className="text-xs font-bold text-white/45 hover:text-white">
-              Sign out
-            </button>
+          <button
+            type="submit"
+            className="w-full rounded-md border border-white/15 px-4 py-2.5 text-left text-xs font-bold text-white/65 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+          >
+            Sign out
+          </button>
           </form>
         ) : (
           <form
@@ -191,9 +204,12 @@ export function PortalShell({
             method="post"
             className="mt-3"
           >
-            <button className="text-xs font-bold text-white/45 hover:text-white">
-              Sign out
-            </button>
+          <button
+            type="submit"
+            className="w-full rounded-md border border-white/15 px-4 py-2.5 text-left text-xs font-bold text-white/65 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+          >
+            Sign out
+          </button>
           </form>
         )}
       </aside>

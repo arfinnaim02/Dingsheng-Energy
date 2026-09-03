@@ -1,8 +1,37 @@
-import { NextResponse } from "next/server";
-import { dealerCookie, dealerCookieConfig } from "@/lib/dealerAuth";
+import {
+  NextResponse,
+} from "next/server";
 
-export async function POST(request: Request) {
-  const store = await dealerCookie();
-  store.set(dealerCookieConfig.name, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
-  return NextResponse.redirect(new URL("/dealer/login", request.url), 303);
+import {
+  dealerCookieConfig,
+} from "@/lib/dealerAuth";
+
+export async function POST(
+  request: Request,
+) {
+  const response =
+    NextResponse.redirect(
+      new URL("/", request.url),
+      {
+        status: 303,
+      },
+    );
+
+  response.cookies.set({
+    name:
+      dealerCookieConfig.name,
+
+    value: "",
+    httpOnly: true,
+    secure:
+      process.env.NODE_ENV ===
+      "production",
+
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(0),
+    maxAge: 0,
+  });
+
+  return response;
 }
