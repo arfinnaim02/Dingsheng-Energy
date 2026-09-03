@@ -14,6 +14,9 @@ import {
   prisma,
 } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 export async function POST() {
   const dealer =
     await getCurrentDealer();

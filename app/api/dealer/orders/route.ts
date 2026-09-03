@@ -27,6 +27,10 @@ import {
   productForDealerGroup,
 } from "@/lib/pricing";
 
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 type CheckoutItem = {
   slug?: string;
   quantity?: number;

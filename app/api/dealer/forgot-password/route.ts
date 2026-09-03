@@ -10,6 +10,9 @@ import {
   prisma,
 } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 type RequestBody = {
   email?: string;
 };

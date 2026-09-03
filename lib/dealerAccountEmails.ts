@@ -70,11 +70,22 @@ function transporter(
   appPassword: string,
 ) {
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
 
     auth: {
       user,
       pass: appPassword,
+    },
+
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+
+    tls: {
+      servername: "smtp.gmail.com",
+      minVersion: "TLSv1.2",
     },
   });
 }
