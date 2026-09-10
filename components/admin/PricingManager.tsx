@@ -5,11 +5,13 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useRouter } from "next/navigation";
+
+import {
+  useRouter,
+} from "next/navigation";
 
 import type {
   DealerPortalSettings,
-  DealerPrice,
   PriceGroup,
   Product,
 } from "@/data/site";
@@ -20,32 +22,99 @@ type Props = {
   dealerPortal: DealerPortalSettings;
 };
 
+type ProductBasePricing = {
+  basePrice?: number;
+  baseCurrency: string;
+  minimumQty?: number;
+  leadTimeText?: string;
+  pricingNote?: string;
+};
+
 function parseOptionalNumber(
   value: string,
 ): number | undefined {
-  if (!value.trim()) return undefined;
+  if (!value.trim()) {
+    return undefined;
+  }
 
-  const parsed = Number(value);
+  const parsed =
+    Number(value);
 
-  return Number.isFinite(parsed)
+  return Number.isFinite(
+    parsed,
+  )
     ? parsed
     : undefined;
+}
+
+function roundMoney(
+  value: number,
+) {
+  return (
+    Math.round(
+      (value +
+        Number.EPSILON) *
+        100,
+    ) / 100
+  );
+}
+
+function calculatedPrice(
+  basePrice:
+    | number
+    | undefined,
+  discountPercent:
+    | number
+    | undefined,
+) {
+  if (
+    typeof basePrice !==
+      "number" ||
+    !Number.isFinite(
+      basePrice,
+    )
+  ) {
+    return undefined;
+  }
+
+  const discount =
+    typeof discountPercent ===
+      "number" &&
+    Number.isFinite(
+      discountPercent,
+    )
+      ? discountPercent
+      : 0;
+
+  return roundMoney(
+    basePrice *
+      (1 -
+        discount /
+          100),
+  );
 }
 
 export function PricingManager({
   initialGroups,
   products,
-  dealerPortal: initialPortal,
+  dealerPortal:
+    initialPortal,
 }: Props) {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [groups, setGroups] = useState<
-    PriceGroup[]
-  >(structuredClone(initialGroups));
+  const [groups, setGroups] =
+    useState<PriceGroup[]>(
+      structuredClone(
+        initialGroups,
+      ),
+    );
 
   const [dealerPortal] =
     useState<DealerPortalSettings>(
-      structuredClone(initialPortal),
+      structuredClone(
+        initialPortal,
+      ),
     );
 
   const initialSelectedGroup =
@@ -53,247 +122,309 @@ export function PricingManager({
       (group) =>
         group.slug ===
           initialPortal.demoPriceGroupSlug &&
-        group.active !== false,
+        group.active !==
+          false,
     ) ??
     initialGroups.find(
       (group) =>
-        group.active !== false,
+        group.active !==
+        false,
     ) ??
     initialGroups[0];
 
-  const [selectedGroup, setSelectedGroup] =
-    useState(
-      initialSelectedGroup?.slug ??
-        "standard",
-    );
+  const [
+    selectedGroup,
+    setSelectedGroup,
+  ] = useState(
+    initialSelectedGroup?.slug ??
+      "standard",
+  );
 
-  const [prices, setPrices] = useState<
-    Record<string, DealerPrice[]>
+  const [
+    basePricing,
+    setBasePricing,
+  ] = useState<
+    Record<
+      string,
+      ProductBasePricing
+    >
   >(
     Object.fromEntries(
-      products.map((product) => [
-        product.slug,
+      products.map(
+        (product) => [
+          product.slug,
 
-        structuredClone(
-          product.dealerPrices ?? [],
-        ),
-      ]),
+          {
+            basePrice:
+              product.basePrice,
+
+            baseCurrency:
+              product.baseCurrency ||
+              "USD",
+
+            minimumQty:
+              product.minimumQty,
+
+            leadTimeText:
+              product.leadTimeText,
+
+            pricingNote:
+              product.pricingNote,
+          },
+        ],
+      ),
     ),
   );
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
+
   const [saving, setSaving] =
     useState(false);
+
   const [message, setMessage] =
     useState("");
+
   const [error, setError] =
     useState("");
 
-  const activeGroups = groups.filter(
-    (group) =>
-      group.active !== false,
-  );
-
-  const visibleProducts = useMemo(() => {
-    const query =
-      search.trim().toLowerCase();
-
-    if (!query) return products;
-
-    return products.filter((product) =>
-      [
-        product.name,
-        product.slug,
-        product.sku,
-        product.subcategory,
-        product.summary,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
+  const activeGroups =
+    groups.filter(
+      (group) =>
+        group.active !==
+        false,
     );
-  }, [products, search]);
 
-  function currentPrice(
-    productSlug: string,
-    groupSlug = selectedGroup,
-  ): DealerPrice {
-    return (
-      prices[productSlug]?.find(
-        (price) =>
-          price.priceGroupSlug ===
-          groupSlug,
-      ) ?? {
-        priceGroupSlug: groupSlug,
-        currency: "USD",
-      }
+  const selectedGroupData =
+    groups.find(
+      (group) =>
+        group.slug ===
+        selectedGroup,
     );
-  }
 
-  function patchPrice(
-    productSlug: string,
-    key: keyof DealerPrice,
-    value: string,
-  ) {
-    setPrices((current) => {
-      const next =
-        structuredClone(current);
+  const visibleProducts =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
 
-      const productPrices = [
-        ...(next[productSlug] ?? []),
-      ];
-
-      const index =
-        productPrices.findIndex(
-          (price) =>
-            price.priceGroupSlug ===
-            selectedGroup,
-        );
-
-      const row: DealerPrice =
-        index >= 0
-          ? {
-              ...productPrices[index],
-            }
-          : {
-              priceGroupSlug:
-                selectedGroup,
-              currency: "USD",
-            };
-
-      if (
-        key === "amount" ||
-        key === "minimumQty"
-      ) {
-        row[key] =
-          parseOptionalNumber(value);
-      } else {
-        row[key] = value;
+      if (!query) {
+        return products;
       }
 
-      if (index >= 0) {
-        productPrices[index] = row;
-      } else {
-        productPrices.push(row);
-      }
-
-      next[productSlug] =
-        productPrices;
-
-      return next;
-    });
-  }
+      return products.filter(
+        (product) =>
+          [
+            product.name,
+            product.slug,
+            product.sku,
+            product.subcategory,
+            product.summary,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase()
+            .includes(query),
+      );
+    }, [
+      products,
+      search,
+    ]);
 
   function patchGroup(
     index: number,
     key: keyof PriceGroup,
-    value: string | boolean,
+    value:
+      | string
+      | boolean
+      | number,
   ) {
-    setGroups((current) =>
-      current.map(
-        (group, groupIndex) =>
-          groupIndex === index
-            ? {
-                ...group,
-                [key]: value,
-              }
-            : group,
-      ),
+    setGroups(
+      (current) =>
+        current.map(
+          (
+            group,
+            groupIndex,
+          ) =>
+            groupIndex ===
+            index
+              ? {
+                  ...group,
+                  [key]:
+                    value,
+                }
+              : group,
+        ),
+    );
+  }
+
+  function patchBasePrice(
+    productSlug: string,
+    key:
+      keyof ProductBasePricing,
+    value: string,
+  ) {
+    setBasePricing(
+      (current) => {
+        const existing =
+          current[
+            productSlug
+          ] ?? {
+            baseCurrency:
+              "USD",
+          };
+
+        const next = {
+          ...existing,
+        };
+
+        if (
+          key ===
+            "basePrice" ||
+          key ===
+            "minimumQty"
+        ) {
+          next[key] =
+            parseOptionalNumber(
+              value,
+            );
+        } else if (
+          key ===
+          "baseCurrency"
+        ) {
+          next.baseCurrency =
+            value.toUpperCase();
+        } else {
+          next[key] =
+            value;
+        }
+
+        return {
+          ...current,
+
+          [productSlug]:
+            next,
+        };
+      },
     );
   }
 
   function addGroup() {
-    let suffix = groups.length + 1;
-    let slug = `custom-${suffix}`;
+    let suffix =
+      groups.length +
+      1;
+
+    let slug =
+      `custom-${suffix}`;
 
     while (
       groups.some(
         (group) =>
-          group.slug === slug,
+          group.slug ===
+          slug,
       )
     ) {
       suffix += 1;
-      slug = `custom-${suffix}`;
+
+      slug =
+        `custom-${suffix}`;
     }
 
-    const newGroup: PriceGroup = {
+    const newGroup:
+      PriceGroup = {
       slug,
-      name: `Custom ${suffix}`,
+
+      name:
+        `Custom ${suffix}`,
+
       description: "",
+
+      discountPercent:
+        0,
+
       active: true,
     };
 
-    setGroups((current) => [
-      ...current,
-      newGroup,
-    ]);
+    setGroups(
+      (current) => [
+        ...current,
+        newGroup,
+      ],
+    );
 
-    setSelectedGroup(newGroup.slug);
+    setSelectedGroup(
+      newGroup.slug,
+    );
+
     setMessage("");
     setError("");
   }
 
-  function deleteGroup(index: number) {
-    const group = groups[index];
+  function deleteGroup(
+    index: number,
+  ) {
+    const group =
+      groups[index];
 
-    if (!group) return;
+    if (!group) {
+      return;
+    }
 
-    if (groups.length <= 1) {
+    if (
+      groups.length <= 1
+    ) {
       setError(
         "At least one price group must remain.",
       );
 
       setMessage("");
+
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete the "${group.name}" price group?\n\nThis removes its configured product prices. A group assigned to a dealer cannot be deleted until those dealers are reassigned.`,
-    );
+    const confirmed =
+      window.confirm(
+        `Delete the "${group.name}" price group?\n\nDealers assigned to this group must be reassigned before deletion.`,
+      );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     const remainingGroups =
       groups.filter(
-        (_, groupIndex) =>
-          groupIndex !== index,
+        (
+          _,
+          groupIndex,
+        ) =>
+          groupIndex !==
+          index,
       );
 
-    setGroups(remainingGroups);
-
-    setPrices((current) =>
-      Object.fromEntries(
-        Object.entries(current).map(
-          ([
-            productSlug,
-            productPrices,
-          ]) => [
-            productSlug,
-
-            productPrices.filter(
-              (price) =>
-                price.priceGroupSlug !==
-                group.slug,
-            ),
-          ],
-        ),
-      ),
+    setGroups(
+      remainingGroups,
     );
 
     if (
-      selectedGroup === group.slug
+      selectedGroup ===
+      group.slug
     ) {
       const replacement =
         remainingGroups.find(
-          (remainingGroup) =>
+          (
+            remainingGroup,
+          ) =>
             remainingGroup.active !==
             false,
-        ) ?? remainingGroups[0];
+        ) ??
+        remainingGroups[0];
 
-      setSelectedGroup(
-        replacement.slug,
-      );
+      if (replacement) {
+        setSelectedGroup(
+          replacement.slug,
+        );
+      }
     }
 
     setError("");
@@ -307,16 +438,24 @@ export function PricingManager({
     index: number,
     active: boolean,
   ) {
-    const group = groups[index];
+    const group =
+      groups[index];
 
-    if (!group) return;
+    if (!group) {
+      return;
+    }
 
     if (
       !active &&
       groups.filter(
-        (candidate, candidateIndex) =>
-          candidateIndex !== index &&
-          candidate.active !== false,
+        (
+          candidate,
+          candidateIndex,
+        ) =>
+          candidateIndex !==
+            index &&
+          candidate.active !==
+            false,
       ).length === 0
     ) {
       setError(
@@ -334,13 +473,20 @@ export function PricingManager({
 
     if (
       !active &&
-      selectedGroup === group.slug
+      selectedGroup ===
+        group.slug
     ) {
-      const replacement = groups.find(
-        (candidate, candidateIndex) =>
-          candidateIndex !== index &&
-          candidate.active !== false,
-      );
+      const replacement =
+        groups.find(
+          (
+            candidate,
+            candidateIndex,
+          ) =>
+            candidateIndex !==
+              index &&
+            candidate.active !==
+              false,
+        );
 
       if (replacement) {
         setSelectedGroup(
@@ -362,13 +508,15 @@ export function PricingManager({
     setError("");
 
     const normalizedNames =
-      groups.map((group) =>
-        group.name.trim(),
+      groups.map(
+        (group) =>
+          group.name.trim(),
       );
 
     if (
       normalizedNames.some(
-        (name) => !name,
+        (name) =>
+          !name,
       )
     ) {
       setError(
@@ -376,14 +524,17 @@ export function PricingManager({
       );
 
       setSaving(false);
+
       return;
     }
 
-    const uniqueNames = new Set(
-      normalizedNames.map((name) =>
-        name.toLowerCase(),
-      ),
-    );
+    const uniqueNames =
+      new Set(
+        normalizedNames.map(
+          (name) =>
+            name.toLowerCase(),
+        ),
+      );
 
     if (
       uniqueNames.size !==
@@ -394,13 +545,41 @@ export function PricingManager({
       );
 
       setSaving(false);
+
       return;
+    }
+
+    for (
+      const group of groups
+    ) {
+      const discount =
+        Number(
+          group.discountPercent ??
+            0,
+        );
+
+      if (
+        !Number.isFinite(
+          discount,
+        ) ||
+        discount < 0 ||
+        discount > 100
+      ) {
+        setError(
+          `Discount for "${group.name}" must be between 0% and 100%.`,
+        );
+
+        setSaving(false);
+
+        return;
+      }
     }
 
     if (
       !groups.some(
         (group) =>
-          group.active !== false,
+          group.active !==
+          false,
       )
     ) {
       setError(
@@ -408,38 +587,53 @@ export function PricingManager({
       );
 
       setSaving(false);
+
       return;
     }
 
     try {
-      const response = await fetch(
-        "/api/admin/pricing",
-        {
-          method: "PUT",
+      const response =
+        await fetch(
+          "/api/admin/pricing",
+          {
+            method: "PUT",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            priceGroups: groups,
-            dealerPortal: {
-              ...dealerPortal,
-
-              demoPriceGroupSlug:
-                selectedGroup,
+            headers: {
+              "Content-Type":
+                "application/json",
             },
 
-            productPrices: prices,
-          }),
-        },
-      );
+            body:
+              JSON.stringify(
+                {
+                  priceGroups:
+                    groups,
+
+                  dealerPortal:
+                    {
+                      ...dealerPortal,
+
+                      demoPriceGroupSlug:
+                        selectedGroup,
+                    },
+
+                  productBasePrices:
+                    basePricing,
+                },
+              ),
+          },
+        );
 
       const result =
-        await response.json();
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
         throw new Error(
           result.error ||
             "Unable to save pricing.",
@@ -447,14 +641,17 @@ export function PricingManager({
       }
 
       setMessage(
-        "Dealer pricing saved to Neon. Dealer products, cart and checkout now use the updated values.",
+        "Base prices and dealer tier discounts saved to Neon. Dealer prices are now calculated automatically.",
       );
 
       router.refresh();
-    } catch (error) {
+    } catch (
+      saveError
+    ) {
       setError(
-        error instanceof Error
-          ? error.message
+        saveError instanceof
+          Error
+          ? saveError.message
           : "Unable to save pricing.",
       );
     } finally {
@@ -475,15 +672,17 @@ export function PricingManager({
             </div>
 
             <h2 className="mt-2 text-xl font-black">
-              Price groups and protected dealer
-              pricing
+              Price groups &
+              automatic discounts
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#71838b]">
-              Create, edit, select, disable or
-              delete dealer price groups. Neon is
-              the authoritative source for all
-              protected prices.
+              Each product has one
+              base price. Dealer
+              prices are calculated
+              automatically from the
+              discount assigned to
+              each price group.
             </p>
           </div>
 
@@ -498,10 +697,13 @@ export function PricingManager({
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {groups.map(
-            (group, index) => (
+            (
+              group,
+              index,
+            ) => (
               <div
                 key={`${group.slug}-${index}`}
-                className={`rounded-xl border bg-[#fafcfb] p-5 transition ${
+                className={`rounded-xl border bg-[#fafcfb] p-5 ${
                   selectedGroup ===
                   group.slug
                     ? "border-[#0a9c63] ring-2 ring-[#0a9c63]/15"
@@ -522,12 +724,14 @@ export function PricingManager({
 
                   <span
                     className={
-                      group.active !== false
+                      group.active !==
+                      false
                         ? "rounded-full bg-[#e7f7ef] px-3 py-1 text-[10px] font-black uppercase text-[#087a50]"
                         : "rounded-full bg-[#eef1f2] px-3 py-1 text-[10px] font-black uppercase text-[#657983]"
                     }
                   >
-                    {group.active !== false
+                    {group.active !==
+                    false
                       ? "Active"
                       : "Inactive"}
                   </span>
@@ -540,28 +744,75 @@ export function PricingManager({
                     </label>
 
                     <input
-                      value={group.name}
-                      onChange={(event) =>
+                      value={
+                        group.name
+                      }
+                      onChange={(
+                        event,
+                      ) =>
                         patchGroup(
                           index,
                           "name",
-                          event.target.value,
+                          event
+                            .target
+                            .value,
                         )
                       }
                     />
                   </div>
 
                   <div className="field">
-                    <label>Slug</label>
+                    <label>
+                      Slug
+                    </label>
 
                     <input
-                      value={group.slug}
+                      value={
+                        group.slug
+                      }
                       readOnly
                       className="!bg-[#f1f5f3] !text-[#7a8d84]"
                     />
                   </div>
 
-                  <div className="field sm:col-span-2">
+                  <div className="field">
+                    <label>
+                      Dealer
+                      discount %
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={
+                        group.discountPercent ??
+                        0
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        patchGroup(
+                          index,
+                          "discountPercent",
+                          Number(
+                            event
+                              .target
+                              .value,
+                          ),
+                        )
+                      }
+                    />
+
+                    <small className="text-[10px] text-[#82938c]">
+                      Example: 7.5 =
+                      7.5% below base
+                      price.
+                    </small>
+                  </div>
+
+                  <div className="field">
                     <label>
                       Description
                     </label>
@@ -571,11 +822,15 @@ export function PricingManager({
                         group.description ??
                         ""
                       }
-                      onChange={(event) =>
+                      onChange={(
+                        event,
+                      ) =>
                         patchGroup(
                           index,
                           "description",
-                          event.target.value,
+                          event
+                            .target
+                            .value,
                         )
                       }
                     />
@@ -587,12 +842,17 @@ export function PricingManager({
                     <input
                       type="checkbox"
                       checked={
-                        group.active !== false
+                        group.active !==
+                        false
                       }
-                      onChange={(event) =>
+                      onChange={(
+                        event,
+                      ) =>
                         changeGroupActive(
                           index,
-                          event.target.checked,
+                          event
+                            .target
+                            .checked,
                         )
                       }
                     />
@@ -603,33 +863,36 @@ export function PricingManager({
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
+                      disabled={
+                        group.active ===
+                        false
+                      }
                       onClick={() =>
                         setSelectedGroup(
                           group.slug,
                         )
                       }
-                      disabled={
-                        group.active === false
-                      }
                       className={
                         selectedGroup ===
                         group.slug
                           ? "rounded-md bg-[#0a9c63] px-3 py-2 text-[10px] font-black uppercase tracking-[.06em] text-white"
-                          : "rounded-md border border-[#cfe1d9] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[.06em] text-[#0a9c63] disabled:cursor-not-allowed disabled:opacity-40"
+                          : "rounded-md border border-[#cfe1d9] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[.06em] text-[#0a9c63] disabled:opacity-40"
                       }
                     >
                       {selectedGroup ===
                       group.slug
-                        ? "Selected"
-                        : "Edit Prices"}
+                        ? "Preview Tier"
+                        : "Preview"}
                     </button>
 
                     <button
                       type="button"
                       onClick={() =>
-                        deleteGroup(index)
+                        deleteGroup(
+                          index,
+                        )
                       }
-                      className="rounded-md border border-red-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[.06em] text-red-600 transition hover:bg-red-50"
+                      className="rounded-md border border-red-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[.06em] text-red-600 hover:bg-red-50"
                     >
                       Delete
                     </button>
@@ -645,42 +908,57 @@ export function PricingManager({
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#e3ebe7] p-6">
           <div>
             <div className="eyebrow">
-              Neon price matrix
+              Base product pricing
             </div>
 
             <h2 className="mt-2 text-xl font-black">
-              Dealer product prices
+              One price per
+              product
             </h2>
 
-            <p className="mt-2 text-sm text-[#71838b]">
-              Enter only approved commercial
-              values. Blank prices remain
-              unconfigured and continue through
-              RFQ.
+            <p className="mt-2 max-w-3xl text-sm text-[#71838b]">
+              Enter the base
+              commercial price once.
+              Dealer prices are then
+              generated automatically.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <div className="field !gap-1">
               <label>
-                Edit price group
+                Preview tier
               </label>
 
               <select
-                value={selectedGroup}
-                onChange={(event) =>
+                value={
+                  selectedGroup
+                }
+                onChange={(
+                  event,
+                ) =>
                   setSelectedGroup(
-                    event.target.value,
+                    event
+                      .target
+                      .value,
                   )
                 }
               >
                 {activeGroups.map(
                   (group) => (
                     <option
-                      key={group.slug}
-                      value={group.slug}
+                      key={
+                        group.slug
+                      }
+                      value={
+                        group.slug
+                      }
                     >
-                      {group.name}
+                      {group.name}{" "}
+                      (
+                      {group.discountPercent ??
+                        0}
+                      %)
                     </option>
                   ),
                 )}
@@ -694,9 +972,13 @@ export function PricingManager({
 
               <input
                 value={search}
-                onChange={(event) =>
+                onChange={(
+                  event,
+                ) =>
                   setSearch(
-                    event.target.value,
+                    event
+                      .target
+                      .value,
                   )
                 }
                 placeholder="Product name or SKU..."
@@ -706,7 +988,7 @@ export function PricingManager({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px] border-collapse text-left">
+          <table className="w-full min-w-[1180px] border-collapse text-left">
             <thead>
               <tr className="bg-[#f6f9f7] text-[10px] font-black uppercase tracking-[.08em] text-[#71838b]">
                 <th className="px-5 py-4">
@@ -718,7 +1000,13 @@ export function PricingManager({
                 </th>
 
                 <th className="px-3 py-4">
-                  Unit Price
+                  Base Price
+                </th>
+
+                <th className="px-3 py-4">
+                  {selectedGroupData?.name ??
+                    "Dealer"}{" "}
+                  Price
                 </th>
 
                 <th className="px-3 py-4">
@@ -738,19 +1026,33 @@ export function PricingManager({
             <tbody>
               {visibleProducts.map(
                 (product) => {
-                  const price =
-                    currentPrice(
-                      product.slug,
+                  const pricing =
+                    basePricing[
+                      product
+                        .slug
+                    ] ?? {
+                      baseCurrency:
+                        "USD",
+                    };
+
+                  const preview =
+                    calculatedPrice(
+                      pricing.basePrice,
+                      selectedGroupData?.discountPercent,
                     );
 
                   return (
                     <tr
-                      key={product.slug}
+                      key={
+                        product.slug
+                      }
                       className="border-t border-[#edf2ef] align-top"
                     >
                       <td className="px-5 py-4">
                         <strong className="block text-sm text-[#17313d]">
-                          {product.name}
+                          {
+                            product.name
+                          }
                         </strong>
 
                         <span className="mt-1 block text-[10px] text-[#82938c]">
@@ -765,15 +1067,21 @@ export function PricingManager({
                       <td className="px-3 py-4">
                         <input
                           className="w-20 rounded-md border border-[#d8e4df] px-2 py-2 text-sm uppercase"
-                          value={
-                            price.currency ||
-                            "USD"
+                          maxLength={
+                            3
                           }
-                          onChange={(event) =>
-                            patchPrice(
+                          value={
+                            pricing.baseCurrency
+                          }
+                          onChange={(
+                            event,
+                          ) =>
+                            patchBasePrice(
                               product.slug,
-                              "currency",
-                              event.target.value.toUpperCase(),
+                              "baseCurrency",
+                              event
+                                .target
+                                .value,
                             )
                           }
                         />
@@ -786,17 +1094,45 @@ export function PricingManager({
                           min="0"
                           step="0.01"
                           value={
-                            price.amount ?? ""
+                            pricing.basePrice ??
+                            ""
                           }
-                          onChange={(event) =>
-                            patchPrice(
+                          onChange={(
+                            event,
+                          ) =>
+                            patchBasePrice(
                               product.slug,
-                              "amount",
-                              event.target.value,
+                              "basePrice",
+                              event
+                                .target
+                                .value,
                             )
                           }
                           placeholder="Not set"
                         />
+                      </td>
+
+                      <td className="px-3 py-4">
+                        <div className="min-w-32 rounded-md border border-[#dcebe4] bg-[#f3faf6] px-3 py-2 text-sm font-black text-[#087a50]">
+                          {preview ===
+                          undefined
+                            ? "RFQ"
+                            : `${pricing.baseCurrency} ${preview.toLocaleString(
+                                undefined,
+                                {
+                                  minimumFractionDigits:
+                                    2,
+                                  maximumFractionDigits:
+                                    2,
+                                },
+                              )}`}
+                        </div>
+
+                        <div className="mt-1 text-[9px] font-bold text-[#82938c]">
+                          {selectedGroupData?.discountPercent ??
+                            0}
+                          % discount
+                        </div>
                       </td>
 
                       <td className="px-3 py-4">
@@ -806,14 +1142,18 @@ export function PricingManager({
                           min="1"
                           step="1"
                           value={
-                            price.minimumQty ??
+                            pricing.minimumQty ??
                             ""
                           }
-                          onChange={(event) =>
-                            patchPrice(
+                          onChange={(
+                            event,
+                          ) =>
+                            patchBasePrice(
                               product.slug,
                               "minimumQty",
-                              event.target.value,
+                              event
+                                .target
+                                .value,
                             )
                           }
                           placeholder="—"
@@ -824,14 +1164,18 @@ export function PricingManager({
                         <input
                           className="w-36 rounded-md border border-[#d8e4df] px-3 py-2 text-sm"
                           value={
-                            price.leadTimeText ??
+                            pricing.leadTimeText ??
                             ""
                           }
-                          onChange={(event) =>
-                            patchPrice(
+                          onChange={(
+                            event,
+                          ) =>
+                            patchBasePrice(
                               product.slug,
                               "leadTimeText",
-                              event.target.value,
+                              event
+                                .target
+                                .value,
                             )
                           }
                           placeholder="—"
@@ -842,16 +1186,21 @@ export function PricingManager({
                         <input
                           className="w-64 rounded-md border border-[#d8e4df] px-3 py-2 text-sm"
                           value={
-                            price.note ?? ""
+                            pricing.pricingNote ??
+                            ""
                           }
-                          onChange={(event) =>
-                            patchPrice(
+                          onChange={(
+                            event,
+                          ) =>
+                            patchBasePrice(
                               product.slug,
-                              "note",
-                              event.target.value,
+                              "pricingNote",
+                              event
+                                .target
+                                .value,
                             )
                           }
-                          placeholder="Optional protected note"
+                          placeholder="Optional dealer note"
                         />
                       </td>
                     </tr>
@@ -863,7 +1212,8 @@ export function PricingManager({
         </div>
       </section>
 
-      {(message || error) && (
+      {(message ||
+        error) && (
         <div
           className={`rounded-lg border p-4 text-sm ${
             error
@@ -871,15 +1221,16 @@ export function PricingManager({
               : "border-emerald-200 bg-emerald-50 text-emerald-700"
           }`}
         >
-          {error || message}
+          {error ||
+            message}
         </div>
       )}
 
       <div className="sticky bottom-4 z-20 flex justify-end">
         <button
           disabled={saving}
-          className="btn btn-primary min-w-48 shadow-xl disabled:opacity-60"
           type="submit"
+          className="btn btn-primary min-w-48 shadow-xl disabled:opacity-60"
         >
           {saving
             ? "Saving Pricing..."

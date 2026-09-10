@@ -11,17 +11,26 @@ import {
 } from "@/components/admin/ProductEditor";
 
 import {
-  getCategories,
   getPriceGroups,
   getProduct,
 } from "@/lib/catalog";
+
+import {
+  getAdminCategories,
+} from "@/lib/databaseCategories";
+
+import {
+  getProductDocuments,
+  legacyProductDocuments,
+} from "@/lib/databaseProductDocuments";
 
 import {
   getProductImages,
   legacyProductImages,
 } from "@/lib/databaseProductImages";
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 
 type PageProps = {
   params: Promise<{
@@ -32,23 +41,40 @@ type PageProps = {
 export default async function EditProductPage({
   params,
 }: PageProps) {
-  const { slug } = await params;
+  const { slug } =
+    await params;
 
   const [
     product,
     categories,
     priceGroups,
     databaseImages,
-  ] = await Promise.all([
-    getProduct(slug, {
-      includeProtected: true,
-      activeOnly: false,
-    }),
+    databaseDocuments,
+  ] =
+    await Promise.all([
+      getProduct(
+        slug,
+        {
+          includeProtected:
+            true,
 
-    getCategories(),
-    getPriceGroups(),
-    getProductImages(slug),
-  ]);
+          activeOnly:
+            false,
+        },
+      ),
+
+      getAdminCategories(),
+
+      getPriceGroups(),
+
+      getProductImages(
+        slug,
+      ),
+
+      getProductDocuments(
+        slug,
+      ),
+    ]);
 
   if (!product) {
     notFound();
@@ -58,10 +84,28 @@ export default async function EditProductPage({
     databaseImages.length
       ? databaseImages
       : legacyProductImages({
-          primaryImage: product.image,
-          gallery: product.gallery,
-          productName: product.name,
+          primaryImage:
+            product.image,
+
+          gallery:
+            product.gallery,
+
+          productName:
+            product.name,
         });
+
+  const initialDocuments =
+    databaseDocuments.length
+      ? databaseDocuments
+      : legacyProductDocuments(
+          {
+            publicDownloads:
+              product.publicDownloads,
+
+            dealerDownloads:
+              product.dealerDownloads,
+          },
+        );
 
   return (
     <PortalShell
@@ -69,10 +113,25 @@ export default async function EditProductPage({
       title={`Edit: ${product.name}`}
     >
       <ProductEditor
-        product={product}
-        categories={categories}
-        priceGroups={priceGroups}
-        initialImages={initialImages}
+        product={
+          product
+        }
+
+        categories={
+          categories
+        }
+
+        priceGroups={
+          priceGroups
+        }
+
+        initialImages={
+          initialImages
+        }
+
+        initialDocuments={
+          initialDocuments
+        }
       />
     </PortalShell>
   );

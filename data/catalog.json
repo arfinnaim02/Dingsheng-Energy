@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-03T04:46:40.341Z",
+  "updatedAt": "2026-09-10T20:37:12.868Z",
   "categories": [
     {
       "slug": "lpg-filling-plant",
@@ -76,585 +76,120 @@
   ],
   "products": [
     {
-      "slug": "bullet-storage-tank",
-      "name": "LPG Bullet Storage Tank",
+      "slug": "bullet-tank",
+      "name": "Bullet Tank ",
       "categorySlugs": [
-        "lpg-filling-plant",
-        "autogas-refueling-station",
-        "industrial-lpg-solutions"
+        "magnetic"
       ],
-      "primaryCategorySlug": "lpg-filling-plant",
-      "subcategory": "Storage Tanks",
-      "eyebrow": "Storage Tanks",
-      "summary": "Above-ground or underground/mounded LPG storage tank for industrial LPG storage and filling plant applications.",
-      "description": "Includes magnetic Rochester level gauge with magnetic level transmitter and temperature/pressure gauges as specified.",
-      "image": "/uploads/products/qr-code-1-1787633680925.png",
-      "gallery": [],
-      "specs": [
-        [
-          "Capacity Range",
-          "5 MT–100 MT"
-        ],
-        [
-          "Design Temperature",
-          "−20°C / +50°C"
-        ],
-        [
-          "Type",
-          "Horizontal / Vertical"
-        ],
-        [
-          "Design Code",
-          "EN13445"
-        ],
-        [
-          "Maximum Working Pressure",
-          "17.2 Bar"
-        ],
-        [
-          "Test Pressure",
-          "24.6 Bar"
-        ],
-        [
-          "Material",
-          "P355NH"
-        ],
-        [
-          "Safety Relief Valve",
-          "Rego/SRG; pop-up pressure 17.2 Bar"
-        ]
-      ],
-      "standards": [
-        "EN13445"
-      ],
-      "applications": [
-        "LPG Filling Plants",
-        "Storage Facilities",
-        "Industrial LPG Systems"
-      ],
-      "commercialMode": "rfq",
-      "dealerPriceProtected": true,
-      "featured": false,
-      "availability": "Project Based",
-      "publicDownloads": [],
-      "dealerDownloads": [],
-      "relatedProducts": [
-        "safety-relief-valve"
-      ],
-      "active": true,
-      "categoryGroups": {
-        "lpg-filling-plant": "Storage Tanks",
-        "autogas-refueling-station": "LPG Storage Tanks",
-        "industrial-lpg-solutions": "LPG Storage Tanks"
-      },
-      "sku": "",
-      "unitLabel": "Unit",
-      "dealerCommercialDetails": "",
-      "dealerPrices": [
-        {
-          "priceGroupSlug": "standard",
-          "currency": "USD",
-          "amount": 100,
-          "minimumQty": 1
-        },
-        {
-          "priceGroupSlug": "tier-a",
-          "currency": "USD",
-          "amount": 100
-        }
-      ]
-    },
-    {
-      "slug": "internal-excess-flow-valve",
-      "name": "Internal Excess Flow Valve",
-      "categorySlugs": [
-        "lpg-filling-plant",
-        "lpg-transport-distribution",
-        "autogas-refueling-station"
-      ],
-      "primaryCategorySlug": "lpg-filling-plant",
-      "subcategory": "Tank Accessories",
-      "eyebrow": "Tank Accessories",
-      "summary": "Excess-flow protection valve for LPG filling, vapor equalizing and withdrawal applications.",
-      "description": "The valve closes automatically when flow increases and returns to open position after inlet and outlet pressure are balanced.",
-      "image": "",
+      "primaryCategorySlug": "magnetic",
+      "subcategory": "",
+      "categoryGroups": {},
+      "eyebrow": "",
+      "summary": "sdgsdf",
+      "description": "Capacity Range: 5MT to 100MT  Design Temperature: –20°C / +50°C Type: Horizontal/ vertical Design Code: EN or ASME Max WP: 17.2 Bar Test Pressure: 24.6 Bar Safety Relief Valve set Pressure: 17.2 Bar Magnetic Level Gauge with magnetic level transmitter Temperature & Pressure Gauge",
+      "image": "https://res.cloudinary.com/ovmhhxc6/image/upload/v1789055160/dingsheng-energy/products/bullet-tank/15_tloskv.png",
       "gallery": [],
       "specs": [],
       "standards": [],
-      "applications": [
-        "LPG Storage Tanks",
-        "Filling",
-        "Vapor Equalizing",
-        "Liquid Withdrawal"
-      ],
+      "applications": [],
       "commercialMode": "dealer-purchase-rfq",
       "dealerPriceProtected": true,
-      "featured": false,
+      "featured": true,
       "availability": "Contact Dingsheng",
-      "publicDownloads": [],
-      "dealerDownloads": [],
-      "relatedProducts": [],
-      "active": true,
-      "categoryGroups": {
-        "lpg-filling-plant": "Tank Accessories",
-        "lpg-transport-distribution": "Tank Accessories",
-        "autogas-refueling-station": "Tank Accessories"
-      },
       "sku": "",
       "unitLabel": "Unit",
+      "basePrice": 150,
+      "baseCurrency": "USD",
       "dealerCommercialDetails": "",
       "dealerPrices": [
         {
           "priceGroupSlug": "standard",
           "currency": "USD",
-          "amount": 102
+          "amount": 142.5
         },
         {
           "priceGroupSlug": "tier-a",
           "currency": "USD",
-          "amount": 1000
+          "amount": 135
+        },
+        {
+          "priceGroupSlug": "tier-b",
+          "currency": "USD",
+          "amount": 150
+        },
+        {
+          "priceGroupSlug": "vip",
+          "currency": "USD",
+          "amount": 150
         }
-      ]
+      ],
+      "publicDownloads": [
+        "https://res.cloudinary.com/ovmhhxc6/raw/authenticated/s--wp3DgXhF--/v1789072623/dingsheng-energy/products/bullet-tank/documents/WM_ASDS_Thesis_Progress_Notice_09_Sep_2026_iofj9c.pdf"
+      ],
+      "dealerDownloads": [],
+      "relatedProducts": [],
+      "active": true
     },
     {
-      "slug": "safety-relief-valve",
-      "name": "LPG Safety Relief Valve",
+      "slug": "lpg",
+      "name": "LPG",
       "categorySlugs": [
-        "lpg-filling-plant",
-        "lpg-transport-distribution",
-        "autogas-refueling-station"
+        "lpg-filling-plant"
       ],
       "primaryCategorySlug": "lpg-filling-plant",
-      "subcategory": "Tank Accessories",
-      "eyebrow": "Tank Accessories",
-      "summary": "Safety relief valve system for LPG storage and pressure protection applications.",
-      "description": "Safety relief valve system for LPG storage and pressure protection applications.",
-      "image": "",
+      "subcategory": "",
+      "categoryGroups": {},
+      "eyebrow": "",
+      "summary": "sdga",
+      "description": "",
+      "image": "https://res.cloudinary.com/ovmhhxc6/image/upload/v1788979825/dingsheng-energy/products/unassigned/ChatGPT_Image_Sep_4_2026_02_35_21_PM_n9zrbu.png",
       "gallery": [],
-      "specs": [
-        [
-          "Manifold Size",
-          "4 in. – 300#"
-        ],
-        [
-          "Set Pressure",
-          "250–350 psi"
-        ],
-        [
-          "NPT Sizes",
-          "¼ in., ½ in., ¾ in., 1 in., 1.25 in., 2 in."
-        ]
-      ],
+      "specs": [],
       "standards": [],
-      "applications": [
-        "LPG Storage Tanks",
-        "Pressure Protection"
-      ],
+      "applications": [],
       "commercialMode": "dealer-purchase-rfq",
       "dealerPriceProtected": true,
       "featured": false,
       "availability": "Contact Dingsheng",
+      "sku": "",
+      "unitLabel": "Unit",
+      "dealerCommercialDetails": "",
+      "dealerPrices": [],
       "publicDownloads": [],
       "dealerDownloads": [],
       "relatedProducts": [],
       "active": true,
-      "categoryGroups": {
-        "lpg-filling-plant": "Tank Accessories",
-        "lpg-transport-distribution": "Tank Accessories",
-        "autogas-refueling-station": "Tank Accessories"
-      },
-      "sku": "",
-      "unitLabel": "Unit",
-      "dealerCommercialDetails": "",
-      "dealerPrices": [
-        {
-          "priceGroupSlug": "standard",
-          "currency": "USD",
-          "amount": 103
-        },
-        {
-          "priceGroupSlug": "tier-a",
-          "currency": "USD",
-          "amount": 100
-        }
-      ]
-    },
-    {
-      "slug": "rotogauge",
-      "name": "LPG Rotogauge",
-      "categorySlugs": [
-        "lpg-filling-plant",
-        "lpg-transport-distribution"
-      ],
-      "primaryCategorySlug": "lpg-filling-plant",
-      "subcategory": "Tank Accessories",
-      "eyebrow": "Level Gauges",
-      "summary": "Manual LPG storage tank level measurement gauge.",
-      "description": "Manual LPG storage tank level measurement gauge.",
-      "image": "",
-      "gallery": [],
-      "specs": [
-        [
-          "Type",
-          "Manual"
-        ],
-        [
-          "Medium",
-          "LPG"
-        ],
-        [
-          "Use",
-          "LPG Storage Tank"
-        ]
-      ],
-      "standards": [],
-      "applications": [
-        "LPG Storage Tanks"
-      ],
-      "commercialMode": "dealer-purchase-rfq",
-      "dealerPriceProtected": true,
-      "featured": false,
-      "availability": "Contact Dingsheng",
-      "publicDownloads": [],
-      "dealerDownloads": [],
-      "relatedProducts": [],
-      "active": true,
-      "categoryGroups": {
-        "lpg-filling-plant": "Tank Accessories",
-        "lpg-transport-distribution": "Tank Accessories"
-      },
-      "sku": "",
-      "unitLabel": "Unit",
-      "dealerCommercialDetails": "",
-      "dealerPrices": [
-        {
-          "priceGroupSlug": "standard",
-          "currency": "USD",
-          "amount": 104
-        },
-        {
-          "priceGroupSlug": "tier-a",
-          "currency": "USD",
-          "amount": 1000
-        }
-      ]
-    },
-    {
-      "slug": "sliding-vane-pump",
-      "name": "LPG Sliding Vane Pump",
-      "categorySlugs": [
-        "lpg-filling-plant",
-        "lpg-transport-distribution"
-      ],
-      "primaryCategorySlug": "lpg-transport-distribution",
-      "subcategory": "LPG Transfer Machinery",
-      "eyebrow": "LPG Pumps",
-      "summary": "Sliding vane LPG pump for road tanker loading and unloading operations.",
-      "description": "Sliding vane LPG pump for road tanker loading and unloading operations.",
-      "image": "",
-      "gallery": [],
-      "specs": [
-        [
-          "Inlet",
-          "2 in. Female NPT"
-        ],
-        [
-          "Outlet",
-          "2 in. Female NPT"
-        ],
-        [
-          "Flow Rate",
-          "41–76 GPM (155–287 LPM) at 100 psid (6.9 Bar)"
-        ],
-        [
-          "Power",
-          "4–7.5 kW"
-        ]
-      ],
-      "standards": [],
-      "applications": [
-        "Road Tanker Loading",
-        "Road Tanker Unloading"
-      ],
-      "commercialMode": "dealer-purchase-rfq",
-      "dealerPriceProtected": true,
-      "featured": false,
-      "availability": "Contact Dingsheng",
-      "publicDownloads": [],
-      "dealerDownloads": [],
-      "relatedProducts": [],
-      "active": true,
-      "categoryGroups": {
-        "lpg-filling-plant": "LPG Transfer Machinery",
-        "lpg-transport-distribution": "LPG Transfer Machinery"
-      },
-      "sku": "",
-      "unitLabel": "Unit",
-      "dealerCommercialDetails": "",
-      "dealerPrices": [
-        {
-          "priceGroupSlug": "standard",
-          "currency": "USD",
-          "amount": 110
-        }
-      ]
+      "baseCurrency": "USD"
     }
   ],
   "services": [
     {
-      "slug": "lpg-filling-plant-epc",
-      "name": "LPG Filling Plant EPC",
-      "shortName": "Filling Plant EPC",
-      "summary": "Complete engineering, procurement and construction solutions for LPG filling plants.",
-      "description": "Dingsheng Energy provides complete EPC solutions for LPG filling plants, including plant design, LPG storage systems, filling equipment, piping, electrical and instrumentation systems, installation, testing and commissioning. Solutions are customized according to operating requirements, site conditions and applicable safety standards.",
-      "image": "/media/services/lpg-filling-plant-epc.jpg",
-      "heroImage": "/media/services/lpg-filling-plant-epc.jpg",
-      "scope": [
-        "Plant Design",
-        "LPG Storage Systems",
-        "Filling Equipment",
-        "Piping Systems",
-        "Electrical Systems",
-        "Instrumentation",
-        "Installation",
-        "Testing",
-        "Commissioning"
-      ],
-      "process": [
-        "Requirement Review",
-        "Engineering",
-        "Procurement",
-        "Installation",
-        "Testing",
-        "Commissioning"
-      ],
-      "applications": [
-        "LPG Bottling Plants",
-        "Cylinder Filling Facilities",
-        "Bulk LPG Storage Facilities",
-        "LPG Plant Expansion Projects"
-      ],
-      "active": true,
-      "featured": true
+      "slug": "test-lpg",
+      "name": "TEST LPG",
+      "shortName": "",
+      "summary": "",
+      "description": "",
+      "image": "",
+      "heroImage": "/media/hero-services.jpg",
+      "scope": [],
+      "process": [],
+      "applications": [],
+      "featured": false,
+      "active": true
     },
     {
-      "slug": "autogas-station-epc",
-      "name": "Autogas Station EPC",
-      "shortName": "Autogas EPC",
-      "summary": "Design, supply, installation and commissioning of complete LPG autogas stations.",
-      "description": "Dingsheng Energy designs, supplies, installs and commissions complete LPG autogas stations for safe and efficient vehicle refueling. Project scope can include storage tanks, dispensers, pumps, piping, control systems, electrical systems, safety equipment and associated civil and mechanical works.",
-      "image": "/media/services/autogas-station-epc.jpg",
-      "heroImage": "/media/services/autogas-station-epc.jpg",
-      "scope": [
-        "Autogas System Design",
-        "Storage Tanks",
-        "LPG Dispensers",
-        "Pumps",
-        "Piping",
-        "Electrical Systems",
-        "Safety Equipment",
-        "Civil Works",
-        "Mechanical Works",
-        "Commissioning"
-      ],
-      "process": [
-        "Site Review",
-        "Engineering",
-        "Equipment Supply",
-        "Installation",
-        "Testing",
-        "Commissioning"
-      ],
-      "applications": [
-        "Public Autogas Stations",
-        "Commercial Vehicle Refueling",
-        "Fleet Refueling Facilities",
-        "Existing Station Upgrades"
-      ],
-      "active": true,
-      "featured": true
-    },
-    {
-      "slug": "household-lpg-reticulation",
-      "name": "Household LPG Reticulation",
-      "shortName": "Household Reticulation",
-      "summary": "Centralized LPG distribution systems for residential buildings, apartments, villas and housing projects.",
-      "description": "Household LPG reticulation solutions provide centralized LPG distribution for residential properties. Dingsheng Energy designs and installs cylinder banks, manifolds, pressure regulators, piping and associated safety systems according to building layout, expected demand and site requirements.",
-      "image": "/media/services/household-lpg-reticulation.jpg",
-      "heroImage": "/media/services/household-lpg-reticulation.jpg",
-      "scope": [
-        "Cylinder Banks",
-        "Manifolds",
-        "Pressure Regulators",
-        "LPG Piping",
-        "Safety Systems",
-        "Installation",
-        "Pressure Testing",
-        "Handover"
-      ],
-      "process": [
-        "Site Assessment",
-        "System Design",
-        "Equipment Supply",
-        "Installation",
-        "Testing",
-        "Handover"
-      ],
-      "applications": [
-        "Residential Buildings",
-        "Apartment Complexes",
-        "Villas",
-        "Housing Projects",
-        "Residential Communities"
-      ],
-      "active": true,
-      "featured": false
-    },
-    {
-      "slug": "industrial-lpg-reticulation",
-      "name": "Industrial LPG Reticulation",
-      "shortName": "Industrial Reticulation",
-      "summary": "Engineered LPG reticulation systems for factories, commercial facilities and high-demand applications.",
-      "description": "Industrial LPG reticulation systems are engineered for factories, commercial facilities, boilers, kitchens, process equipment and other high-demand applications. Each system is designed to support reliable gas supply, controlled operating pressure, operational safety and efficient LPG utilization.",
-      "image": "/media/services/industrial-lpg-reticulation.jpg",
-      "heroImage": "/media/services/industrial-lpg-reticulation.jpg",
-      "scope": [
-        "System Design",
-        "Storage or Cylinder Bank Interface",
-        "Pressure Regulation",
-        "LPG Piping",
-        "Safety Systems",
-        "Installation",
-        "Pressure Testing",
-        "Commissioning"
-      ],
-      "process": [
-        "Load Review",
-        "Engineering",
-        "Procurement",
-        "Installation",
-        "Pressure Testing",
-        "Commissioning"
-      ],
-      "applications": [
-        "Factories",
-        "Manufacturing Facilities",
-        "Industrial Boilers",
-        "Commercial Kitchens",
-        "Process Equipment",
-        "High-Demand LPG Users"
-      ],
-      "active": true,
-      "featured": true
-    },
-    {
-      "slug": "pipeline-skid-systems",
-      "name": "LPG Pipeline & Skid Systems",
-      "shortName": "Pipeline & Skid",
-      "summary": "Engineered LPG pipeline and skid-mounted systems for controlled transfer, pressure regulation and plant integration.",
-      "description": "Dingsheng Energy provides engineering and integration support for LPG pipelines and skid-mounted systems. Solutions can include LPG transfer equipment, pressure regulation, pumps, valves, controls, instrumentation, fabrication, installation, testing and commissioning.",
-      "image": "/media/services/pipeline-skid-systems.jpg",
-      "heroImage": "/media/services/pipeline-skid-systems.jpg",
-      "scope": [
-        "Pipeline Engineering",
-        "System Integration",
-        "LPG Piping",
-        "Skid Packages",
-        "Pumps and Valves",
-        "Controls and Instrumentation",
-        "Installation",
-        "Testing",
-        "Commissioning"
-      ],
-      "process": [
-        "Requirement Review",
-        "Engineering",
-        "Fabrication or Procurement",
-        "Integration",
-        "Testing",
-        "Commissioning"
-      ],
-      "applications": [
-        "LPG Filling Plants",
-        "Industrial LPG Systems",
-        "Bulk Transfer Systems",
-        "Pressure Regulation Systems",
-        "Utility Systems"
-      ],
-      "active": true,
-      "featured": false
-    },
-    {
-      "slug": "engineering-consultancy",
-      "name": "Engineering Consultancy",
-      "shortName": "Consultancy",
-      "summary": "Technical assessment, design support and engineering consultancy for LPG equipment and infrastructure projects.",
-      "description": "Dingsheng Energy provides technical review, engineering guidance, design support, equipment selection, safety review and project coordination for LPG infrastructure and equipment systems. Consultancy scope is defined according to the project stage and available technical information.",
-      "image": "/media/services/engineering-consultancy.jpg",
-      "heroImage": "/media/services/engineering-consultancy.jpg",
-      "scope": [
-        "Technical Review",
-        "Design Support",
-        "Equipment Selection",
-        "Safety Review",
-        "System Assessment",
-        "Project Coordination",
-        "Upgrade Recommendations"
-      ],
-      "process": [
-        "Requirement Review",
-        "Technical Assessment",
-        "Recommendations",
-        "Design Support",
-        "Project Follow-up"
-      ],
-      "applications": [
-        "New LPG Projects",
-        "Equipment Selection",
-        "Plant Upgrades",
-        "System Troubleshooting",
-        "Technical Due Diligence"
-      ],
-      "active": true,
-      "featured": false
-    },
-    {
-      "slug": "machinery-servicing",
-      "name": "Machinery Servicing",
-      "shortName": "Equipment Servicing",
-      "summary": "Inspection, preventive maintenance, troubleshooting and repair of LPG machinery and equipment.",
-      "description": "Professional servicing covers LPG filling machines, dispensers, pumps, compressors, flowmeters, vaporizers and related equipment. Inspection, diagnosis, maintenance and operational testing help support safe, reliable and efficient equipment operation.",
-      "image": "/media/services/machinery-servicing.jpg",
-      "heroImage": "/media/services/machinery-servicing.jpg",
-      "scope": [
-        "Equipment Inspection",
-        "Preventive Maintenance",
-        "Troubleshooting",
-        "Repair",
-        "Filling Machine Servicing",
-        "Dispenser Servicing",
-        "Pump Servicing",
-        "Compressor Servicing",
-        "Flowmeter Servicing",
-        "Vaporizer Servicing"
-      ],
-      "process": [
-        "Inspection",
-        "Diagnosis",
-        "Service Plan",
-        "Repair or Maintenance",
-        "Operational Testing",
-        "Service Report"
-      ],
-      "applications": [
-        "LPG Filling Plants",
-        "Autogas Stations",
-        "Industrial LPG Systems",
-        "LPG Transfer Equipment",
-        "Plant Maintenance Programs"
-      ],
-      "active": true,
-      "featured": true
+      "slug": "test-engineering",
+      "name": "TEST Engineering",
+      "shortName": "",
+      "summary": "",
+      "description": "",
+      "image": "https://res.cloudinary.com/ovmhhxc6/image/upload/v1788984656/dingsheng-energy/services/test-engineering/ChatGPT_Image_Sep_4_2026_01_03_10_PM_vombo0.png",
+      "heroImage": "https://res.cloudinary.com/ovmhhxc6/image/upload/v1788984673/dingsheng-energy/services/test-engineering/Salaatit_3_uf4oii.png",
+      "scope": [],
+      "process": [],
+      "applications": [],
+      "featured": false,
+      "active": true
     }
   ],
   "priceGroups": [

@@ -77,6 +77,11 @@ const adminNav = [
   ],
 
   [
+    "Resources",
+    "/admin/resources",
+  ],
+
+  [
     "Categories",
     "/admin/categories",
   ],
@@ -141,20 +146,20 @@ export function PortalShell({
   return (
     <div className="sidebar-shell portal-grid">
       <aside className="portal-side">
-      <Brand
-        inverse
-        compact
-        href={
-          admin
-            ? "/admin"
-            : "/dealer/dashboard"
-        }
-        ariaLabel={
-          admin
-            ? "Return to admin dashboard"
-            : "Return to dealer dashboard"
-        }
-      />
+        <Brand
+          inverse
+          compact
+          href={
+            admin
+              ? "/admin"
+              : "/dealer/dashboard"
+          }
+          ariaLabel={
+            admin
+              ? "Return to admin dashboard"
+              : "Return to dealer dashboard"
+          }
+        />
 
         <div className="mt-6 text-[10px] font-extrabold uppercase tracking-[.16em] text-white/35">
           {admin
@@ -191,12 +196,12 @@ export function PortalShell({
             method="post"
             className="mt-3"
           >
-          <button
-            type="submit"
-            className="w-full rounded-md border border-white/15 px-4 py-2.5 text-left text-xs font-bold text-white/65 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
-          >
-            Sign out
-          </button>
+            <button
+              type="submit"
+              className="w-full rounded-md border border-white/15 px-4 py-2.5 text-left text-xs font-bold text-white/65 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+            >
+              Sign out
+            </button>
           </form>
         ) : (
           <form
@@ -204,12 +209,12 @@ export function PortalShell({
             method="post"
             className="mt-3"
           >
-          <button
-            type="submit"
-            className="w-full rounded-md border border-white/15 px-4 py-2.5 text-left text-xs font-bold text-white/65 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
-          >
-            Sign out
-          </button>
+            <button
+              type="submit"
+              className="w-full rounded-md border border-white/15 px-4 py-2.5 text-left text-xs font-bold text-white/65 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+            >
+              Sign out
+            </button>
           </form>
         )}
       </aside>
@@ -233,14 +238,14 @@ export function PortalShell({
 
           <span className="status">
             {admin
-              ? "Local content manager"
+              ? "Content manager"
               : "Protected commercial portal"}
           </span>
         </div>
 
         <div className="mock-note mb-7">
           {admin
-            ? "Products, categories, services, contact inquiries and protected dealer pricing are managed from this administration workspace."
+            ? "Products, categories, services, resources, contact inquiries and protected dealer pricing are managed from this administration workspace."
             : "This protected workspace displays the commercial access and pricing group assigned to your approved dealer account. Product availability, prices and commercial information may vary by dealer profile."}
         </div>
 

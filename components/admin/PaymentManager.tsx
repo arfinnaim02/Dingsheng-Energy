@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-
-import {
-  OrderPaymentControl,
-} from "@/components/admin/OrderPaymentControl";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 type PaymentStatus =
   | "PENDING"
@@ -14,22 +11,12 @@ type PaymentStatus =
   | "FAILED"
   | "REFUNDED";
 
-type Payment = {
+export type AdminPayment = {
   id: string;
+  provider: string | null;
+  providerRef: string | null;
   status: PaymentStatus;
-
-  provider:
-    | string
-    | null;
-
-  providerRef:
-    | string
-    | null;
-
-  amount:
-    | string
-    | null;
-
+  amount: string | null;
   currency: string;
   createdAt: string;
   updatedAt: string;
@@ -39,47 +26,30 @@ type Payment = {
     reference: string;
     status: string;
 
-    totalAmount:
-      | string
-      | null;
-
-    deliveryCountry:
-      | string
-      | null;
-
-    deliveryAddress:
-      | string
-      | null;
-
     dealer: {
       id: string;
       companyName: string;
       contactName: string;
 
-      phone:
-        | string
-        | null;
-
-      country:
-        | string
-        | null;
-
       user: {
         email: string;
       };
     };
-
-    items: Array<{
-      id: string;
-      quantity: number;
-
-      product: {
-        name: string;
-        slug: string;
-      };
-    }>;
   };
 };
+
+const statusOptions: PaymentStatus[] = [
+  "PENDING",
+  "PROCESSING",
+  "PAID",
+  "FAILED",
+  "REFUNDED",
+];
+
+type BulkAction =
+  | ""
+  | "DELETE"
+  | PaymentStatus;
 
 function statusLabel(
   status: string,
@@ -87,10 +57,8 @@ function statusLabel(
   return status
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(
-      /\b\w/g,
-      (letter) =>
-        letter.toUpperCase(),
+    .replace(/\b\w/g, (letter) =>
+      letter.toUpperCase(),
     );
 }
 
@@ -101,24 +69,23 @@ function statusClass(
     case "PAID":
       return "bg-[#e7f7ef] text-[#087a50]";
 
-    case "PROCESSING":
-      return "bg-[#e7f2ff] text-[#27659a]";
-
     case "FAILED":
       return "bg-[#fbeaea] text-[#a43e3e]";
 
     case "REFUNDED":
       return "bg-[#eeeaff] text-[#6550a3]";
 
+    case "PROCESSING":
+      return "bg-[#e7f2ff] text-[#27659a]";
+
+    case "PENDING":
     default:
       return "bg-[#fff6dc] text-[#926900]";
   }
 }
 
-function paymentMethodLabel(
-  provider:
-    | string
-    | null,
+function providerLabel(
+  provider: string | null,
 ) {
   switch (provider) {
     case "BANK_TRANSFER":
@@ -128,10 +95,10 @@ function paymentMethodLabel(
       return "Letter of Credit (L/C)";
 
     case "APPROVED_CREDIT_TERMS":
-      return "Approved Dealer Credit Terms";
+      return "Approved Credit Terms";
 
     case "MANUAL_COMMERCIAL_AGREEMENT":
-      return "Manual Commercial Agreement";
+      return "Manual Agreement";
 
     default:
       return "Not specified";
@@ -139,265 +106,618 @@ function paymentMethodLabel(
 }
 
 function money(
-  amount:
-    | string
-    | null,
+  amount: string | null,
   currency: string,
 ) {
   if (amount === null) {
-    return "Amount pending";
+    return "—";
   }
 
-  try {
-    return new Intl.NumberFormat(
-      "en-US",
-      {
-        style: "currency",
-        currency,
-      },
-    ).format(Number(amount));
-  } catch {
-    return `${currency} ${Number(
-      amount,
-    ).toFixed(2)}`;
-  }
+  return new Intl.NumberFormat(
+    "en-US",
+    {
+      style: "currency",
+      currency,
+    },
+  ).format(
+    Number(amount),
+  );
 }
 
-export default function PaymentManager({
+export function PaymentManager({
   payments,
 }: {
-  payments: Payment[];
+  payments: AdminPayment[];
 }) {
-  const [
-    expandedId,
-    setExpandedId,
-  ] = useState<
-    string | null
-  >(null);
+  const router =
+    useRouter();
 
-  function togglePayment(
+  const [expanded, setExpanded] =
+    useState<Set<string>>(
+      () => new Set(),
+    );
+
+  const [selectedIds, setSelectedIds] =
+    useState<Set<string>>(
+      () => new Set(),
+    );
+
+  const [selectedStatus, setSelectedStatus] =
+    useState<
+      Record<
+        string,
+        PaymentStatus
+      >
+    >(
+      Object.fromEntries(
+        payments.map(
+          (payment) => [
+            payment.id,
+            payment.status,
+          ],
+        ),
+      ),
+    );
+
+  const [bulkAction, setBulkAction] =
+    useState<BulkAction>("");
+
+  const [workingId, setWorkingId] =
+    useState<string | null>(
+      null,
+    );
+
+  const [bulkWorking, setBulkWorking] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
+
+  const allSelected =
+    payments.length >
+      0 &&
+    selectedIds.size ===
+      payments.length;
+
+  const selectedPayments =
+    useMemo(
+      () =>
+        payments.filter(
+          (payment) =>
+            selectedIds.has(
+              payment.id,
+            ),
+        ),
+      [
+        payments,
+        selectedIds,
+      ],
+    );
+
+  function toggleExpanded(
+    id: string,
+  ) {
+    setExpanded(
+      (current) => {
+        const next =
+          new Set(current);
+
+        next.has(id)
+          ? next.delete(id)
+          : next.add(id);
+
+        return next;
+      },
+    );
+  }
+
+  function toggleSelected(
+    id: string,
+  ) {
+    setSelectedIds(
+      (current) => {
+        const next =
+          new Set(current);
+
+        next.has(id)
+          ? next.delete(id)
+          : next.add(id);
+
+        return next;
+      },
+    );
+  }
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(
+        new Set(),
+      );
+    } else {
+      setSelectedIds(
+        new Set(
+          payments.map(
+            (payment) =>
+              payment.id,
+          ),
+        ),
+      );
+    }
+  }
+
+  async function updatePayment(
     paymentId: string,
   ) {
-    setExpandedId(
-      (current) =>
-        current === paymentId
-          ? null
-          : paymentId,
+    setWorkingId(
+      paymentId,
     );
+
+    setError("");
+    setMessage("");
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/payments/${encodeURIComponent(
+            paymentId,
+          )}`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                status:
+                  selectedStatus[
+                    paymentId
+                  ],
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to update payment.",
+        );
+      }
+
+      setMessage(
+        "Payment updated successfully.",
+      );
+
+      router.refresh();
+    } catch (
+      updateError
+    ) {
+      setError(
+        updateError instanceof
+          Error
+          ? updateError.message
+          : "Unable to update payment.",
+      );
+    } finally {
+      setWorkingId(
+        null,
+      );
+    }
+  }
+
+  async function deletePayment(
+    payment: AdminPayment,
+  ) {
+    const confirmed =
+      window.confirm(
+        `Delete payment for order ${payment.order.reference}?\n\n${money(
+          payment.amount,
+          payment.currency,
+        )}\n\nThis cannot be undone.`,
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setWorkingId(
+      payment.id,
+    );
+
+    setError("");
+    setMessage("");
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/payments/${encodeURIComponent(
+            payment.id,
+          )}`,
+          {
+            method:
+              "DELETE",
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to delete payment.",
+        );
+      }
+
+      setMessage(
+        "Payment deleted successfully.",
+      );
+
+      router.refresh();
+    } catch (
+      deleteError
+    ) {
+      setError(
+        deleteError instanceof
+          Error
+          ? deleteError.message
+          : "Unable to delete payment.",
+      );
+    } finally {
+      setWorkingId(
+        null,
+      );
+    }
+  }
+
+  async function applyBulkAction() {
+    if (
+      !selectedIds.size ||
+      !bulkAction
+    ) {
+      return;
+    }
+
+    if (
+      bulkAction ===
+      "DELETE"
+    ) {
+      const confirmed =
+        window.confirm(
+          `Delete ${selectedPayments.length} selected payment record${
+            selectedPayments.length ===
+            1
+              ? ""
+              : "s"
+          }?\n\nThis cannot be undone.`,
+        );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setBulkWorking(true);
+
+    setError("");
+    setMessage("");
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/payments/bulk",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                ids: [
+                  ...selectedIds,
+                ],
+
+                action:
+                  bulkAction ===
+                  "DELETE"
+                    ? "DELETE"
+                    : "STATUS",
+
+                status:
+                  bulkAction ===
+                  "DELETE"
+                    ? undefined
+                    : bulkAction,
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to apply payment action.",
+        );
+      }
+
+      setMessage(
+        bulkAction ===
+          "DELETE"
+          ? `${result.count} payment records deleted.`
+          : `${result.count} payments updated to ${statusLabel(
+              bulkAction,
+            )}.`,
+      );
+
+      setSelectedIds(
+        new Set(),
+      );
+
+      setBulkAction("");
+
+      router.refresh();
+    } catch (
+      bulkError
+    ) {
+      setError(
+        bulkError instanceof
+          Error
+          ? bulkError.message
+          : "Unable to apply payment action.",
+      );
+    } finally {
+      setBulkWorking(false);
+    }
   }
 
   if (!payments.length) {
     return (
-      <div className="card p-10 text-center">
-        <h2 className="text-xl font-black">
-          No matching payments
-        </h2>
-
-        <p className="mt-3 text-sm text-[#71838b]">
-          No payment records
-          match the current search
-          and filters.
-        </p>
-
-        <Link
-          href="/admin/payments"
-          className="btn btn-secondary mt-5 inline-flex"
-        >
-          Clear Filters
-        </Link>
+      <div className="card p-10 text-center text-sm text-[#71838b]">
+        No payment records
+        are available.
       </div>
     );
   }
 
   return (
-    <section className="grid gap-4">
-      {payments.map(
-        (payment) => {
-          const expanded =
-            expandedId ===
-            payment.id;
+    <div className="grid gap-4">
+      {message && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+          {message}
+        </div>
+      )}
 
-          const amount =
-            payment.amount ??
-            payment.order
-              .totalAmount;
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          {error}
+        </div>
+      )}
 
-          const totalUnits =
-            payment.order.items.reduce(
-              (
-                total,
-                item,
+      <section className="card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <label className="flex items-center gap-2 text-xs font-black">
+            <input
+              type="checkbox"
+              checked={
+                allSelected
+              }
+              onChange={
+                toggleSelectAll
+              }
+              className="h-4 w-4 accent-[#0a9c63]"
+            />
+
+            Select All ·{" "}
+            {
+              selectedIds.size
+            }{" "}
+            selected
+          </label>
+
+          <div className="flex gap-2">
+            <select
+              value={
+                bulkAction
+              }
+              onChange={(
+                event,
               ) =>
-                total +
-                item.quantity,
-
-              0,
-            );
-
-          return (
-            <article
-              key={payment.id}
-              className={`card overflow-hidden transition ${
-                expanded
-                  ? "ring-1 ring-[#b8d9ca]"
-                  : "hover:border-[#b8d9ca]"
-              }`}
+                setBulkAction(
+                  event.target
+                    .value as BulkAction,
+                )
+              }
+              className="min-w-[210px] rounded-md border border-[#d8e4df] bg-white px-3 py-2.5 text-xs font-bold"
             >
-              <button
-                type="button"
-                aria-expanded={
-                  expanded
-                }
-                aria-controls={`payment-details-${payment.id}`}
-                onClick={() =>
-                  togglePayment(
+              <option value="">
+                Bulk Actions
+              </option>
+
+              {statusOptions.map(
+                (status) => (
+                  <option
+                    key={
+                      status
+                    }
+                    value={
+                      status
+                    }
+                  >
+                    Set:{" "}
+                    {statusLabel(
+                      status,
+                    )}
+                  </option>
+                ),
+              )}
+
+              <option value="DELETE">
+                Delete Permanently
+              </option>
+            </select>
+
+            <button
+              type="button"
+              disabled={
+                bulkWorking ||
+                !selectedIds.size ||
+                !bulkAction
+              }
+              onClick={
+                applyBulkAction
+              }
+              className="rounded-md bg-[#0a9c63] px-4 py-2.5 text-xs font-black text-white disabled:opacity-40"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="min-w-[1050px]">
+            <div className="grid grid-cols-[42px_38px_140px_minmax(190px,1fr)_150px_130px_145px_130px] items-center gap-3 border-b border-[#e1ebe7] bg-[#f7faf8] px-4 py-3 text-[9px] font-black uppercase text-[#829198]">
+              <span />
+              <span />
+              <span>
+                Order
+              </span>
+              <span>
+                Dealer
+              </span>
+              <span>
+                Method
+              </span>
+              <span>
+                Amount
+              </span>
+              <span>
+                Status
+              </span>
+              <span className="text-right">
+                Actions
+              </span>
+            </div>
+
+            {payments.map(
+              (payment) => {
+                const open =
+                  expanded.has(
                     payment.id,
-                  )
-                }
-                className="grid w-full items-center gap-4 p-5 text-left transition hover:bg-[#f8fbf9] md:grid-cols-[minmax(0,1fr)_auto_auto_auto]"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-black text-[#17313d]">
-                      {
-                        payment.order
-                          .reference
-                      }
-                    </span>
+                  );
 
-                    <span className="truncate text-sm font-bold text-[#526872]">
-                      {
-                        payment.order
-                          .dealer
-                          .companyName
-                      }
-                    </span>
-                  </div>
+                const busy =
+                  workingId ===
+                  payment.id;
 
-                  <div className="mt-1 truncate text-xs text-[#829198]">
-                    {paymentMethodLabel(
-                      payment.provider,
-                    )}{" "}
-                    ·{" "}
-                    {
-                      payment.order
-                        .dealer
-                        .contactName
-                    }{" "}
-                    · {totalUnits}{" "}
-                    unit
-                    {totalUnits === 1
-                      ? ""
-                      : "s"}
-                  </div>
-                </div>
-
-                <div className="text-left md:text-right">
-                  <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                    Amount
-                  </div>
-
-                  <div className="mt-1 font-black text-[#08774f]">
-                    {money(
-                      amount,
-                      payment.currency,
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 md:justify-end">
-                  <span
-                    className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[.06em] ${statusClass(
-                      payment.status,
-                    )}`}
+                return (
+                  <article
+                    key={
+                      payment.id
+                    }
+                    className="border-b border-[#e8efec] last:border-b-0"
                   >
-                    {statusLabel(
-                      payment.status,
-                    )}
-                  </span>
+                    <div className="grid min-h-[68px] grid-cols-[42px_38px_140px_minmax(190px,1fr)_150px_130px_145px_130px] items-center gap-3 px-4 hover:bg-[#fafcfb]">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedIds.has(
+                            payment.id,
+                          )
+                        }
+                        onChange={() =>
+                          toggleSelected(
+                            payment.id,
+                          )
+                        }
+                        className="h-4 w-4 accent-[#0a9c63]"
+                      />
 
-                  <span className="rounded-full bg-[#edf1f3] px-3 py-1 text-[10px] font-black uppercase tracking-[.06em] text-[#526872]">
-                    Order:{" "}
-                    {statusLabel(
-                      payment.order
-                        .status,
-                    )}
-                  </span>
-                </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleExpanded(
+                            payment.id,
+                          )
+                        }
+                      >
+                        ›
+                      </button>
 
-                <div className="flex items-center justify-between gap-3 md:justify-end">
-                  <span className="text-xs text-[#829198]">
-                    {new Date(
-                      payment.createdAt,
-                    ).toLocaleDateString()}
-                  </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleExpanded(
+                            payment.id,
+                          )
+                        }
+                        className="text-left text-xs font-black"
+                      >
+                        {
+                          payment.order.reference
+                        }
+                      </button>
 
-                  <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-full border border-[#d8e4df] text-lg font-black text-[#0a7c55] transition ${
-                      expanded
-                        ? "rotate-180 bg-[#eff9f4]"
-                        : "bg-white"
-                    }`}
-                  >
-                    ⌄
-                  </span>
-                </div>
-              </button>
-
-              {expanded && (
-                <div
-                  id={`payment-details-${payment.id}`}
-                  className="border-t border-[#e1ebe7]"
-                >
-                  <header className="flex flex-wrap items-start justify-between gap-5 bg-[#fafcfb] px-6 py-5">
-                    <div>
-                      <div className="eyebrow">
-                        Payment Record
-                      </div>
-
-                      <h2 className="mt-2 text-xl font-black">
+                      <div>
                         <Link
                           href={`/admin/dealers/${payment.order.dealer.id}`}
-                          className="transition hover:text-[#0a9c63]"
+                          className="text-sm font-black hover:text-[#0a9c63]"
                         >
                           {
-                            payment.order
-                              .dealer
-                              .companyName
+                            payment.order.dealer.companyName
                           }
                         </Link>
-                      </h2>
 
-                      <p className="mt-2 text-xs text-[#71838b]">
-                        {
-                          payment.order
-                            .dealer
-                            .contactName
-                        }{" "}
-                        ·{" "}
-                        {
-                          payment.order
-                            .dealer.user
-                            .email
-                        }
-                      </p>
+                        <div className="text-[10px] text-[#829198]">
+                          {
+                            payment.order.dealer.user.email
+                          }
+                        </div>
+                      </div>
 
-                      <p className="mt-1 text-xs text-[#829198]">
-                        Payment ID:{" "}
-                        {payment.id}
-                      </p>
-                    </div>
+                      <div className="text-xs font-bold">
+                        {providerLabel(
+                          payment.provider,
+                        )}
+                      </div>
 
-                    <div className="text-right">
-                      <div className="text-2xl font-black text-[#08774f]">
+                      <div className="text-sm font-black text-[#08774f]">
                         {money(
-                          amount,
+                          payment.amount,
                           payment.currency,
                         )}
                       </div>
 
                       <span
-                        className={`mt-3 inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[.08em] ${statusClass(
+                        className={`w-fit rounded-full px-2.5 py-1 text-[9px] font-black uppercase ${statusClass(
                           payment.status,
                         )}`}
                       >
@@ -405,266 +725,168 @@ export default function PaymentManager({
                           payment.status,
                         )}
                       </span>
-                    </div>
-                  </header>
 
-                  <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-                    <div className="space-y-5">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="rounded-lg bg-[#f6f8f7] p-4 text-xs leading-6 text-[#657983]">
-                          <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                            Payment
-                            Details
-                          </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleExpanded(
+                              payment.id,
+                            )
+                          }
+                          className="rounded-md border px-3 py-1.5 text-[10px] font-black"
+                        >
+                          {open
+                            ? "Close"
+                            : "View"}
+                        </button>
 
-                          <div className="mt-2">
-                            <strong>
-                              Method:
-                            </strong>{" "}
-                            {paymentMethodLabel(
-                              payment.provider,
-                            )}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Status:
-                            </strong>{" "}
-                            {statusLabel(
-                              payment.status,
-                            )}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Currency:
-                            </strong>{" "}
-                            {
-                              payment.currency
-                            }
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Provider
-                              Reference:
-                            </strong>{" "}
-                            {payment.providerRef ||
-                              "Not provided"}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Created:
-                            </strong>{" "}
-                            {new Date(
-                              payment.createdAt,
-                            ).toLocaleString()}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Updated:
-                            </strong>{" "}
-                            {new Date(
-                              payment.updatedAt,
-                            ).toLocaleString()}
-                          </div>
-                        </div>
-
-                        <div className="rounded-lg bg-[#f6f8f7] p-4 text-xs leading-6 text-[#657983]">
-                          <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                            Related Order
-                          </div>
-
-                          <div className="mt-2">
-                            <strong>
-                              Reference:
-                            </strong>{" "}
-                            {
-                              payment.order
-                                .reference
-                            }
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Order Status:
-                            </strong>{" "}
-                            {statusLabel(
-                              payment.order
-                                .status,
-                            )}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Total Units:
-                            </strong>{" "}
-                            {totalUnits}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Delivery:
-                            </strong>{" "}
-                            {payment.order
-                              .deliveryCountry ||
-                              "Not provided"}
-                          </div>
-
-                          <Link
-                            href={`/admin/orders?q=${encodeURIComponent(
-                              payment.order
-                                .reference,
-                            )}`}
-                            className="mt-3 inline-block font-black text-[#0a9c63] hover:underline"
-                          >
-                            View Related
-                            Order →
-                          </Link>
-                        </div>
+                        <button
+                          type="button"
+                          disabled={
+                            busy
+                          }
+                          onClick={() =>
+                            deletePayment(
+                              payment,
+                            )
+                          }
+                          className="rounded-md border border-red-200 px-3 py-1.5 text-[10px] font-black text-red-600"
+                        >
+                          Delete
+                        </button>
                       </div>
+                    </div>
 
-                      <div>
-                        <div className="text-xs font-black uppercase tracking-[.08em] text-[#71838b]">
-                          Order Products
-                        </div>
+                    {open && (
+                      <div className="border-t border-[#dfe8e4] bg-[#fbfcfc] p-6">
+                        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="card p-4">
+                              <div className="text-[9px] font-black uppercase text-[#829198]">
+                                Provider Reference
+                              </div>
 
-                        <div className="table-wrap mt-3">
-                          <table>
-                            <thead>
-                              <tr>
-                                <th>
-                                  Product
-                                </th>
+                              <div className="mt-2 text-sm font-bold">
+                                {payment.providerRef ||
+                                  "Not provided"}
+                              </div>
+                            </div>
 
-                                <th>
-                                  Quantity
-                                </th>
-                              </tr>
-                            </thead>
+                            <div className="card p-4">
+                              <div className="text-[9px] font-black uppercase text-[#829198]">
+                                Created
+                              </div>
 
-                            <tbody>
-                              {payment.order.items.map(
+                              <div className="mt-2 text-sm font-bold">
+                                {new Date(
+                                  payment.createdAt,
+                                ).toLocaleString()}
+                              </div>
+                            </div>
+
+                            <div className="card p-4">
+                              <div className="text-[9px] font-black uppercase text-[#829198]">
+                                Dealer Contact
+                              </div>
+
+                              <div className="mt-2 text-sm font-bold">
+                                {
+                                  payment.order.dealer.contactName
+                                }
+                              </div>
+                            </div>
+
+                            <div className="card p-4">
+                              <div className="text-[9px] font-black uppercase text-[#829198]">
+                                Order Status
+                              </div>
+
+                              <div className="mt-2 text-sm font-bold">
+                                {statusLabel(
+                                  payment.order.status,
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <aside className="rounded-xl border border-[#dfe8e4] bg-white p-5">
+                            <div className="eyebrow">
+                              Payment Management
+                            </div>
+
+                            <label className="mt-5 block text-xs font-black">
+                              Payment Status
+                            </label>
+
+                            <select
+                              value={
+                                selectedStatus[
+                                  payment.id
+                                ]
+                              }
+                              onChange={(
+                                event,
+                              ) =>
+                                setSelectedStatus(
+                                  (
+                                    current,
+                                  ) => ({
+                                    ...current,
+
+                                    [payment.id]:
+                                      event.target
+                                        .value as PaymentStatus,
+                                  }),
+                                )
+                              }
+                              className="mt-2 w-full rounded-md border border-[#d8e4df] px-3 py-3 text-sm"
+                            >
+                              {statusOptions.map(
                                 (
-                                  item,
+                                  status,
                                 ) => (
-                                  <tr
+                                  <option
                                     key={
-                                      item.id
+                                      status
+                                    }
+                                    value={
+                                      status
                                     }
                                   >
-                                    <td>
-                                      <strong>
-                                        {
-                                          item
-                                            .product
-                                            .name
-                                        }
-                                      </strong>
-
-                                      <div className="mt-1 text-[10px] text-[#829198]">
-                                        {
-                                          item
-                                            .product
-                                            .slug
-                                        }
-                                      </div>
-                                    </td>
-
-                                    <td className="font-black">
-                                      {
-                                        item.quantity
-                                      }
-                                    </td>
-                                  </tr>
+                                    {statusLabel(
+                                      status,
+                                    )}
+                                  </option>
                                 ),
                               )}
-                            </tbody>
-                          </table>
+                            </select>
+
+                            <button
+                              type="button"
+                              disabled={
+                                busy
+                              }
+                              onClick={() =>
+                                updatePayment(
+                                  payment.id,
+                                )
+                              }
+                              className="btn btn-primary mt-3 w-full"
+                            >
+                              Update Payment
+                            </button>
+                          </aside>
                         </div>
                       </div>
-
-                      <div className="rounded-lg border border-[#e1ebe7] p-4 text-xs leading-6 text-[#657983]">
-                        <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                          Dealer Contact
-                        </div>
-
-                        <div className="mt-2">
-                          <strong>
-                            Contact:
-                          </strong>{" "}
-                          {
-                            payment.order
-                              .dealer
-                              .contactName
-                          }
-                        </div>
-
-                        <div className="mt-1">
-                          <strong>
-                            Email:
-                          </strong>{" "}
-                          {
-                            payment.order
-                              .dealer.user
-                              .email
-                          }
-                        </div>
-
-                        <div className="mt-1">
-                          <strong>
-                            Phone:
-                          </strong>{" "}
-                          {payment.order
-                            .dealer.phone ||
-                            "Not provided"}
-                        </div>
-
-                        <div className="mt-1">
-                          <strong>
-                            Country:
-                          </strong>{" "}
-                          {payment.order
-                            .dealer.country ||
-                            "Not provided"}
-                        </div>
-                      </div>
-                    </div>
-
-                    <aside>
-                      <OrderPaymentControl
-                        orderId={
-                          payment.order
-                            .id
-                        }
-                        initialStatus={
-                          payment.status ===
-                          "PAID"
-                            ? "PAID"
-                            : "PENDING"
-                        }
-                        provider={
-                          payment.provider
-                        }
-                      />
-
-                      <Link
-                        href={`/admin/dealers/${payment.order.dealer.id}`}
-                        className="btn btn-secondary mt-4 block w-full text-center"
-                      >
-                        View Dealer
-                        Profile
-                      </Link>
-                    </aside>
-                  </div>
-                </div>
-              )}
-            </article>
-          );
-        },
-      )}
-    </section>
+                    )}
+                  </article>
+                );
+              },
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

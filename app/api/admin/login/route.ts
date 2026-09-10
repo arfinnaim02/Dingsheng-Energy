@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import {
+  NextResponse,
+} from "next/server";
 
 import {
   adminCookieConfig,
@@ -6,19 +8,93 @@ import {
   verifyAdminPassword,
 } from "@/lib/adminAuth";
 
-export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as { password?: string };
-  if (!verifyAdminPassword(body.password ?? "")) {
-    return NextResponse.json({ ok: false, error: "Invalid administrator password." }, { status: 401 });
-  }
+export const runtime =
+  "nodejs";
 
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(adminCookieConfig.name, createAdminToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: adminCookieConfig.maxAge,
-    path: "/",
-  });
-  return response;
+type LoginBody = {
+  password?: unknown;
+};
+
+export async function POST(
+  request: Request,
+) {
+  try {
+    const body =
+      (await request
+        .json()
+        .catch(
+          () => ({}),
+        )) as LoginBody;
+
+    const password =
+      typeof body.password ===
+      "string"
+        ? body.password
+        : "";
+
+    if (
+      !verifyAdminPassword(
+        password,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+
+          error:
+            "Invalid administrator password.",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    const response =
+      NextResponse.json({
+        ok: true,
+      });
+
+    response.cookies.set({
+      name:
+        adminCookieConfig.name,
+
+      value:
+        createAdminToken(),
+
+      httpOnly: true,
+
+      sameSite: "lax",
+
+      secure:
+        process.env.NODE_ENV ===
+        "production",
+
+      maxAge:
+        adminCookieConfig.maxAge,
+
+      path: "/",
+    });
+
+    return response;
+  } catch (error) {
+    console.error(
+      "Administrator login failed:",
+      error instanceof Error
+        ? error.message
+        : error,
+    );
+
+    return NextResponse.json(
+      {
+        ok: false,
+
+        error:
+          "Administrator authentication is not configured correctly.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }

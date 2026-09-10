@@ -1,9 +1,14 @@
 import "server-only";
 
 import type {
+  ManagedProductDocument,
   ManagedProductImage,
   Product,
 } from "@/data/site";
+
+import {
+  replaceProductDocuments,
+} from "@/lib/databaseProductDocuments";
 
 import {
   readCatalog,
@@ -31,10 +36,17 @@ type BulkResult = {
 
 type SaveDatabaseProductOptions = {
   originalSlug?: string;
-  managedImages?: ManagedProductImage[];
+
+  managedImages?:
+    ManagedProductImage[];
+
+  managedDocuments?:
+    ManagedProductDocument[];
 };
 
-function uniqueStrings(values: string[]) {
+function uniqueStrings(
+  values: string[],
+) {
   return [
     ...new Set(
       values
@@ -42,7 +54,10 @@ function uniqueStrings(values: string[]) {
           (value) =>
             typeof value === "string",
         )
-        .map((value) => value.trim())
+        .map(
+          (value) =>
+            value.trim(),
+        )
         .filter(Boolean),
     ),
   ];
@@ -51,7 +66,8 @@ function uniqueStrings(values: string[]) {
 function cleanOptional(
   value: string | undefined,
 ) {
-  const cleaned = value?.trim() ?? "";
+  const cleaned =
+    value?.trim() ?? "";
 
   return cleaned || null;
 }
@@ -73,41 +89,6 @@ function commercialMode(
     default:
       return "RFQ_ONLY" as const;
   }
-}
-
-function documentTitle(
-  filePath: string,
-) {
-  try {
-    const pathname = new URL(
-      filePath,
-      "http://localhost",
-    ).pathname;
-
-    const filename =
-      pathname.split("/").pop() ||
-      "Product document";
-
-    return decodeURIComponent(filename)
-      .replace(/\.[^/.]+$/, "")
-      .replace(/[-_]+/g, " ")
-      .trim();
-  } catch {
-    return "Product document";
-  }
-}
-
-function validDealerPrices(
-  product: Product,
-) {
-  return (
-    product.dealerPrices ?? []
-  ).filter(
-    (price) =>
-      typeof price.amount === "number" &&
-      Number.isFinite(price.amount) &&
-      price.amount >= 0,
-  );
 }
 
 export async function saveDatabaseProduct(
@@ -150,10 +131,14 @@ export async function saveDatabaseProduct(
   const missingCategorySlugs =
     categorySlugs.filter(
       (slug) =>
-        !foundCategorySlugs.has(slug),
+        !foundCategorySlugs.has(
+          slug,
+        ),
     );
 
-  if (missingCategorySlugs.length) {
+  if (
+    missingCategorySlugs.length
+  ) {
     throw new Error(
       `The following categories do not exist in Neon: ${missingCategorySlugs.join(
         ", ",
@@ -161,81 +146,56 @@ export async function saveDatabaseProduct(
     );
   }
 
-  const requestedPrices =
-    validDealerPrices(product);
-
-  const requestedPriceGroupSlugs =
-    uniqueStrings(
-      requestedPrices.map(
-        (price) =>
-          price.priceGroupSlug,
-      ),
-    );
-
-  const priceGroups =
-    requestedPriceGroupSlugs.length
-      ? await prisma.priceGroup.findMany({
-          where: {
-            slug: {
-              in: requestedPriceGroupSlugs,
-            },
-          },
-
-          select: {
-            id: true,
-            slug: true,
-          },
-        })
-      : [];
-
-  const priceGroupBySlug =
-    new Map(
-      priceGroups.map((group) => [
-        group.slug,
-        group,
-      ]),
-    );
-
   const originalSlug =
     options.originalSlug?.trim();
 
   const existingProduct =
     originalSlug
-      ? await prisma.product.findUnique({
-          where: {
-            slug: originalSlug,
-          },
+      ? await prisma.product.findUnique(
+          {
+            where: {
+              slug:
+                originalSlug,
+            },
 
-          select: {
-            id: true,
-            slug: true,
+            select: {
+              id: true,
+              slug: true,
+            },
           },
-        })
-      : await prisma.product.findUnique({
-          where: {
-            slug: product.slug,
-          },
+        )
+      : await prisma.product.findUnique(
+          {
+            where: {
+              slug:
+                product.slug,
+            },
 
-          select: {
-            id: true,
-            slug: true,
+            select: {
+              id: true,
+              slug: true,
+            },
           },
-        });
+        );
 
   if (
     originalSlug &&
-    originalSlug !== product.slug
+    originalSlug !==
+      product.slug
   ) {
     const slugCollision =
-      await prisma.product.findUnique({
-        where: {
-          slug: product.slug,
-        },
+      await prisma.product.findUnique(
+        {
+          where: {
+            slug:
+              product.slug,
+          },
 
-        select: {
-          id: true,
+          select: {
+            id: true,
+          },
         },
-      });
+      );
 
     if (
       slugCollision &&
@@ -249,11 +209,16 @@ export async function saveDatabaseProduct(
   }
 
   const scalarData = {
-    name: product.name.trim(),
-    slug: product.slug,
+    name:
+      product.name.trim(),
+
+    slug:
+      product.slug,
 
     sku:
-      cleanOptional(product.sku),
+      cleanOptional(
+        product.sku,
+      ),
 
     subcategory:
       cleanOptional(
@@ -261,10 +226,14 @@ export async function saveDatabaseProduct(
       ),
 
     eyebrow:
-      cleanOptional(product.eyebrow),
+      cleanOptional(
+        product.eyebrow,
+      ),
 
     summary:
-      cleanOptional(product.summary),
+      cleanOptional(
+        product.summary,
+      ),
 
     description:
       cleanOptional(
@@ -285,7 +254,8 @@ export async function saveDatabaseProduct(
       product.dealerPriceProtected,
 
     featured:
-      product.featured === true,
+      product.featured ===
+      true,
 
     availability:
       cleanOptional(
@@ -297,13 +267,67 @@ export async function saveDatabaseProduct(
         product.unitLabel,
       ) || "Unit",
 
+    /*
+     * ========================================
+     * NEW BASE PRICING SYSTEM
+     * ========================================
+     *
+     * Products now store ONE base price.
+     * Dealer-specific prices are calculated
+     * dynamically using PriceGroup discounts.
+     */
+
+    basePrice:
+      typeof product.basePrice ===
+        "number" &&
+      Number.isFinite(
+        product.basePrice,
+      ) &&
+      product.basePrice >= 0
+        ? product.basePrice
+        : null,
+
+    baseCurrency:
+      typeof product.baseCurrency ===
+        "string" &&
+      /^[A-Za-z]{3}$/.test(
+        product.baseCurrency.trim(),
+      )
+        ? product.baseCurrency
+            .trim()
+            .toUpperCase()
+        : "USD",
+
+    minimumQty:
+      typeof product.minimumQty ===
+        "number" &&
+      Number.isFinite(
+        product.minimumQty,
+      ) &&
+      product.minimumQty >= 1
+        ? Math.floor(
+            product.minimumQty,
+          )
+        : null,
+
+    leadTimeText:
+      cleanOptional(
+        product.leadTimeText,
+      ),
+
+    pricingNote:
+      cleanOptional(
+        product.pricingNote,
+      ),
+
     dealerCommercialDetails:
       cleanOptional(
         product.dealerCommercialDetails,
       ),
 
     relatedProductsJson:
-      product.relatedProducts ?? [],
+      product.relatedProducts ??
+      [],
 
     isActive:
       product.active !== false,
@@ -311,24 +335,39 @@ export async function saveDatabaseProduct(
 
   const savedProduct =
     await prisma.$transaction(
-      async (transaction) => {
+      async (
+        transaction,
+      ) => {
         const databaseProduct =
           existingProduct
-            ? await transaction.product.update({
-                where: {
-                  id: existingProduct.id,
-                },
+            ? await transaction.product.update(
+                {
+                  where: {
+                    id:
+                      existingProduct.id,
+                  },
 
-                data: scalarData,
-              })
-            : await transaction.product.create({
-                data: scalarData,
-              });
+                  data:
+                    scalarData,
+                },
+              )
+            : await transaction.product.create(
+                {
+                  data:
+                    scalarData,
+                },
+              );
 
         /*
-         * Clear replaceable child records before
-         * recreating them from the submitted form.
+         * ========================================
+         * REPLACE EDITABLE CHILD RECORDS
+         * ========================================
+         *
+         * These records represent the current
+         * product configuration submitted by the
+         * admin form.
          */
+
         await transaction.productCategoryAssignment.deleteMany(
           {
             where: {
@@ -365,58 +404,68 @@ export async function saveDatabaseProduct(
           },
         );
 
-        await transaction.productDocument.deleteMany(
-          {
-            where: {
-              productId:
-                databaseProduct.id,
-            },
-          },
-        );
-
-        await transaction.productPrice.deleteMany(
-          {
-            where: {
-              productId:
-                databaseProduct.id,
-            },
-          },
-        );
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT delete ProductPrice here.
+         *
+         * ProductPrice is now retained only as
+         * legacy/fallback pricing while existing
+         * products are migrated to basePrice.
+         *
+         * Once a product has basePrice,
+         * databasePricing.ts ignores legacy
+         * ProductPrice rows and calculates dealer
+         * pricing dynamically.
+         */
 
         /*
-         * Category assignments
+         * ========================================
+         * CATEGORY ASSIGNMENTS
+         * ========================================
          */
+
         await transaction.productCategoryAssignment.createMany(
           {
-            data: categories.map(
-              (category) => ({
-                productId:
-                  databaseProduct.id,
+            data:
+              categories.map(
+                (
+                  category,
+                ) => ({
+                  productId:
+                    databaseProduct.id,
 
-                categoryId:
-                  category.id,
+                  categoryId:
+                    category.id,
 
-                groupName:
-                  cleanOptional(
-                    product.categoryGroups?.[
-                      category.slug
-                    ],
-                  ) ||
-                  cleanOptional(
-                    product.subcategory,
-                  ),
-              }),
-            ),
+                  groupName:
+                    cleanOptional(
+                      product
+                        .categoryGroups?.[
+                        category.slug
+                      ],
+                    ) ||
+                    cleanOptional(
+                      product.subcategory,
+                    ),
+                }),
+              ),
           },
         );
 
         /*
-         * Specifications
+         * ========================================
+         * SPECIFICATIONS
+         * ========================================
          */
+
         const specifications =
           product.specs
             .map(
-              ([label, value]) => ({
+              ([
+                label,
+                value,
+              ]) => ({
                 label:
                   label.trim(),
 
@@ -425,208 +474,146 @@ export async function saveDatabaseProduct(
               }),
             )
             .filter(
-              (specification) =>
+              (
+                specification,
+              ) =>
                 specification.label ||
                 specification.value,
             );
 
-        if (specifications.length) {
+        if (
+          specifications.length
+        ) {
           await transaction.productSpecification.createMany(
             {
-              data: specifications.map(
-                (
-                  specification,
-                  position,
-                ) => ({
-                  productId:
-                    databaseProduct.id,
+              data:
+                specifications.map(
+                  (
+                    specification,
+                    position,
+                  ) => ({
+                    productId:
+                      databaseProduct.id,
 
-                  label:
-                    specification.label,
+                    label:
+                      specification.label,
 
-                  value:
-                    specification.value,
+                    value:
+                      specification.value,
 
-                  position,
-                }),
-              ),
+                    position,
+                  }),
+                ),
             },
           );
         }
 
         /*
-         * Applications
+         * ========================================
+         * APPLICATIONS
+         * ========================================
          */
+
         const applications =
           uniqueStrings(
-            product.applications ?? [],
+            product.applications ??
+              [],
           );
 
-        if (applications.length) {
+        if (
+          applications.length
+        ) {
           await transaction.productApplication.createMany(
             {
-              data: applications.map(
-                (label, position) => ({
-                  productId:
-                    databaseProduct.id,
+              data:
+                applications.map(
+                  (
+                    label,
+                    position,
+                  ) => ({
+                    productId:
+                      databaseProduct.id,
 
-                  label,
-                  position,
-                }),
-              ),
+                    label,
+                    position,
+                  }),
+                ),
             },
           );
         }
 
         /*
-         * Standards
+         * ========================================
+         * STANDARDS
+         * ========================================
          */
+
         const standards =
           uniqueStrings(
-            product.standards ?? [],
+            product.standards ??
+              [],
           );
 
-        if (standards.length) {
+        if (
+          standards.length
+        ) {
           await transaction.productStandard.createMany(
             {
-              data: standards.map(
-                (label, position) => ({
-                  productId:
-                    databaseProduct.id,
+              data:
+                standards.map(
+                  (
+                    label,
+                    position,
+                  ) => ({
+                    productId:
+                      databaseProduct.id,
 
-                  label,
-                  position,
-                }),
-              ),
+                    label,
+                    position,
+                  }),
+                ),
             },
           );
         }
 
         /*
-         * Public and dealer documents
+         * ========================================
+         * PRICING
+         * ========================================
+         *
+         * No ProductPrice records are created here.
+         *
+         * Pricing source:
+         *
+         * Product.basePrice
+         * Product.baseCurrency
+         * Product.minimumQty
+         * Product.leadTimeText
+         * Product.pricingNote
+         *
+         * +
+         *
+         * PriceGroup.discountPercent
+         *
+         * =
+         *
+         * dynamically calculated dealer price.
          */
-        const documents = [
-          ...(
-            product.publicDownloads ?? []
-          )
-            .map((filePath) =>
-              filePath.trim(),
-            )
-            .filter(Boolean)
-            .map((filePath) => ({
-              filePath,
-              dealerOnly: false,
-            })),
-
-          ...(
-            product.dealerDownloads ?? []
-          )
-            .map((filePath) =>
-              filePath.trim(),
-            )
-            .filter(Boolean)
-            .map((filePath) => ({
-              filePath,
-              dealerOnly: true,
-            })),
-        ];
-
-        if (documents.length) {
-          await transaction.productDocument.createMany(
-            {
-              data: documents.map(
-                (document) => ({
-                  productId:
-                    databaseProduct.id,
-
-                  title:
-                    documentTitle(
-                      document.filePath,
-                    ),
-
-                  filePath:
-                    document.filePath,
-
-                  dealerOnly:
-                    document.dealerOnly,
-                }),
-              ),
-            },
-          );
-        }
-
-        /*
-         * Dealer pricing
-         */
-        const priceRows =
-          requestedPrices.flatMap(
-            (price) => {
-              const priceGroup =
-                priceGroupBySlug.get(
-                  price.priceGroupSlug,
-                );
-
-              if (!priceGroup) {
-                return [];
-              }
-
-              return [
-                {
-                  productId:
-                    databaseProduct.id,
-
-                  priceGroupId:
-                    priceGroup.id,
-
-                  currency:
-                    price.currency
-                      ?.trim()
-                      .toUpperCase()
-                      .slice(0, 10) ||
-                    "USD",
-
-                  amount:
-                    price.amount!,
-
-                  minimumQty:
-                    typeof price.minimumQty ===
-                      "number" &&
-                    Number.isInteger(
-                      price.minimumQty,
-                    ) &&
-                    price.minimumQty > 0
-                      ? price.minimumQty
-                      : null,
-
-                  leadTimeText:
-                    cleanOptional(
-                      price.leadTimeText,
-                    ),
-
-                  note:
-                    cleanOptional(
-                      price.note,
-                    ),
-                },
-              ];
-            },
-          );
-
-        if (priceRows.length) {
-          await transaction.productPrice.createMany(
-            {
-              data: priceRows,
-            },
-          );
-        }
 
         return databaseProduct;
       },
+
       {
         maxWait: 10000,
         timeout: 30000,
       },
     );
+
+  /*
+   * ========================================
+   * PRODUCT IMAGES
+   * ========================================
+   */
 
   let imageResult:
     | Awaited<
@@ -640,9 +627,11 @@ export async function saveDatabaseProduct(
    * Images are replaced only when the new
    * managed-image interface submits an array.
    *
-   * This prevents the older product editor from
-   * destroying existing Cloudinary metadata.
+   * This prevents older product-editor requests
+   * from accidentally destroying existing
+   * Cloudinary metadata.
    */
+
   if (
     Array.isArray(
       options.managedImages,
@@ -655,11 +644,58 @@ export async function saveDatabaseProduct(
       );
   }
 
+  /*
+   * ========================================
+   * PRODUCT DOCUMENTS
+   * ========================================
+   *
+   * Documents are replaced separately from
+   * the main product transaction.
+   *
+   * Important behavior:
+   *
+   * undefined:
+   * leave existing documents untouched
+   *
+   * []:
+   * remove every existing document
+   *
+   * populated array:
+   * replace existing documents with the
+   * current admin submission
+   */
+
+  let documentResult:
+    | Awaited<
+        ReturnType<
+          typeof replaceProductDocuments
+        >
+      >
+    | undefined;
+
+  if (
+    Array.isArray(
+      options.managedDocuments,
+    )
+  ) {
+    documentResult =
+      await replaceProductDocuments(
+        savedProduct.id,
+        options.managedDocuments,
+      );
+  }
+
   return {
-    product: savedProduct,
+    product:
+      savedProduct,
 
     removedCloudinaryPublicIds:
       imageResult
+        ?.removedCloudinaryPublicIds ??
+      [],
+
+    removedDocumentCloudinaryPublicIds:
+      documentResult
         ?.removedCloudinaryPublicIds ??
       [],
   };
@@ -669,29 +705,42 @@ export async function deleteDatabaseProduct(
   slug: string,
 ) {
   const product =
-    await prisma.product.findUnique({
-      where: {
-        slug,
-      },
-
-      select: {
-        id: true,
-        name: true,
-
-        images: {
-          select: {
-            cloudinaryPublicId: true,
-          },
+    await prisma.product.findUnique(
+      {
+        where: {
+          slug,
         },
 
-        _count: {
-          select: {
-            orderItems: true,
-            rfqItems: true,
+        select: {
+          id: true,
+          name: true,
+
+          images: {
+            select: {
+              cloudinaryPublicId:
+                true,
+            },
+          },
+
+          documents: {
+            select: {
+              cloudinaryPublicId:
+                true,
+            },
+          },
+
+          _count: {
+            select: {
+              orderItems:
+                true,
+
+              rfqItems:
+                true,
+            },
           },
         },
       },
-    });
+    );
 
   if (!product) {
     return {
@@ -699,12 +748,17 @@ export async function deleteDatabaseProduct(
 
       cloudinaryPublicIds:
         [] as string[],
+
+      documentCloudinaryPublicIds:
+        [] as string[],
     };
   }
 
   if (
-    product._count.orderItems > 0 ||
-    product._count.rfqItems > 0
+    product._count.orderItems >
+      0 ||
+    product._count.rfqItems >
+      0
   ) {
     throw new Error(
       `Cannot permanently delete "${product.name}" because it is referenced by an order or RFQ. Hide the product instead.`,
@@ -715,27 +769,55 @@ export async function deleteDatabaseProduct(
     ...new Set(
       product.images
         .map(
-          (image) =>
+          (
+            image,
+          ) =>
             image.cloudinaryPublicId,
         )
         .filter(
           (
             publicId,
           ): publicId is string =>
-            Boolean(publicId),
+            Boolean(
+              publicId,
+            ),
+        ),
+    ),
+  ];
+
+  const documentCloudinaryPublicIds = [
+    ...new Set(
+      product.documents
+        .map(
+          (
+            document,
+          ) =>
+            document.cloudinaryPublicId,
+        )
+        .filter(
+          (
+            publicId,
+          ): publicId is string =>
+            Boolean(
+              publicId,
+            ),
         ),
     ),
   ];
 
   await prisma.product.delete({
     where: {
-      id: product.id,
+      id:
+        product.id,
     },
   });
 
   return {
     deleted: true,
+
     cloudinaryPublicIds,
+
+    documentCloudinaryPublicIds,
   };
 }
 
@@ -754,7 +836,10 @@ export async function applyProductBulkAction(
     );
   }
 
-  if (slugs.length > 200) {
+  if (
+    slugs.length >
+    200
+  ) {
     throw new Error(
       "A maximum of 200 products can be updated at once.",
     );
@@ -765,13 +850,17 @@ export async function applyProductBulkAction(
 
   const catalogueProducts =
     catalog.products.filter(
-      (product) =>
+      (
+        product,
+      ) =>
         slugs.includes(
           product.slug,
         ),
     );
 
-  if (!catalogueProducts.length) {
+  if (
+    !catalogueProducts.length
+  ) {
     throw new Error(
       "None of the selected products were found.",
     );
@@ -779,45 +868,72 @@ export async function applyProductBulkAction(
 
   const foundSlugs =
     catalogueProducts.map(
-      (product) =>
+      (
+        product,
+      ) =>
         product.slug,
     );
 
-  if (action === "delete") {
+  /*
+   * ========================================
+   * BULK DELETE
+   * ========================================
+   */
+
+  if (
+    action ===
+    "delete"
+  ) {
     const databaseProducts =
-      await prisma.product.findMany({
-        where: {
-          slug: {
-            in: foundSlugs,
+      await prisma.product.findMany(
+        {
+          where: {
+            slug: {
+              in:
+                foundSlugs,
+            },
           },
-        },
 
-        select: {
-          id: true,
-          slug: true,
-          name: true,
+          select: {
+            id: true,
+            slug: true,
+            name: true,
 
-          _count: {
-            select: {
-              orderItems: true,
-              rfqItems: true,
+            _count: {
+              select: {
+                orderItems:
+                  true,
+
+                rfqItems:
+                  true,
+              },
             },
           },
         },
-      });
+      );
 
     const referencedProducts =
       databaseProducts.filter(
-        (product) =>
-          product._count.orderItems > 0 ||
-          product._count.rfqItems > 0,
+        (
+          product,
+        ) =>
+          product._count
+            .orderItems >
+            0 ||
+          product._count
+            .rfqItems >
+            0,
       );
 
-    if (referencedProducts.length) {
+    if (
+      referencedProducts.length
+    ) {
       const names =
         referencedProducts
           .map(
-            (product) =>
+            (
+              product,
+            ) =>
               product.name,
           )
           .join(", ");
@@ -828,24 +944,36 @@ export async function applyProductBulkAction(
     }
 
     await prisma.$transaction(
-      async (transaction) => {
-        await transaction.product.deleteMany({
-          where: {
-            slug: {
-              in: foundSlugs,
+      async (
+        transaction,
+      ) => {
+        await transaction.product.deleteMany(
+          {
+            where: {
+              slug: {
+                in:
+                  foundSlugs,
+              },
             },
           },
-        });
+        );
       },
+
       {
         maxWait: 10000,
         timeout: 20000,
       },
     );
 
+    /*
+     * Keep legacy JSON catalogue aligned.
+     */
+
     catalog.products =
       catalog.products.filter(
-        (product) =>
+        (
+          product,
+        ) =>
           !foundSlugs.includes(
             product.slug,
           ),
@@ -855,58 +983,87 @@ export async function applyProductBulkAction(
       const product of
       catalog.products
     ) {
-      product.relatedProducts = (
-        product.relatedProducts ?? []
-      ).filter(
-        (relatedSlug) =>
-          !foundSlugs.includes(
+      product.relatedProducts =
+        (
+          product.relatedProducts ??
+          []
+        ).filter(
+          (
             relatedSlug,
-          ),
-      );
+          ) =>
+            !foundSlugs.includes(
+              relatedSlug,
+            ),
+        );
     }
 
-    await writeCatalog(catalog);
+    await writeCatalog(
+      catalog,
+    );
 
     return {
       action,
+
       affected:
         foundSlugs.length,
-      slugs: foundSlugs,
+
+      slugs:
+        foundSlugs,
     };
   }
 
+  /*
+   * ========================================
+   * BULK VISIBILITY / FEATURE UPDATE
+   * ========================================
+   */
+
   const databaseUpdate =
-    action === "activate"
+    action ===
+    "activate"
       ? {
-          isActive: true,
+          isActive:
+            true,
         }
-      : action === "hide"
+      : action ===
+          "hide"
         ? {
-            isActive: false,
+            isActive:
+              false,
           }
-        : action === "feature"
+        : action ===
+            "feature"
           ? {
-              featured: true,
+              featured:
+                true,
             }
           : {
-              featured: false,
+              featured:
+                false,
             };
 
   const databaseUpdateResult =
-    await prisma.product.updateMany({
-      where: {
-        slug: {
-          in: foundSlugs,
+    await prisma.product.updateMany(
+      {
+        where: {
+          slug: {
+            in:
+              foundSlugs,
+          },
         },
+
+        data:
+          databaseUpdate,
       },
+    );
 
-      data: databaseUpdate,
-    });
-
-    return {
+  return {
     action,
+
     affected:
       databaseUpdateResult.count,
-    slugs: foundSlugs,
+
+    slugs:
+      foundSlugs,
   };
 }

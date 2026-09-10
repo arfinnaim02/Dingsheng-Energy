@@ -57,6 +57,25 @@ export type ManagedProductImage = {
   uploadedNow?: boolean;
 };
 
+export type ManagedProductDocument = {
+  id?: string;
+
+  title: string;
+
+  filePath: string;
+
+  cloudinaryPublicId: string | null;
+
+  originalFileName: string | null;
+
+  mimeType: string | null;
+
+  dealerOnly: boolean;
+
+  position: number;
+
+  uploadedNow?: boolean;
+};
 export type DealerPrice = {
   priceGroupSlug: string;
   currency: string;
@@ -71,6 +90,7 @@ export type PriceGroup = {
   name: string;
   description?: string;
   active?: boolean;
+  discountPercent?: number;
 };
 
 export type DealerPortalSettings = {
@@ -106,6 +126,11 @@ export type Product = {
   dealerDownloads?: string[];
   relatedProducts?: string[];
   active?: boolean;
+  basePrice?: number;
+  baseCurrency?: string;
+  minimumQty?: number;
+  leadTimeText?: string;
+  pricingNote?: string;
 };
 
 export type ProductCategory = {

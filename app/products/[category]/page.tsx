@@ -1,61 +1,118 @@
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
+import {
+  notFound,
+  redirect,
+} from "next/navigation";
 
-import { PublicShell } from "@/components/PublicShell";
-import { ProductCard } from "@/components/ProductCard";
-import { Callout } from "@/components/Callout";
-import { Icon } from "@/components/Icon";
-import { getCategories, getCategory, getProducts } from "@/lib/catalog";
+import {
+  buildCategoryHref,
+  getPublicProductCategories,
+} from "@/lib/publicProductTree";
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 
-type Props = { params: Promise<{ category: string }> };
+type Props = {
+  params: Promise<{
+    category: string;
+  }>;
+};
 
-export async function generateMetadata({ params }: Props) {
-  const { category: slug } = await params;
-  const category = await getCategory(slug);
-  return category ? { title: `${category.name} | Dingsheng Energy Limited`, description: category.description } : { title: "Product Category | Dingsheng Energy" };
+export async function generateMetadata({
+  params,
+}: Props) {
+  const {
+    category: rawSlug,
+  } = await params;
+
+  let slug: string;
+
+  try {
+    slug =
+      decodeURIComponent(
+        rawSlug,
+      );
+  } catch {
+    return {
+      title:
+        "Product Category | Dingsheng Energy Limited",
+    };
+  }
+
+  const categories =
+    await getPublicProductCategories();
+
+  const category =
+    categories.find(
+      (item) =>
+        item.slug === slug,
+    );
+
+  if (!category) {
+    return {
+      title:
+        "Product Category | Dingsheng Energy Limited",
+    };
+  }
+
+  return {
+    title:
+      `${category.name} | Dingsheng Energy Limited`,
+
+    description:
+      category.description ||
+      category.summary ||
+      `Explore ${category.name} products and LPG equipment from Dingsheng Energy Limited.`,
+  };
 }
 
-export default async function CategoryPage({ params }: Props) {
-  const { category: slug } = await params;
-  const [category, categories] = await Promise.all([getCategory(slug), getCategories()]);
-  if (!category) notFound();
-  const items = await getProducts({ categorySlug: category.slug });
-  const groups = category.groups.map((name) => ({ name, products: items.filter((product) => (product.categoryGroups?.[category.slug] ?? product.subcategory) === name) }));
-  const otherCategories = categories.filter((item) => item.slug !== category.slug);
+export default async function LegacyCategoryPage({
+  params,
+}: Props) {
+  const {
+    category: rawSlug,
+  } = await params;
 
-  return <PublicShell>
-    <section className="relative min-h-[470px] overflow-hidden bg-[#061f2d]"><Image
-  src={category.heroImage}
-  alt={category.name}
-  fill
-  priority
-  sizes="100vw"
-  className="object-cover object-center"
-/><div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/96 via-[#061f2d]/78 to-[#061f2d]/20"/><div className="container-shell relative z-10 flex min-h-[470px] items-center py-20"><div className="max-w-[760px]"><div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.16em] text-[#49d79e]"><span className="h-[2px] w-8 bg-[#49d79e]"/>Product System</div><h1 className="mt-4 text-[44px] font-black leading-[1.02] tracking-[-.04em] text-white md:text-[58px]">{category.name}</h1><p className="mt-6 max-w-[680px] text-base leading-8 text-white/75">{category.description}</p><div className="mt-8 flex flex-wrap gap-3"><Link href="#equipment" className="btn btn-primary">Explore Equipment →</Link><Link href="/contact#rfq" className="btn border border-white/35 text-white">Request a Quote</Link></div></div></div></section>
-    <div className="border-b border-[#e3ebe7] bg-white"><div className="container-shell flex min-h-[58px] flex-wrap items-center gap-2 text-xs font-semibold text-[#7a8d94]"><Link href="/">Home</Link><span>›</span><Link href="/products">Products</Link><span>›</span><span className="text-[#18313d]">{category.name}</span></div></div>
+  let slug: string;
 
-    <section className="section bg-white"><div className="container-shell grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr]"><div><div className="eyebrow">Category Overview</div><h2 className="h2 mt-3">Equipment for {category.name}</h2><p className="mt-5 text-[15px] leading-8 text-[#687c85]">{category.description}</p><div className="mt-8 grid gap-4 sm:grid-cols-2"><div className="flex items-start gap-4 border border-[#dfe8e4] bg-[#f9fbfa] p-4"><Icon name="eye" className="h-5 w-5 text-[#0a9c63]"/><div><h3 className="text-xs font-extrabold">Public Technical Information</h3><p className="mt-1 text-[11px] leading-5 text-[#768991]">Technical details and available specifications stay visible without login.</p></div></div><div className="flex items-start gap-4 border border-[#eadfbd] bg-[#fffaf0] p-4"><Icon name="lock" className="h-5 w-5 text-[#c88b00]"/><div><h3 className="text-xs font-extrabold">Protected Dealer Pricing</h3><p className="mt-1 text-[11px] leading-5 text-[#85795d]">Approved dealers access commercial information through the secure portal.</p></div></div></div></div><div className="relative min-h-[390px] overflow-hidden rounded-xl border border-[#dde8e3]"><Image
-  src={category.image}
-  alt={category.name}
-  fill
-  sizes="(max-width: 1023px) 100vw, 50vw"
-  className="object-cover object-center"
-/><div className="absolute inset-0 bg-gradient-to-t from-[#061f2d]/70 to-transparent"/><div className="absolute bottom-6 left-6 text-white"><div className="eyebrow !text-[#61e1af]">Dingsheng Product System</div><div className="mt-2 text-xl font-black">{category.name}</div></div></div></div></section>
+  try {
+    slug =
+      decodeURIComponent(
+        rawSlug,
+      );
+  } catch {
+    notFound();
+  }
 
-    <section className="border-y border-[#e4ebe7] bg-[#f5f8f6] py-14"><div className="container-shell"><div className="text-center"><div className="eyebrow">Product Groups</div><h2 className="mt-3 text-3xl font-black">Explore the {category.shortName || category.name} Range</h2></div><div className="mt-9 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">{groups.map((group,i)=><a key={group.name} href={group.products.length ? `#group-${i+1}` : "#equipment"} className="group flex min-h-[98px] items-center justify-between border border-[#dfe8e4] bg-white px-5 py-4 hover:border-[#0a9c63]/45"><div className="flex items-center gap-4"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e9f7ef] text-[10px] font-black text-[#0a9c63]">{String(i+1).padStart(2,"0")}</div><div><div className="text-xs font-extrabold">{group.name}</div><div className="mt-1 text-[10px] text-[#879791]">{group.products.length ? `${group.products.length} item${group.products.length===1?"":"s"}` : "Catalogue expanding"}</div></div></div><Icon name="arrow" className="h-4 w-4 text-[#0a9c63]"/></a>)}</div></div></section>
+  const categories =
+    await getPublicProductCategories();
 
-    <section id="equipment" className="section bg-white"><div className="container-shell grid gap-9 lg:grid-cols-[255px_minmax(0,1fr)]"><aside className="self-start lg:sticky lg:top-24"><div className="overflow-hidden rounded-xl border border-[#dfe8e4] bg-white"><div className="bg-[#071f2c] px-5 py-5 text-white"><div className="text-[10px] font-black uppercase tracking-[.14em] text-[#4fd8a2]">Product System</div><h3 className="mt-2 text-base font-black">{category.name}</h3></div><div className="p-4"><div className="grid gap-1">{groups.map((group,i)=><a key={group.name} href={group.products.length ? `#group-${i+1}` : "#equipment"} className="flex items-center justify-between rounded-md px-3 py-2.5 text-[11px] font-bold text-[#526a75] hover:bg-[#edf7f2] hover:text-[#0a9c63]"><span>{group.name}</span>{group.products.length>0&&<span className="rounded-full bg-[#eef5f1] px-2 py-1 text-[9px]">{group.products.length}</span>}</a>)}</div><div className="my-5 border-t border-[#e7edea]"/><div className="rounded-lg bg-[#fff8e7] p-4"><div className="flex items-center gap-2 text-[11px] font-black text-[#9a6900]"><Icon name="lock" className="h-4 w-4"/>Dealer Pricing</div><p className="mt-2 text-[10px] leading-5 text-[#82765c]">Commercial pricing is available to approved dealer accounts.</p><Link href="/dealer/login" className="mt-4 flex h-9 items-center justify-center bg-[#0a9c63] text-[10px] font-black uppercase text-white">Dealer Login</Link></div></div></div></aside><main><div className="flex flex-wrap items-end justify-between gap-5"><div><div className="eyebrow">Equipment Catalogue</div><h2 className="mt-2 text-3xl font-black">{category.name} Equipment</h2></div><span className="pill">{items.length} products</span></div>{items.length>0?<div className="mt-10 space-y-14">{groups.map((group,groupIndex)=>group.products.length?<section key={group.name} id={`group-${groupIndex+1}`} className="scroll-mt-28"><div className="mb-6 flex items-end justify-between gap-4 border-b border-[#e3ebe7] pb-4"><div><div className="text-[10px] font-black uppercase tracking-[.14em] text-[#0a9c63]">Product Group</div><h3 className="mt-2 text-xl font-black">{group.name}</h3></div><span className="text-[10px] font-bold uppercase text-[#82958c]">{group.products.length} products</span></div><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{group.products.map((product)=><ProductCard key={product.slug} product={product} contextCategorySlug={category.slug}/>)}</div></section>:null)}</div>:<div className="mt-10 rounded-xl border border-[#dfe8e4] bg-[#f8faf9] p-10 text-center"><Icon name="box" className="mx-auto h-8 w-8 text-[#0a9c63]"/><h3 className="mt-5 text-xl font-black">Catalogue Expansion in Progress</h3><p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#687c85]">Products will appear here as approved technical records are added through the admin panel.</p></div>}</main></div></section>
+  const category =
+    categories.find(
+      (item) =>
+        item.slug === slug,
+    );
 
-    <section className="section soft-section"><div className="container-shell"><div className="flex flex-wrap items-end justify-between gap-5"><div><div className="eyebrow">Explore More</div><h2 className="h2 mt-3">Other LPG Product Systems</h2></div><Link href="/products" className="text-xs font-black uppercase text-[#0a9c63]">View All Products →</Link></div><div className="mt-9 grid gap-5 md:grid-cols-3">{otherCategories.map((item)=><Link key={item.slug} href={`/products/${item.slug}`} className="group overflow-hidden rounded-xl border border-[#dfe8e4] bg-white transition hover:-translate-y-1 hover:shadow-xl"><div className="relative h-[180px]"><Image
-  src={item.image}
-  alt={item.name}
-  fill
-  sizes="(max-width: 767px) 100vw, 33vw"
-  className="object-cover object-center"
-/><div className="absolute inset-0 bg-gradient-to-t from-[#071f2c]/70 to-transparent"/></div><div className="p-5"><h3 className="text-lg font-black">{item.name}</h3><p className="mt-2 text-xs leading-6 text-[#687c85]">{item.summary}</p><div className="mt-4 text-[10px] font-black uppercase text-[#0a9c63]">Explore Products →</div></div></Link>)}</div></div></section>
-    <section className="section-sm bg-white"><div className="container-shell"><Callout title={`Need Help With ${category.name}?`} copy="Share your equipment, project or technical requirements with Dingsheng and our team can assist with product selection and quotation support."/></div></section>
-  </PublicShell>;
+  if (!category) {
+    notFound();
+  }
+
+  /*
+   * This route exists only for
+   * backward compatibility.
+   *
+   * Example:
+   *
+   * /products/storage-tank
+   *
+   * becomes:
+   *
+   * /products/category/lpg/
+   * filling-plant/storage-tank
+   */
+  redirect(
+    buildCategoryHref(
+      categories,
+      category.id,
+    ),
+  );
 }

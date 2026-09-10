@@ -42,27 +42,34 @@ const DEFAULT_PRICE_GROUPS: PriceGroup[] = [
     name: "Standard",
     description:
       "Default approved dealer pricing",
+    discountPercent: 0,
     active: true,
   },
+
   {
     slug: "tier-a",
     name: "Tier A",
     description:
       "Preferred dealer pricing",
+    discountPercent: 5,
     active: true,
   },
+
   {
     slug: "tier-b",
     name: "Tier B",
     description:
       "Volume dealer pricing",
+    discountPercent: 10,
     active: true,
   },
+
   {
     slug: "vip",
     name: "VIP / Custom",
     description:
       "Strategic-account pricing",
+    discountPercent: 15,
     active: true,
   },
 ];
@@ -706,13 +713,22 @@ export async function updatePricingConfiguration(
   input: {
     priceGroups: PriceGroup[];
 
-    dealerPortal: DealerPortalSettings;
+    dealerPortal:
+      DealerPortalSettings;
 
-    productPrices: Record<
+    productBasePrices: Record<
       string,
-      import("@/data/site").DealerPrice[]
+      {
+        basePrice?: number;
+        baseCurrency?: string;
+        minimumQty?: number;
+        leadTimeText?: string;
+        pricingNote?: string;
+      }
     >;
   },
 ): Promise<void> {
-  await updateDatabasePricing(input);
+  await updateDatabasePricing(
+    input,
+  );
 }

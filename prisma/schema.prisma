@@ -31,6 +31,23 @@ enum ProductCommercialMode {
   DEALER_PURCHASE_AND_RFQ
 }
 
+enum ResourceAccess {
+  PUBLIC
+  DEALER
+  CONTROLLED
+}
+
+enum ResourceType {
+  COMPANY
+  CATALOGUE
+  DATASHEET
+  TECHNICAL
+  COMMERCIAL
+  INSTALLATION
+  SERVICE
+  OTHER
+}
+
 enum RfqStatus {
   DRAFT
   SUBMITTED
@@ -143,15 +160,16 @@ model DealerProfile {
 }
 
 model PriceGroup {
-  id          String          @id @default(cuid())
-  slug        String          @unique
-  name        String          @unique
-  description String?         @db.Text
-  active      Boolean         @default(true)
-  dealers     DealerProfile[]
-  prices      ProductPrice[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id              String          @id @default(cuid())
+  slug            String          @unique
+  name            String          @unique
+  description     String?         @db.Text
+  discountPercent Decimal         @default(0) @db.Decimal(5, 2)
+  active          Boolean         @default(true)
+  dealers         DealerProfile[]
+  prices          ProductPrice[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model DealerPortalSetting {
@@ -162,20 +180,36 @@ model DealerPortalSetting {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
-
 model ProductCategory {
-  id          String                      @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
-  slug        String                      @unique
+  slug        String  @unique
   shortName   String?
-  summary     String?                     @db.Text
-  description String?                     @db.Text
-  image       String?
-  heroImage   String?
-  groupsJson  Json?
+  summary     String? @db.Text
+  description String? @db.Text
+
+  image             String?
+  imagePublicId     String?
+  heroImage         String?
+  heroImagePublicId String?
+
+  groupsJson Json?
+
+  parentId String?
+  parent   ProductCategory?  @relation("ProductCategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children ProductCategory[] @relation("ProductCategoryTree")
+
+  position Int     @default(0)
+  isActive Boolean @default(true)
+
   assignments ProductCategoryAssignment[]
-  createdAt   DateTime                    @default(now())
-  updatedAt   DateTime                    @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([parentId, position])
+  @@index([isActive])
 }
 
 model Product {
@@ -194,6 +228,13 @@ model Product {
   availability            String?
   unitLabel               String?                     @default("Unit")
   dealerCommercialDetails String?                     @db.Text
+
+  basePrice               Decimal?                    @db.Decimal(14, 2)
+  baseCurrency            String                      @default("USD")
+  minimumQty              Int?
+  leadTimeText            String?
+  pricingNote             String?                     @db.Text
+
   relatedProductsJson     Json?
   isActive                Boolean                     @default(true)
   categories              ProductCategoryAssignment[]
@@ -258,13 +299,24 @@ model ProductImage {
 }
 
 model ProductDocument {
-  id         String   @id @default(cuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  title      String
-  filePath   String
-  dealerOnly Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id                 String   @id @default(cuid())
+  productId          String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  title              String
+  filePath           String
+
+  cloudinaryPublicId String?
+  originalFileName   String?
+  mimeType           String?
+
+  dealerOnly         Boolean  @default(false)
+  position           Int      @default(0)
+
+  createdAt          DateTime @default(now())
+
+  @@index([productId, dealerOnly, position])
+  @@index([cloudinaryPublicId])
 }
 
 model ProductPrice {
@@ -283,21 +335,71 @@ model ProductPrice {
 }
 
 model Service {
-  id               String   @id @default(cuid())
-  name             String
-  slug             String   @unique
-  shortName        String?
-  summary          String?  @db.Text
-  description      String?  @db.Text
-  image            String?
-  heroImage        String?
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  shortName   String?
+  summary     String? @db.Text
+  description String? @db.Text
+
+  image             String?
+  imagePublicId     String?
+  heroImage         String?
+  heroImagePublicId String?
+
+  parentId String?
+  parent   Service?  @relation("ServiceTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Service[] @relation("ServiceTree")
+
+  position Int @default(0)
+
   scopeJson        Json?
   processJson      Json?
   applicationsJson Json?
-  featured         Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+
+  featured Boolean @default(false)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([parentId, position])
+  @@index([isActive])
+}
+
+model Resource {
+  id          String         @id @default(cuid())
+  title       String
+  slug        String         @unique
+  summary     String?        @db.Text
+  description String?        @db.Text
+
+  type        ResourceType   @default(OTHER)
+  access      ResourceAccess @default(PUBLIC)
+
+  image             String?
+  imagePublicId     String?
+
+  fileUrl           String?
+  filePublicId      String?
+  originalFileName  String?
+  fileSize          Int?
+  mimeType          String?
+
+  externalUrl String?
+
+  position Int     @default(0)
+  featured Boolean @default(false)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([access])
+  @@index([type])
+  @@index([position])
 }
 
 model Rfq {

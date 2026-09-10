@@ -7,18 +7,22 @@ import {
 } from "@/components/admin/ProductEditor";
 
 import {
-  getCategories,
   getPriceGroups,
 } from "@/lib/catalog";
 
-export const dynamic = "force-dynamic";
+import {
+  getAdminCategories,
+} from "@/lib/databaseCategories";
+
+export const dynamic =
+  "force-dynamic";
 
 export default async function NewProductPage() {
   const [
     categories,
     priceGroups,
   ] = await Promise.all([
-    getCategories(),
+    getAdminCategories(),
     getPriceGroups(),
   ]);
 
@@ -28,8 +32,12 @@ export default async function NewProductPage() {
       title="Add Product"
     >
       <ProductEditor
-        categories={categories}
-        priceGroups={priceGroups}
+        categories={
+          categories
+        }
+        priceGroups={
+          priceGroups
+        }
         initialImages={[]}
       />
     </PortalShell>

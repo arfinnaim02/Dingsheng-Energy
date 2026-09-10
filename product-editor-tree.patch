@@ -1,0 +1,319 @@
+diff --git a/components/admin/ProductEditor.tsx b/components/admin/ProductEditor.tsx
+--- a/components/admin/ProductEditor.tsx
++++ b/components/admin/ProductEditor.tsx
+@@
+ import {
+   FormEvent,
+-  useMemo,
+   useState,
+ } from "react";
+@@
+ import {
+   ProductImageManager,
+ } from "@/components/admin/ProductImageManager";
+
++import {
++  ProductCategoryTreePicker,
++} from "@/components/admin/ProductCategoryTreePicker";
++
++import type {
++  ProductCategoryTreeItem,
++} from "@/components/admin/ProductCategoryTreePicker";
++
+ import type {
+   DealerPrice,
+   ManagedProductImage,
+   PriceGroup,
+   Product,
+-  ProductCategory,
+   ProductSpecification,
+ } from "@/data/site";
+
+ type Props = {
+   product?: Product;
+-  categories: ProductCategory[];
++  categories: ProductCategoryTreeItem[];
+   priceGroups: PriceGroup[];
+   initialImages?: ManagedProductImage[];
+ };
+@@
+-  const groupOptions =
+-    useMemo(() => {
+-      const selected =
+-        categories.filter(
+-          (category) =>
+-            form.categorySlugs.includes(
+-              category.slug,
+-            ),
+-        );
+-
+-      return [
+-        ...new Set(
+-          selected.flatMap(
+-            (category) =>
+-              category.groups,
+-          ),
+-        ),
+-      ];
+-    }, [
+-      categories,
+-      form.categorySlugs,
+-    ]);
+-
+   function patch<
+@@
+   function toggleCategory(
+     slug: string,
+   ) {
+     setForm((current) => {
+       const exists =
+@@
+       const categorySlugs = exists
+         ? current.categorySlugs.filter(
+             (item) => item !== slug,
+           )
+         : [
+             ...current.categorySlugs,
+             slug,
+           ];
+-
+-      const categoryGroups = {
+-        ...(current.categoryGroups ?? {}),
+-      };
+-
+-      if (exists) {
+-        delete categoryGroups[slug];
+-      } else {
+-        const category =
+-          categories.find(
+-            (item) =>
+-              item.slug === slug,
+-          );
+-
+-        categoryGroups[slug] =
+-          category?.groups[0] ??
+-          current.subcategory ??
+-          "";
+-      }
+
+       let primaryCategorySlug =
+         current.primaryCategorySlug;
+@@
+-      const subcategory =
+-        primaryCategorySlug
+-          ? categoryGroups[
+-              primaryCategorySlug
+-            ] ??
+-            current.subcategory
+-          : current.subcategory;
+-
+       return {
+         ...current,
+         categorySlugs,
+-        categoryGroups,
+         primaryCategorySlug,
+-        subcategory,
+       };
+     });
+   }
+-
+-  function updateCategoryGroup(
+-    categorySlug: string,
+-    group: string,
+-  ) {
+-    setForm((current) => {
+-      const categoryGroups = {
+-        ...(current.categoryGroups ?? {}),
+-        [categorySlug]: group,
+-      };
+-
+-      return {
+-        ...current,
+-        categoryGroups,
+-
+-        subcategory:
+-          current.primaryCategorySlug ===
+-          categorySlug
+-            ? group
+-            : current.subcategory,
+-      };
+-    });
+-  }
+@@
+-            <div className="field">
+-              <label>
+-                Subcategory / product group
+-              </label>
+-
+-              <input
+-                list="product-groups"
+-                value={form.subcategory}
+-                onChange={(event) =>
+-                  patch(
+-                    "subcategory",
+-                    event.target.value,
+-                  )
+-                }
+-              />
+-            </div>
+-
+-            <datalist id="product-groups">
+-              {groupOptions.map(
+-                (item) => (
+-                  <option
+-                    value={item}
+-                    key={item}
+-                  />
+-                ),
+-              )}
+-            </datalist>
+-
+             <div className="field">
+               <label>
+                 Eyebrow / short label
+@@
+           <h2 className="mt-2 text-xl font-black">
+-            Product systems & groups
++            Product category tree
+           </h2>
+
+           <p className="mt-2 text-sm leading-6 text-[#71838b]">
+-            A product can appear in multiple
+-            systems. Choose one primary category
+-            for the canonical public URL.
++            Select the most specific category for this product. Multiple
++            branches are supported when genuinely required. Choose one
++            primary category for the canonical public URL.
+           </p>
+
+-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+-            {categories.map(
+-              (category) => (
+-                <label
+-                  key={category.slug}
+-                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${
+-                    form.categorySlugs.includes(
+-                      category.slug,
+-                    )
+-                      ? "border-[#0a9c63] bg-[#eff9f4]"
+-                      : "border-[#dfe8e4] bg-white"
+-                  }`}
+-                >
+-                  <input
+-                    type="checkbox"
+-                    checked={form.categorySlugs.includes(
+-                      category.slug,
+-                    )}
+-                    onChange={() =>
+-                      toggleCategory(
+-                        category.slug,
+-                      )
+-                    }
+-                    className="mt-1"
+-                  />
+-
+-                  <span>
+-                    <strong className="block text-sm">
+-                      {category.name}
+-                    </strong>
+-
+-                    <span className="mt-1 block text-xs leading-5 text-[#71838b]">
+-                      {category.summary}
+-                    </span>
+-                  </span>
+-                </label>
+-              ),
+-            )}
+-          </div>
+-
+-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+-            {categories
+-              .filter((category) =>
+-                form.categorySlugs.includes(
+-                  category.slug,
+-                ),
+-              )
+-              .map((category) => (
+-                <div
+-                  className="field"
+-                  key={category.slug}
+-                >
+-                  <label>
+-                    {category.name} group
+-                  </label>
+-
+-                  <select
+-                    value={
+-                      form.categoryGroups?.[
+-                        category.slug
+-                      ] ?? ""
+-                    }
+-                    onChange={(event) =>
+-                      updateCategoryGroup(
+-                        category.slug,
+-                        event.target.value,
+-                      )
+-                    }
+-                  >
+-                    <option value="">
+-                      Select product group
+-                    </option>
+-
+-                    {category.groups.map(
+-                      (group) => (
+-                        <option
+-                          key={group}
+-                          value={group}
+-                        >
+-                          {group}
+-                        </option>
+-                      ),
+-                    )}
+-                  </select>
+-                </div>
+-              ))}
++          <div className="mt-5">
++            <ProductCategoryTreePicker
++              categories={categories}
++              selectedSlugs={form.categorySlugs}
++              primarySlug={form.primaryCategorySlug}
++              onToggle={toggleCategory}
++              onPrimaryChange={(slug) =>
++                patch("primaryCategorySlug", slug)
++              }
++            />
+           </div>
+
+           <div className="field mt-5 max-w-md">
+@@
+               value={
+                 form.primaryCategorySlug
+               }
+-              onChange={(event) => {
+-                const value =
+-                  event.target.value;
+-
+-                setForm(
+-                  (current) => ({
+-                    ...current,
+-
+-                    primaryCategorySlug:
+-                      value,
+-
+-                    subcategory:
+-                      current
+-                        .categoryGroups?.[
+-                        value
+-                      ] ??
+-                      current.subcategory,
+-                  }),
+-                );
+-              }}
++              onChange={(event) =>
++                patch(
++                  "primaryCategorySlug",
++                  event.target.value,
++                )
++              }
+               required
+             >

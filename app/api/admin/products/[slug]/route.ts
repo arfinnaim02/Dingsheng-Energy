@@ -1,12 +1,9 @@
 import {
-  revalidatePath,
-} from "next/cache";
-
-import {
   NextResponse,
 } from "next/server";
 
 import type {
+  ManagedProductDocument,
   ManagedProductImage,
   Product,
 } from "@/data/site";
@@ -16,12 +13,7 @@ import {
 } from "@/lib/adminAuth";
 
 import {
-  deleteProduct,
-  getProduct,
-  upsertProduct,
-} from "@/lib/catalog";
-
-import {
+  deleteProductDocument,
   deleteProductImage,
 } from "@/lib/cloudinary";
 
@@ -30,9 +22,25 @@ import {
   saveDatabaseProduct,
 } from "@/lib/databaseProducts";
 
-type ProductRequest = Product & {
-  managedImages?: ManagedProductImage[];
-};
+import {
+  deleteProduct,
+  upsertProduct,
+} from "@/lib/catalog";
+
+export const runtime =
+  "nodejs";
+
+export const dynamic =
+  "force-dynamic";
+
+type ProductRequest =
+  Product & {
+    managedImages?:
+      ManagedProductImage[];
+
+    managedDocuments?:
+      ManagedProductDocument[];
+  };
 
 type RouteContext = {
   params: Promise<{
@@ -40,77 +48,29 @@ type RouteContext = {
   }>;
 };
 
-async function cleanupCloudinaryImages(
-  publicIds: string[],
-) {
-  const results =
-    await Promise.allSettled(
-      publicIds.map((publicId) =>
-        deleteProductImage(publicId),
-      ),
-    );
-
-  results.forEach(
-    (result, index) => {
-      if (result.status === "rejected") {
-        console.error(
-          `Unable to remove Cloudinary image ${publicIds[index]}:`,
-          result.reason,
-        );
-      }
-    },
-  );
-}
-
-export async function GET(
-  _request: Request,
-  context: RouteContext,
-) {
-  if (!(await isAdminSession())) {
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
-
-  const { slug } =
-    await context.params;
-
-  const product = await getProduct(
-    slug,
-    {
-      includeProtected: true,
-    },
-  );
-
-  if (!product) {
-    return NextResponse.json(
-      {
-        error: "Product not found.",
-      },
-      {
-        status: 404,
-      },
-    );
-  }
-
-  return NextResponse.json({
-    product,
-  });
-}
+/*
+ * ============================================
+ * UPDATE PRODUCT
+ * ============================================
+ */
 
 export async function PUT(
   request: Request,
   context: RouteContext,
 ) {
-  if (!(await isAdminSession())) {
+  /*
+   * API routes must use isAdminSession().
+   *
+   * requireAdmin() is intended for protected
+   * server pages/layouts and returns void.
+   */
+  if (
+    !(await isAdminSession())
+  ) {
     return NextResponse.json(
       {
-        error: "Unauthorized",
+        error:
+          "Unauthorized",
       },
       {
         status: 401,
@@ -118,38 +78,45 @@ export async function PUT(
     );
   }
 
-  const { slug } =
+  const {
+    slug: rawSlug,
+  } =
     await context.params;
 
-  const previousProduct =
-    await getProduct(slug, {
-      includeProtected: true,
-    });
+  let originalSlug:
+    string;
 
-  if (!previousProduct) {
+  try {
+    originalSlug =
+      decodeURIComponent(
+        rawSlug,
+      );
+  } catch {
     return NextResponse.json(
       {
-        error: "Product not found.",
+        error:
+          "Invalid product slug.",
       },
       {
-        status: 404,
+        status: 400,
       },
     );
   }
 
-  let savedCatalogProduct:
-    | Product
-    | undefined;
-
   try {
     const body =
-      (await request.json()) as ProductRequest;
+      (await request.json()) as
+        ProductRequest;
 
-    if (!body.name?.trim()) {
+    if (
+      !body ||
+      typeof body !==
+        "object"
+    ) {
       return NextResponse.json(
         {
           error:
-            "Product name is required.",
+            "Invalid product data.",
         },
         {
           status: 400,
@@ -157,100 +124,139 @@ export async function PUT(
       );
     }
 
-    if (!body.categorySlugs?.length) {
-      return NextResponse.json(
-        {
-          error:
-            "Select at least one product category.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
+    /*
+     * managedImages and managedDocuments are not
+     * part of the legacy Product object itself.
+     *
+     * Pass them separately to saveDatabaseProduct()
+     * so the dedicated DB managers can replace the
+     * relevant child records.
+     */
     const {
       managedImages,
+      managedDocuments,
       ...productInput
-    } = body;
+    } =
+      body;
 
-    savedCatalogProduct =
-      await upsertProduct(
-        productInput as Product,
-        slug,
-      );
+    /*
+     * ============================================
+     * SAVE NEON PRODUCT
+     * ============================================
+     */
 
     const databaseResult =
       await saveDatabaseProduct(
-        savedCatalogProduct,
+        productInput,
         {
-          originalSlug: slug,
+          originalSlug,
 
-          managedImages:
-            Array.isArray(managedImages)
-              ? managedImages
-              : undefined,
+          managedImages,
+
+          /*
+           * IMPORTANT:
+           *
+           * [] means:
+           * delete all existing ProductDocument rows.
+           *
+           * undefined means:
+           * don't touch existing documents.
+           */
+          managedDocuments,
         },
       );
 
-    await cleanupCloudinaryImages(
-      databaseResult
-        .removedCloudinaryPublicIds,
-    );
-
-    revalidatePath("/");
-    revalidatePath("/products");
-    revalidatePath("/admin/products");
-
-    for (
-      const categorySlug of
-      savedCatalogProduct.categorySlugs
-    ) {
-      revalidatePath(
-        `/products/${categorySlug}`,
-      );
-    }
-
-    for (
-      const categorySlug of
-      previousProduct.categorySlugs
-    ) {
-      revalidatePath(
-        `/products/${categorySlug}`,
-      );
-    }
-
-    revalidatePath(
-      `/products/${savedCatalogProduct.primaryCategorySlug}/${savedCatalogProduct.slug}`,
-    );
-
-    revalidatePath(
-      `/products/${previousProduct.primaryCategorySlug}/${previousProduct.slug}`,
-    );
-
-    return NextResponse.json({
-      ok: true,
-      product: savedCatalogProduct,
-    });
-  } catch (error) {
     /*
-     * Restore the previous JSON product if
-     * database synchronization fails.
+     * ============================================
+     * DELETE REMOVED CLOUDINARY PRODUCT IMAGES
+     * ============================================
      */
-    if (savedCatalogProduct) {
-      await upsertProduct(
-        previousProduct,
-        savedCatalogProduct.slug,
-      ).catch((rollbackError) => {
-        console.error(
-          "Unable to restore previous catalogue product:",
-          rollbackError,
-        );
-      });
+
+    const removedImageIds =
+      databaseResult
+        .removedCloudinaryPublicIds ??
+      [];
+
+    if (
+      removedImageIds.length
+    ) {
+      await Promise.allSettled(
+        removedImageIds.map(
+          async (
+            publicId,
+          ) => {
+            await deleteProductImage(
+              publicId,
+            );
+          },
+        ),
+      );
     }
 
+    /*
+     * ============================================
+     * DELETE REMOVED CLOUDINARY DOCUMENTS
+     * ============================================
+     *
+     * The DB rows have already been replaced by
+     * replaceProductDocuments().
+     *
+     * Only after that succeeds do we remove the old
+     * physical files from Cloudinary.
+     */
+
+    const removedDocumentIds =
+      databaseResult
+        .removedDocumentCloudinaryPublicIds ??
+      [];
+
+    if (
+      removedDocumentIds.length
+    ) {
+      await Promise.allSettled(
+        removedDocumentIds.map(
+          async (
+            publicId,
+          ) => {
+            await deleteProductDocument(
+              publicId,
+            );
+          },
+        ),
+      );
+    }
+
+    /*
+     * ============================================
+     * LEGACY CATALOG COMPATIBILITY
+     * ============================================
+     *
+     * Parts of the website still read catalog.json.
+     * Keep this until the later Neon-only migration.
+     */
+
+    await upsertProduct(
+      productInput,
+      originalSlug,
+    );
+
+    return NextResponse.json(
+      {
+        ok: true,
+
+        product:
+          databaseResult.product,
+
+        removedImages:
+          removedImageIds.length,
+
+        removedDocuments:
+          removedDocumentIds.length,
+      },
+    );
+  } catch (error) {
     console.error(
-      "Unable to update product:",
+      "Admin product update failed:",
       error,
     );
 
@@ -262,20 +268,29 @@ export async function PUT(
             : "Unable to update product.",
       },
       {
-        status: 400,
+        status: 500,
       },
     );
   }
 }
 
+/*
+ * ============================================
+ * DELETE PRODUCT
+ * ============================================
+ */
+
 export async function DELETE(
   _request: Request,
   context: RouteContext,
 ) {
-  if (!(await isAdminSession())) {
+  if (
+    !(await isAdminSession())
+  ) {
     return NextResponse.json(
       {
-        error: "Unauthorized",
+        error:
+          "Unauthorized",
       },
       {
         status: 401,
@@ -283,29 +298,123 @@ export async function DELETE(
     );
   }
 
-  const { slug } =
+  const {
+    slug: rawSlug,
+  } =
     await context.params;
 
+  let slug:
+    string;
+
   try {
+    slug =
+      decodeURIComponent(
+        rawSlug,
+      );
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Invalid product slug.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  try {
+    /*
+     * First read Cloudinary IDs and remove the
+     * product from Neon.
+     */
     const databaseResult =
-      await deleteDatabaseProduct(slug);
+      await deleteDatabaseProduct(
+        slug,
+      );
 
-    await deleteProduct(slug);
+    if (
+      !databaseResult.deleted
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Product not found.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
 
-    await cleanupCloudinaryImages(
-      databaseResult.cloudinaryPublicIds,
+    /*
+     * ============================================
+     * DELETE PRODUCT IMAGES FROM CLOUDINARY
+     * ============================================
+     */
+
+    if (
+      databaseResult
+        .cloudinaryPublicIds
+        .length
+    ) {
+      await Promise.allSettled(
+        databaseResult
+          .cloudinaryPublicIds
+          .map(
+            async (
+              publicId,
+            ) => {
+              await deleteProductImage(
+                publicId,
+              );
+            },
+          ),
+      );
+    }
+
+    /*
+     * ============================================
+     * DELETE PRODUCT DOCUMENTS FROM CLOUDINARY
+     * ============================================
+     */
+
+    if (
+      databaseResult
+        .documentCloudinaryPublicIds
+        .length
+    ) {
+      await Promise.allSettled(
+        databaseResult
+          .documentCloudinaryPublicIds
+          .map(
+            async (
+              publicId,
+            ) => {
+              await deleteProductDocument(
+                publicId,
+              );
+            },
+          ),
+      );
+    }
+
+    /*
+     * Keep legacy catalog.json synchronized until
+     * we complete the Neon-only catalog migration.
+     */
+    await deleteProduct(
+      slug,
     );
 
-    revalidatePath("/");
-    revalidatePath("/products");
-    revalidatePath("/admin/products");
-
-    return NextResponse.json({
-      ok: true,
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+      },
+    );
   } catch (error) {
     console.error(
-      "Unable to delete product:",
+      "Admin product delete failed:",
       error,
     );
 
@@ -317,7 +426,7 @@ export async function DELETE(
             : "Unable to delete product.",
       },
       {
-        status: 400,
+        status: 500,
       },
     );
   }

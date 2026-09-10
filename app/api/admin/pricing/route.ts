@@ -1,13 +1,19 @@
-import { revalidatePath } from "next/cache";
-import { NextResponse } from "next/server";
+import {
+  revalidatePath,
+} from "next/cache";
+
+import {
+  NextResponse,
+} from "next/server";
 
 import type {
   DealerPortalSettings,
-  DealerPrice,
   PriceGroup,
 } from "@/data/site";
 
-import { isAdminSession } from "@/lib/adminAuth";
+import {
+  isAdminSession,
+} from "@/lib/adminAuth";
 
 import {
   getAllPriceGroups,
@@ -16,11 +22,40 @@ import {
   updatePricingConfiguration,
 } from "@/lib/catalog";
 
+type ProductBasePricingInput = {
+  basePrice?: number;
+  baseCurrency?: string;
+
+  minimumQty?: number;
+
+  leadTimeText?: string;
+  pricingNote?: string;
+};
+
+type PricingRequestBody = {
+  priceGroups: PriceGroup[];
+
+  dealerPortal:
+    DealerPortalSettings;
+
+  productBasePrices: Record<
+    string,
+    ProductBasePricingInput
+  >;
+};
+
 export async function GET() {
-  if (!(await isAdminSession())) {
+  if (
+    !(await isAdminSession())
+  ) {
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
+      {
+        error:
+          "Unauthorized",
+      },
+      {
+        status: 401,
+      },
     );
   }
 
@@ -32,8 +67,11 @@ export async function GET() {
     getAllPriceGroups(),
 
     getProducts({
-      activeOnly: false,
-      includeProtected: true,
+      activeOnly:
+        false,
+
+      includeProtected:
+        true,
     }),
 
     getDealerPortalSettings(),
@@ -49,26 +87,24 @@ export async function GET() {
 export async function PUT(
   request: Request,
 ) {
-  if (!(await isAdminSession())) {
+  if (
+    !(await isAdminSession())
+  ) {
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
+      {
+        error:
+          "Unauthorized",
+      },
+      {
+        status: 401,
+      },
     );
   }
 
   try {
     const body =
-      (await request.json()) as {
-        priceGroups: PriceGroup[];
-
-        dealerPortal:
-          DealerPortalSettings;
-
-        productPrices: Record<
-          string,
-          DealerPrice[]
-        >;
-      };
+      (await request.json()) as
+        PricingRequestBody;
 
     if (
       !Array.isArray(
@@ -81,29 +117,115 @@ export async function PUT(
           error:
             "At least one price group is required.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
-    await updatePricingConfiguration(
-      body,
+    if (
+      !body.dealerPortal ||
+      typeof body.dealerPortal !==
+        "object"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Dealer portal configuration is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (
+      !body.productBasePrices ||
+      typeof body.productBasePrices !==
+        "object" ||
+      Array.isArray(
+        body.productBasePrices,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Product base pricing configuration is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    await updatePricingConfiguration({
+      priceGroups:
+        body.priceGroups,
+
+      dealerPortal:
+        body.dealerPortal,
+
+      productBasePrices:
+        body.productBasePrices,
+    });
+
+    /*
+     * Admin
+     */
+    revalidatePath(
+      "/admin/pricing",
     );
 
-    revalidatePath("/admin/pricing");
-    revalidatePath("/admin/products");
-    revalidatePath("/admin/operations");
+    revalidatePath(
+      "/admin/products",
+    );
 
-    revalidatePath("/dealer");
-    revalidatePath("/dealer/dashboard");
-    revalidatePath("/dealer/products");
-    revalidatePath("/dealer/cart");
-    revalidatePath("/dealer/checkout");
-    revalidatePath("/dealer/rfq");
+    revalidatePath(
+      "/admin/operations",
+    );
+
+    /*
+     * Dealer portal
+     */
+    revalidatePath(
+      "/dealer",
+    );
+
+    revalidatePath(
+      "/dealer/dashboard",
+    );
+
+    revalidatePath(
+      "/dealer/products",
+    );
+
+    revalidatePath(
+      "/dealer/cart",
+    );
+
+    revalidatePath(
+      "/dealer/checkout",
+    );
+
+    revalidatePath(
+      "/dealer/rfq",
+    );
+
+    /*
+     * Public catalogue may show
+     * commercial/RFQ state that depends
+     * on product configuration.
+     */
+    revalidatePath(
+      "/products",
+    );
 
     return NextResponse.json({
       ok: true,
     });
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Pricing update failed:",
       error,
@@ -116,7 +238,9 @@ export async function PUT(
             ? error.message
             : "Unable to save pricing.",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 }

@@ -1,10 +1,21 @@
+import { Prisma } from "@prisma/client";
+
 import type {
   DealerPortalSettings,
   DealerPrice,
   PriceGroup,
   Product,
 } from "@/data/site";
+
 import { prisma } from "@/lib/prisma";
+
+export type ProductBasePricingInput = {
+  basePrice?: number;
+  baseCurrency?: string;
+  minimumQty?: number;
+  leadTimeText?: string;
+  pricingNote?: string;
+};
 
 function slugify(value: string) {
   return value
@@ -19,65 +30,245 @@ function slugify(value: string) {
 
 function optionalString(value?: string) {
   const normalized = value?.trim();
+
   return normalized || null;
+}
+
+function normalizeCurrency(value?: string) {
+  const currency = value?.trim().toUpperCase();
+
+  return currency &&
+    /^[A-Z]{3}$/.test(currency)
+    ? currency
+    : "USD";
+}
+
+function validOptionalNumber(
+  value: unknown,
+): number | undefined {
+  return typeof value === "number" &&
+    Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
+function normalizeDiscount(
+  value: unknown,
+): number {
+  const discount =
+    typeof value === "number"
+      ? value
+      : Number(value ?? 0);
+
+  if (
+    !Number.isFinite(discount) ||
+    discount < 0 ||
+    discount > 100
+  ) {
+    throw new Error(
+      "Dealer discount must be between 0% and 100%.",
+    );
+  }
+
+  return Math.round(discount * 100) / 100;
+}
+
+function calculateDealerPrice(
+  basePrice: Prisma.Decimal,
+  discountPercent: Prisma.Decimal,
+) {
+  return basePrice
+    .mul(
+      new Prisma.Decimal(100).minus(
+        discountPercent,
+      ),
+    )
+    .div(100)
+    .toDecimalPlaces(
+      2,
+      Prisma.Decimal.ROUND_HALF_UP,
+    );
 }
 
 export async function enrichProductsWithDatabasePricing(
   products: Product[],
 ): Promise<Product[]> {
-  if (!products.length) return products;
+  if (!products.length) {
+    return products;
+  }
 
-  const databaseProducts =
-    await prisma.product.findMany({
-      where: {
-        slug: {
-          in: products.map(
-            (product) => product.slug,
-          ),
+  const [databaseProducts, priceGroups] =
+    await Promise.all([
+      prisma.product.findMany({
+        where: {
+          slug: {
+            in: products.map(
+              (product) => product.slug,
+            ),
+          },
         },
-      },
 
-      select: {
-        slug: true,
+        select: {
+          slug: true,
 
-        prices: {
-          include: {
-            priceGroup: {
-              select: {
-                slug: true,
+          basePrice: true,
+          baseCurrency: true,
+          minimumQty: true,
+          leadTimeText: true,
+          pricingNote: true,
+
+          /*
+           * Legacy ProductPrice rows remain available
+           * during the migration period.
+           *
+           * They are used only when the product does
+           * not yet have a base price.
+           */
+          prices: {
+            include: {
+              priceGroup: {
+                select: {
+                  slug: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
 
-  const pricesByProduct = new Map<
-    string,
-    DealerPrice[]
-  >();
+      prisma.priceGroup.findMany({
+        orderBy: {
+          name: "asc",
+        },
 
-  for (const product of databaseProducts) {
-    pricesByProduct.set(
-      product.slug,
-      product.prices.map((price) => ({
-        priceGroupSlug: price.priceGroup.slug,
-        currency: price.currency,
-        amount: Number(price.amount),
-        minimumQty:
-          price.minimumQty ?? undefined,
-        leadTimeText:
-          price.leadTimeText ?? undefined,
-        note: price.note ?? undefined,
-      })),
+        select: {
+          slug: true,
+          discountPercent: true,
+          active: true,
+        },
+      }),
+    ]);
+
+  const databaseProductsBySlug =
+    new Map(
+      databaseProducts.map(
+        (product) => [
+          product.slug,
+          product,
+        ],
+      ),
     );
-  }
 
-  return products.map((product) => ({
-    ...product,
-    dealerPrices:
-      pricesByProduct.get(product.slug) ?? [],
-  }));
+  return products.map((product) => {
+    const databaseProduct =
+      databaseProductsBySlug.get(
+        product.slug,
+      );
+
+    if (!databaseProduct) {
+      return product;
+    }
+
+    let dealerPrices: DealerPrice[] = [];
+
+    /*
+     * NEW PRICING ENGINE
+     *
+     * Once a product has basePrice, its dealer
+     * prices are calculated dynamically.
+     */
+    if (
+      databaseProduct.basePrice !== null
+    ) {
+      dealerPrices = priceGroups.map(
+        (group) => ({
+          priceGroupSlug: group.slug,
+
+          currency:
+            databaseProduct.baseCurrency ||
+            "USD",
+
+          amount: calculateDealerPrice(
+            databaseProduct.basePrice!,
+            group.discountPercent,
+          ).toNumber(),
+
+          minimumQty:
+            databaseProduct.minimumQty ??
+            undefined,
+
+          leadTimeText:
+            databaseProduct.leadTimeText ??
+            undefined,
+
+          note:
+            databaseProduct.pricingNote ??
+            undefined,
+        }),
+      );
+    } else {
+      /*
+       * LEGACY FALLBACK
+       *
+       * Existing dealer pricing continues working
+       * until a base price is entered for this
+       * product.
+       */
+      dealerPrices =
+        databaseProduct.prices.map(
+          (price) => ({
+            priceGroupSlug:
+              price.priceGroup.slug,
+
+            currency: price.currency,
+
+            amount:
+              Number(price.amount),
+
+            minimumQty:
+              price.minimumQty ??
+              undefined,
+
+            leadTimeText:
+              price.leadTimeText ??
+              undefined,
+
+            note:
+              price.note ??
+              undefined,
+          }),
+        );
+    }
+
+    return {
+      ...product,
+
+      basePrice:
+        databaseProduct.basePrice !== null
+          ? Number(
+              databaseProduct.basePrice,
+            )
+          : undefined,
+
+      baseCurrency:
+        databaseProduct.baseCurrency ||
+        "USD",
+
+      minimumQty:
+        databaseProduct.minimumQty ??
+        undefined,
+
+      leadTimeText:
+        databaseProduct.leadTimeText ??
+        undefined,
+
+      pricingNote:
+        databaseProduct.pricingNote ??
+        undefined,
+
+      dealerPrices,
+    };
+  });
 }
 
 export async function getDatabasePriceGroups(
@@ -98,9 +289,18 @@ export async function getDatabasePriceGroups(
 
   return groups.map((group) => ({
     slug: group.slug,
+
     name: group.name,
+
     description:
-      group.description ?? undefined,
+      group.description ??
+      undefined,
+
+    discountPercent:
+      Number(
+        group.discountPercent,
+      ),
+
     active: group.active,
   }));
 }
@@ -112,28 +312,39 @@ export async function updateDatabasePricing(
     dealerPortal:
       DealerPortalSettings;
 
-    productPrices: Record<
+    productBasePrices: Record<
       string,
-      DealerPrice[]
+      ProductBasePricingInput
     >;
   },
 ) {
   const groups = input.priceGroups
     .map((group) => ({
       slug: slugify(
-        group.slug || group.name,
+        group.slug ||
+          group.name,
       ),
 
-      name: group.name.trim(),
+      name:
+        group.name.trim(),
 
-      description: optionalString(
-        group.description,
-      ),
+      description:
+        optionalString(
+          group.description,
+        ),
 
-      active: group.active !== false,
+      discountPercent:
+        normalizeDiscount(
+          group.discountPercent,
+        ),
+
+      active:
+        group.active !== false,
     }))
     .filter(
-      (group) => group.slug && group.name,
+      (group) =>
+        group.slug &&
+        group.name,
     );
 
   if (!groups.length) {
@@ -142,22 +353,33 @@ export async function updateDatabasePricing(
     );
   }
 
-  const uniqueSlugs = new Set(
-    groups.map((group) => group.slug),
-  );
+  const uniqueSlugs =
+    new Set(
+      groups.map(
+        (group) =>
+          group.slug,
+      ),
+    );
 
-  if (uniqueSlugs.size !== groups.length) {
+  if (
+    uniqueSlugs.size !==
+    groups.length
+  ) {
     throw new Error(
       "Price group slugs must be unique.",
     );
   }
 
-  const normalizedNames = groups.map(
-    (group) => group.name.toLowerCase(),
-  );
+  const normalizedNames =
+    groups.map(
+      (group) =>
+        group.name.toLowerCase(),
+    );
 
   if (
-    new Set(normalizedNames).size !==
+    new Set(
+      normalizedNames,
+    ).size !==
     normalizedNames.length
   ) {
     throw new Error(
@@ -165,7 +387,12 @@ export async function updateDatabasePricing(
     );
   }
 
-  if (!groups.some((group) => group.active)) {
+  if (
+    !groups.some(
+      (group) =>
+        group.active,
+    )
+  ) {
     throw new Error(
       "At least one active price group is required.",
     );
@@ -174,7 +401,10 @@ export async function updateDatabasePricing(
   await prisma.$transaction(
     async (transaction) => {
       const submittedGroupSlugs =
-        groups.map((group) => group.slug);
+        groups.map(
+          (group) =>
+            group.slug,
+        );
 
       const existingGroups =
         await transaction.priceGroup.findMany({
@@ -198,27 +428,40 @@ export async function updateDatabasePricing(
       const assignedRemovedGroup =
         removedGroups.find(
           (group) =>
-            group._count.dealers > 0,
+            group._count.dealers >
+            0,
         );
 
-      if (assignedRemovedGroup) {
+      if (
+        assignedRemovedGroup
+      ) {
         throw new Error(
           `Cannot delete "${assignedRemovedGroup.name}" because ${assignedRemovedGroup._count.dealers} dealer account(s) are assigned to it. Reassign those dealers first.`,
         );
       }
 
-      if (removedGroups.length) {
-        await transaction.priceGroup.deleteMany({
-          where: {
-            id: {
-              in: removedGroups.map(
-                (group) => group.id,
-              ),
+      if (
+        removedGroups.length
+      ) {
+        await transaction.priceGroup.deleteMany(
+          {
+            where: {
+              id: {
+                in: removedGroups.map(
+                  (group) =>
+                    group.id,
+                ),
+              },
             },
           },
-        });
+        );
       }
 
+      /*
+       * Keep existing behaviour:
+       * groups not submitted are not silently
+       * left active.
+       */
       await transaction.priceGroup.updateMany({
         where: {
           slug: {
@@ -231,168 +474,131 @@ export async function updateDatabasePricing(
         },
       });
 
-      for (const group of groups) {
+      for (
+        const group of groups
+      ) {
         await transaction.priceGroup.upsert({
           where: {
-            slug: group.slug,
+            slug:
+              group.slug,
           },
 
           update: {
-            name: group.name,
+            name:
+              group.name,
+
             description:
               group.description,
-            active: group.active,
+
+            discountPercent:
+              group.discountPercent,
+
+            active:
+              group.active,
           },
 
           create: {
-            slug: group.slug,
-            name: group.name,
+            slug:
+              group.slug,
+
+            name:
+              group.name,
+
             description:
               group.description,
-            active: group.active,
+
+            discountPercent:
+              group.discountPercent,
+
+            active:
+              group.active,
           },
         });
       }
 
-      const [
-        databaseGroups,
-        databaseProducts,
-      ] = await Promise.all([
-        transaction.priceGroup.findMany({
-          where: {
-            slug: {
-              in: groups.map(
-                (group) => group.slug,
-              ),
-            },
-          },
-
-          select: {
-            id: true,
-            slug: true,
-          },
-        }),
-
-        transaction.product.findMany({
-          where: {
-            slug: {
-              in: Object.keys(
-                input.productPrices,
-              ),
-            },
-          },
-
-          select: {
-            id: true,
-            slug: true,
-          },
-        }),
-      ]);
-
-      const groupIds = new Map(
-        databaseGroups.map((group) => [
-          group.slug,
-          group.id,
-        ]),
-      );
-
-      const productIds = new Map(
-        databaseProducts.map(
-          (product) => [
-            product.slug,
-            product.id,
-          ],
-        ),
-      );
-
       /*
-       * Rebuild the complete active price matrix. Existing
-       * orders retain their captured OrderItem.unitPrice.
+       * BASE PRODUCT PRICES
+       *
+       * No ProductPrice matrix is rebuilt here.
        */
-      await transaction.productPrice.deleteMany(
-        {},
-      );
-
-      const priceRecords: Array<{
-        productId: string;
-        priceGroupId: string;
-        currency: string;
-        amount: number;
-        minimumQty: number | null;
-        leadTimeText: string | null;
-        note: string | null;
-      }> = [];
-
-      for (const [
-        productSlug,
-        prices,
-      ] of Object.entries(
-        input.productPrices,
-      )) {
-        const productId =
-          productIds.get(productSlug);
-
-        if (!productId) continue;
-
-        for (const price of prices ?? []) {
-          const priceGroupId = groupIds.get(
-            price.priceGroupSlug,
+      for (
+        const [
+          productSlug,
+          pricing,
+        ] of Object.entries(
+          input.productBasePrices ??
+            {},
+        )
+      ) {
+        const rawBasePrice =
+          validOptionalNumber(
+            pricing.basePrice,
           );
 
-          if (!priceGroupId) continue;
+        if (
+          rawBasePrice !==
+            undefined &&
+          rawBasePrice < 0
+        ) {
+          throw new Error(
+            `Base price for "${productSlug}" cannot be negative.`,
+          );
+        }
 
-          if (
-            typeof price.amount !== "number" ||
-            !Number.isFinite(price.amount) ||
-            price.amount < 0
-          ) {
-            continue;
-          }
+        const rawMinimumQty =
+          validOptionalNumber(
+            pricing.minimumQty,
+          );
 
-          priceRecords.push({
-            productId,
-            priceGroupId,
+        if (
+          rawMinimumQty !==
+            undefined &&
+          rawMinimumQty < 1
+        ) {
+          throw new Error(
+            `Minimum quantity for "${productSlug}" must be at least 1.`,
+          );
+        }
 
-            currency:
-              typeof price.currency ===
-                "string" &&
-              /^[A-Za-z]{3}$/.test(
-                price.currency,
-              )
-                ? price.currency.toUpperCase()
-                : "USD",
+        await transaction.product.updateMany({
+          where: {
+            slug:
+              productSlug,
+          },
 
-            amount: price.amount,
+          data: {
+            basePrice:
+              rawBasePrice ===
+              undefined
+                ? null
+                : new Prisma.Decimal(
+                    rawBasePrice,
+                  ),
+
+            baseCurrency:
+              normalizeCurrency(
+                pricing.baseCurrency,
+              ),
 
             minimumQty:
-              typeof price.minimumQty ===
-                "number" &&
-              Number.isFinite(
-                price.minimumQty,
-              ) &&
-              price.minimumQty >= 1
-                ? Math.floor(
-                    price.minimumQty,
-                  )
-                : null,
+              rawMinimumQty ===
+              undefined
+                ? null
+                : Math.floor(
+                    rawMinimumQty,
+                  ),
 
-            leadTimeText: optionalString(
-              price.leadTimeText,
-            ),
+            leadTimeText:
+              optionalString(
+                pricing.leadTimeText,
+              ),
 
-            note: optionalString(
-              price.note,
-            ),
-          });
-        }
-      }
-
-      if (priceRecords.length) {
-        await transaction.productPrice.createMany(
-          {
-            data: priceRecords,
+            pricingNote:
+              optionalString(
+                pricing.pricingNote,
+              ),
           },
-        );
+        });
       }
 
       const activeGroup =
@@ -402,50 +608,49 @@ export async function updateDatabasePricing(
             group.slug ===
               input.dealerPortal
                 .demoPriceGroupSlug,
-        ) ||
+        ) ??
         groups.find(
-          (group) => group.active,
+          (group) =>
+            group.active,
         )!;
 
-      await transaction.dealerPortalSetting.upsert(
-        {
-          where: {
-            id: "default",
-          },
-
-          update: {
-            demoPriceGroupSlug:
-              activeGroup.slug,
-
-            demoCompanyName:
-              input.dealerPortal
-                .demoCompanyName ||
-              "Demo Dealer Company",
-
-            demoContactName:
-              input.dealerPortal
-                .demoContactName ||
-              "Demo User",
-          },
-
-          create: {
-            id: "default",
-
-            demoPriceGroupSlug:
-              activeGroup.slug,
-
-            demoCompanyName:
-              input.dealerPortal
-                .demoCompanyName ||
-              "Demo Dealer Company",
-
-            demoContactName:
-              input.dealerPortal
-                .demoContactName ||
-              "Demo User",
-          },
+      await transaction.dealerPortalSetting.upsert({
+        where: {
+          id: "default",
         },
-      );
+
+        update: {
+          demoPriceGroupSlug:
+            activeGroup.slug,
+
+          demoCompanyName:
+            input.dealerPortal
+              .demoCompanyName ||
+            "Demo Dealer Company",
+
+          demoContactName:
+            input.dealerPortal
+              .demoContactName ||
+            "Demo User",
+        },
+
+        create: {
+          id: "default",
+
+          demoPriceGroupSlug:
+            activeGroup.slug,
+
+          demoCompanyName:
+            input.dealerPortal
+              .demoCompanyName ||
+            "Demo Dealer Company",
+
+          demoContactName:
+            input.dealerPortal
+              .demoContactName ||
+            "Demo User",
+        },
+      });
     },
 
     {

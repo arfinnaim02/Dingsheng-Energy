@@ -1,6 +1,5 @@
-import { PortalShell } from "@/components/PortalShell";
-import { ServiceEditor } from "@/components/admin/ServiceEditor";
+import { redirect } from "next/navigation";
 
 export default function NewServicePage() {
-  return <PortalShell admin title="Add Service"><ServiceEditor /></PortalShell>;
+  redirect("/admin/services");
 }

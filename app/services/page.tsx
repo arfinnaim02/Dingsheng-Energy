@@ -1,11 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Callout } from "@/components/Callout";
-import { Icon } from "@/components/Icon";
-import { PublicShell } from "@/components/PublicShell";
+import {
+  Callout,
+} from "@/components/Callout";
 
-import { getServices } from "@/lib/catalog";
+import {
+  Icon,
+} from "@/components/Icon";
+
+import {
+  PublicShell,
+} from "@/components/PublicShell";
+
+import {
+  buildServiceHref,
+  getPublicServiceImage,
+  getPublicServices,
+  getServiceChildren,
+} from "@/lib/publicServiceTree";
 
 export const metadata = {
   title:
@@ -33,16 +46,19 @@ const serviceBenefits = [
     "End-to-End Solutions",
     "Engineering and procurement through testing and commissioning.",
   ],
+
   [
     "shield",
     "Safety & Compliance",
     "Design decisions aligned to applicable standards and project requirements.",
   ],
+
   [
     "user",
     "Engineering Support",
     "Technical support for equipment selection and project delivery.",
   ],
+
   [
     "wrench",
     "After-Sales Support",
@@ -52,10 +68,20 @@ const serviceBenefits = [
 
 export default async function ServicesPage() {
   const services =
-    await getServices();
+    await getPublicServices();
+
+  const roots =
+    getServiceChildren(
+      services,
+      null,
+    );
 
   return (
     <PublicShell>
+      {/* =====================================
+          PAGE HERO
+      ===================================== */}
+
       <section className="relative min-h-[420px] overflow-hidden bg-[#061f2d] sm:min-h-[455px]">
         <Image
           src="/media/services/hero-services.jpg"
@@ -74,8 +100,7 @@ export default async function ServicesPage() {
               <span className="h-[2px] w-8 shrink-0 bg-[#4ed7a1]" />
 
               <span>
-                Engineering Excellence ·
-                Complete Solutions
+                Engineering Excellence · Complete Solutions
               </span>
             </div>
 
@@ -88,8 +113,7 @@ export default async function ServicesPage() {
               Dingsheng Energy delivers
               integrated LPG engineering and
               technical services for safe,
-              efficient and reliable
-              operation.
+              efficient and reliable operation.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3 sm:mt-8">
@@ -111,6 +135,10 @@ export default async function ServicesPage() {
         </div>
       </section>
 
+      {/* =====================================
+          ROOT SERVICE CARDS
+      ===================================== */}
+
       <section className="section bg-white">
         <div className="container-shell">
           <div className="mx-auto max-w-3xl text-center">
@@ -119,16 +147,14 @@ export default async function ServicesPage() {
             </div>
 
             <h2 className="h2 mt-3">
-              Comprehensive LPG Engineering
-              & Technical Services
+              Comprehensive LPG Engineering & Technical Services
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-[#687b84]">
-              Project support spans
-              engineering, procurement,
-              installation, commissioning,
-              reticulation, consultancy and
-              machinery servicing.
+              Explore our engineering,
+              technical and project-service
+              capabilities across the complete
+              energy infrastructure lifecycle.
             </p>
           </div>
 
@@ -136,79 +162,119 @@ export default async function ServicesPage() {
             id="services"
             className="mt-10 grid scroll-mt-24 gap-5 md:grid-cols-2 xl:grid-cols-3"
           >
-            {services.map(
-              (service, index) => (
-                <Link
-                  href={`/services/${service.slug}`}
-                  key={service.slug}
-                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#dfe8e4] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <div className="relative h-[210px] overflow-hidden bg-[#e8efeb] sm:h-[220px] xl:h-[200px]">
-                    <Image
-                      src={
-                        service.image ||
-                        "/media/service-epc.jpg"
-                      }
-                      alt={service.name}
-                      fill
-                      sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
-                      className="object-cover object-center transition duration-500 group-hover:scale-[1.04]"
-                    />
+            {roots.map(
+              (
+                service,
+                index,
+              ) => {
+                const children =
+                  getServiceChildren(
+                    services,
+                    service.id,
+                  );
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071f2c]/80 via-[#071f2c]/10 to-transparent" />
+                const serviceImage =
+                  getPublicServiceImage(
+                    service,
+                    "card",
+                  );
 
-                    <div className="absolute bottom-4 left-5 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-[#0a9c63] text-xs font-black text-white">
-                      {String(
-                        index + 1,
-                      ).padStart(2, "0")}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 flex-col p-6">
-                    <h3 className="text-xl font-black leading-tight">
-                      {service.name}
-                    </h3>
-
-                    <p className="mt-3 text-sm leading-6 text-[#657983]">
-                      {service.summary}
-                    </p>
-
-                    {service.scope.length >
-                      0 && (
-                      <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {service.scope
-                          .slice(0, 4)
-                          .map(
-                            (
-                              scope,
-                            ) => (
-                              <div
-                                key={
-                                  scope
-                                }
-                                className="flex items-start gap-2 text-[10px] font-bold leading-5 text-[#5d746e]"
-                              >
-                                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#0a9c63]" />
-
-                                <span>
-                                  {scope}
-                                </span>
-                              </div>
-                            ),
-                          )}
-                      </div>
+                return (
+                  <Link
+                    key={service.id}
+                    href={buildServiceHref(
+                      services,
+                      service.id,
                     )}
+                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#dfe8e4] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    <div className="relative h-[210px] overflow-hidden bg-[#e8efeb] sm:h-[220px] xl:h-[200px]">
+                      {serviceImage ? (
+                        <Image
+                          src={serviceImage}
+                          alt={service.name}
+                          fill
+                          sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                          className="object-cover object-center transition duration-500 group-hover:scale-[1.04]"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#edf4f0] to-[#dce9e3] px-6 text-center">
+                          <span className="text-xs font-black uppercase tracking-[.12em] text-[#82968d]">
+                            Image managed from Admin
+                          </span>
+                        </div>
+                      )}
 
-                    <div className="mt-auto pt-6 text-xs font-black text-[#0a9c63]">
-                      Explore service →
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#071f2c]/80 via-[#071f2c]/10 to-transparent" />
+
+                      <div className="absolute bottom-4 left-5 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-[#0a9c63] text-xs font-black text-white">
+                        {String(
+                          index + 1,
+                        ).padStart(
+                          2,
+                          "0",
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ),
+
+                    <div className="flex flex-1 flex-col p-6">
+                      <h3 className="text-xl font-black leading-tight">
+                        {service.name}
+                      </h3>
+
+                      {service.summary && (
+                        <p className="mt-3 text-sm leading-6 text-[#657983]">
+                          {service.summary}
+                        </p>
+                      )}
+
+                      {children.length > 0 && (
+                        <div className="mt-5 grid gap-2">
+                          {children
+                            .slice(
+                              0,
+                              4,
+                            )
+                            .map(
+                              (
+                                child,
+                              ) => (
+                                <div
+                                  key={child.id}
+                                  className="flex items-start gap-2 text-[10px] font-bold leading-5 text-[#5d746e]"
+                                >
+                                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#0a9c63]" />
+
+                                  <span>
+                                    {child.name}
+                                  </span>
+                                </div>
+                              ),
+                            )}
+                        </div>
+                      )}
+
+                      <div className="mt-auto pt-6 text-xs font-black text-[#0a9c63]">
+                        Explore service →
+                      </div>
+                    </div>
+                  </Link>
+                );
+              },
             )}
           </div>
+
+          {!roots.length && (
+            <div className="mt-10 rounded-xl border border-dashed border-[#d7e4df] bg-[#f8fbfa] p-10 text-center text-sm text-[#627780]">
+              No public services are currently available.
+            </div>
+          )}
         </div>
       </section>
+
+      {/* =====================================
+          DELIVERY MODEL
+      ===================================== */}
 
       <section className="section dark-section">
         <div className="container-shell">
@@ -218,14 +284,16 @@ export default async function ServicesPage() {
             </div>
 
             <h2 className="h2 mt-3">
-              From Requirement Review to
-              Operational Handover
+              From Requirement Review to Operational Handover
             </h2>
           </div>
 
           <div className="mt-11 grid gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-0 xl:grid-cols-6">
             {deliverySteps.map(
-              (step, index) => (
+              (
+                step,
+                index,
+              ) => (
                 <div
                   key={step}
                   className="relative border border-white/10 bg-white/[.025] p-5 text-center md:border-r-0 xl:last:border-r"
@@ -233,7 +301,10 @@ export default async function ServicesPage() {
                   <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#0a9c63] text-xs font-black">
                     {String(
                       index + 1,
-                    ).padStart(2, "0")}
+                    ).padStart(
+                      2,
+                      "0",
+                    )}
                   </div>
 
                   <div className="mt-4 text-xs font-black uppercase leading-5 tracking-wide">
@@ -246,6 +317,10 @@ export default async function ServicesPage() {
         </div>
       </section>
 
+      {/* =====================================
+          BENEFITS
+      ===================================== */}
+
       <section className="section soft-section">
         <div className="container-shell">
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -256,11 +331,13 @@ export default async function ServicesPage() {
                 copy,
               ]) => (
                 <div
-                  className="card h-full p-6"
                   key={title}
+                  className="card h-full p-6"
                 >
                   <Icon
-                    name={icon as any}
+                    name={
+                      icon as any
+                    }
                     className="h-8 w-8 text-[#0a9c63]"
                   />
 

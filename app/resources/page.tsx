@@ -1,14 +1,159 @@
-import { PublicShell } from "@/components/PublicShell";
-import { PageHero } from "@/components/PageHero";
-import { Icon } from "@/components/Icon";
+import Image from "next/image";
 
-export const metadata={title:"Resources"};
-const files=[["Company Profile","Company overview, capabilities and contact information.","Public"],["LPG Product & Service Catalogue","Product families, technical specifications and service scope.","Public"],["Product Technical Datasheets","Product-level specifications and engineering information.","Dealer / Product specific"],["Commercial Documents","Protected pricing and commercial information.","Approved dealer only"],["Installation & Service Documents","Technical resources provided according to product and project access.","Controlled access"]];
-export default function ResourcesPage(){return <PublicShell><PageHero
-  eyebrow="Technical resources"
-  title="Resources & Downloads"
-  description="Access company information, product catalogues and approved technical documentation."
-  image="/media/hero-resources.jpg"
-  imageAlt="LPG technical documentation and engineering resources"
-  imagePosition="right"
-/><section className="section"><div className="container-shell"><div className="grid gap-4">{files.map(([title,copy,access])=><div className="card p-6 md:flex md:items-center md:justify-between md:gap-8" key={title}><div className="flex gap-4"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f7f0]"><Icon name="file" className="h-6 w-6 text-[#0a9c63]"/></div><div><h3 className="font-extrabold">{title}</h3><p className="mt-1 text-sm leading-6 text-[#657983]">{copy}</p></div></div><div className="mt-4 flex items-center gap-3 md:mt-0"><span className="pill">{access}</span><button className="btn btn-secondary">Download / Request</button></div></div>)}</div><div className="mock-note mt-8">Download buttons are UI placeholders in Phase 1. Actual public and dealer-protected file storage will be connected during backend implementation.</div></div></section></PublicShell>}
+import Link from "next/link";
+
+import {
+  PublicShell,
+} from "@/components/PublicShell";
+
+import {
+  PageHero,
+} from "@/components/PageHero";
+
+import {
+  Icon,
+} from "@/components/Icon";
+
+import {
+  getPublicResources,
+} from "@/lib/publicResources";
+
+export const metadata = {
+  title:
+    "Resources",
+};
+
+export const dynamic =
+  "force-dynamic";
+
+function accessLabel(
+  access: string,
+) {
+  if (
+    access ===
+    "DEALER"
+  ) {
+    return "Approved Dealer";
+  }
+
+  if (
+    access ===
+    "CONTROLLED"
+  ) {
+    return "Controlled Access";
+  }
+
+  return "Public";
+}
+
+export default async function ResourcesPage() {
+  const resources =
+    await getPublicResources();
+
+  return (
+    <PublicShell>
+      <PageHero
+        eyebrow="Technical resources"
+        title="Resources & Downloads"
+        description="Access company information, product catalogues and approved technical documentation."
+        image="/media/hero-resources.jpg"
+        imageAlt="Energy technical documentation and engineering resources"
+        imagePosition="right"
+      />
+
+      <section className="section">
+        <div className="container-shell">
+          {resources.length ===
+          0 ? (
+            <div className="card p-8 text-center">
+              <h2 className="text-xl font-extrabold">
+                Resources coming soon
+              </h2>
+
+              <p className="mt-2 text-sm text-[#657983]">
+                Technical documents and company resources are currently being prepared.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {resources.map(
+                (resource) => (
+                  <div
+                    className="card overflow-hidden md:flex md:items-center"
+                    key={
+                      resource.id
+                    }
+                  >
+                    {resource.image ? (
+                      <div className="relative h-44 w-full shrink-0 bg-[#edf3f0] md:h-36 md:w-48">
+                        <Image
+                          src={
+                            resource.image
+                          }
+                          alt={
+                            resource.title
+                          }
+                          fill
+                          sizes="(max-width: 768px) 100vw, 192px"
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-32 w-full shrink-0 items-center justify-center bg-[#e9f7f0] md:h-36 md:w-40">
+                        <Icon
+                          name="file"
+                          className="h-9 w-9 text-[#0a9c63]"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex-1 p-6 md:flex md:items-center md:justify-between md:gap-8">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-extrabold">
+                            {
+                              resource.title
+                            }
+                          </h3>
+
+                          {resource.featured && (
+                            <span className="pill">
+                              Featured
+                            </span>
+                          )}
+                        </div>
+
+                        {resource.summary && (
+                          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#657983]">
+                            {
+                              resource.summary
+                            }
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-5 flex shrink-0 flex-wrap items-center gap-3 md:mt-0">
+                        <span className="pill">
+                          {accessLabel(
+                            resource.access,
+                          )}
+                        </span>
+
+                        <Link
+                          href={`/resources/${resource.slug}`}
+                          className="btn btn-secondary"
+                        >
+                          View Resource
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+    </PublicShell>
+  );
+}

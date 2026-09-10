@@ -4,9 +4,13 @@ import type {
   Prisma,
 } from "@prisma/client";
 
+
 import Link from "next/link";
 
-import PaymentManager from "@/components/admin/PaymentManager";
+import {
+  PaymentManager,
+  type AdminPayment,
+} from "@/components/admin/PaymentManager";
 
 import {
   PortalShell,
@@ -421,7 +425,7 @@ export default async function AdminPaymentsPage({
     prisma.payment.count(),
   ]);
 
-  const serializedPayments =
+  const serializedPayments: AdminPayment[] =
     payments.map(
       (payment) => ({
         id: payment.id,

@@ -1,12 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-import {
-  OrderPaymentControl,
-} from "@/components/admin/OrderPaymentControl";
+import { OrderPaymentControl } from "@/components/admin/OrderPaymentControl";
 
 type OrderStatus =
   | "PENDING"
@@ -23,23 +20,16 @@ type PaymentStatus =
   | "FAILED"
   | "REFUNDED";
 
-type Order = {
+export type AdminOrder = {
   id: string;
   reference: string;
   status: OrderStatus;
+
   currency: string;
+  totalAmount: string | null;
 
-  totalAmount:
-    | string
-    | null;
-
-  deliveryCountry:
-    | string
-    | null;
-
-  deliveryAddress:
-    | string
-    | null;
+  deliveryCountry: string | null;
+  deliveryAddress: string | null;
 
   createdAt: string;
 
@@ -56,10 +46,7 @@ type Order = {
   items: Array<{
     id: string;
     quantity: number;
-
-    unitPrice:
-      | string
-      | null;
+    unitPrice: string | null;
 
     product: {
       name: string;
@@ -70,68 +57,59 @@ type Order = {
   payments: Array<{
     id: string;
     status: PaymentStatus;
-
-    provider:
-      | string
-      | null;
-
-    providerRef:
-      | string
-      | null;
-
-    amount:
-      | string
-      | null;
-
+    provider: string | null;
+    providerRef: string | null;
+    amount: string | null;
     currency: string;
     createdAt: string;
     updatedAt: string;
   }>;
 };
 
-const statusOptions:
-  OrderStatus[] = [
-    "PENDING",
-    "AWAITING_PAYMENT",
-    "PROCESSING",
-    "SHIPPED",
-    "COMPLETED",
-    "CANCELLED",
-  ];
+const statusOptions: OrderStatus[] = [
+  "PENDING",
+  "AWAITING_PAYMENT",
+  "PROCESSING",
+  "SHIPPED",
+  "COMPLETED",
+  "CANCELLED",
+];
+
+type BulkAction =
+  | ""
+  | "DELETE"
+  | OrderStatus;
 
 function money(
-  amount:
-    | string
-    | null,
+  amount: string | null,
   currency: string,
 ) {
   if (amount === null) {
     return "—";
   }
 
-  return new Intl.NumberFormat(
-    "en-US",
-    {
-      style: "currency",
-      currency,
-    },
-  ).format(Number(amount));
+  const numeric = Number(amount);
+
+  if (!Number.isFinite(numeric)) {
+    return "—";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(numeric);
 }
 
-function statusLabel(
-  status: string,
-) {
+function statusLabel(status: string) {
   return status
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(
-      /\b\w/g,
-      (letter) =>
-        letter.toUpperCase(),
+    .replace(/\b\w/g, (letter) =>
+      letter.toUpperCase(),
     );
 }
 
-function statusClass(
+function orderStatusClass(
   status: OrderStatus,
 ) {
   switch (status) {
@@ -171,15 +149,14 @@ function paymentStatusClass(
     case "PROCESSING":
       return "bg-[#e7f2ff] text-[#27659a]";
 
+    case "PENDING":
     default:
       return "bg-[#fff6dc] text-[#926900]";
   }
 }
 
 function paymentMethodLabel(
-  provider:
-    | string
-    | null,
+  provider: string | null,
 ) {
   switch (provider) {
     case "BANK_TRANSFER":
@@ -202,73 +179,177 @@ function paymentMethodLabel(
 export function OrderManager({
   orders,
 }: {
-  orders: Order[];
+  orders: AdminOrder[];
 }) {
   const router = useRouter();
 
+  /*
+   * Status values inside the expanded
+   * management panel.
+   */
   const [
-    expandedId,
-    setExpandedId,
+    selectedStatus,
+    setSelectedStatus,
   ] = useState<
-    string | null
-  >(null);
-
-  const [
-    selected,
-    setSelected,
-  ] = useState<
-    Record<
-      string,
-      OrderStatus
-    >
+    Record<string, OrderStatus>
   >(
     Object.fromEntries(
-      orders.map(
-        (order) => [
-          order.id,
-          order.status,
-        ],
-      ),
+      orders.map((order) => [
+        order.id,
+        order.status,
+      ]),
     ),
   );
+
+  /*
+   * Expanded order rows.
+   */
+  const [
+    expanded,
+    setExpanded,
+  ] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  /*
+   * Selected orders for bulk actions.
+   */
+  const [
+    selectedIds,
+    setSelectedIds,
+  ] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const [
+    bulkAction,
+    setBulkAction,
+  ] = useState<BulkAction>("");
 
   const [
     workingId,
     setWorkingId,
-  ] = useState<
-    string | null
-  >(null);
+  ] = useState<string | null>(
+    null,
+  );
 
-  const [error, setError] =
-    useState("");
+  const [
+    bulkWorking,
+    setBulkWorking,
+  ] = useState(false);
 
   const [
     message,
     setMessage,
   ] = useState("");
 
-  function toggleOrder(
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const allSelected =
+    orders.length > 0 &&
+    selectedIds.size ===
+      orders.length;
+
+  const selectedOrders =
+    useMemo(
+      () =>
+        orders.filter((order) =>
+          selectedIds.has(
+            order.id,
+          ),
+        ),
+      [orders, selectedIds],
+    );
+
+  function clearNotices() {
+    setMessage("");
+    setError("");
+  }
+
+  function toggleExpanded(
     orderId: string,
   ) {
-    setExpandedId(
-      (current) =>
-        current === orderId
-          ? null
-          : orderId,
+    setExpanded((current) => {
+      const next =
+        new Set(current);
+
+      if (next.has(orderId)) {
+        next.delete(orderId);
+      } else {
+        next.add(orderId);
+      }
+
+      return next;
+    });
+  }
+
+  function toggleSelected(
+    orderId: string,
+  ) {
+    setSelectedIds(
+      (current) => {
+        const next =
+          new Set(current);
+
+        if (
+          next.has(orderId)
+        ) {
+          next.delete(
+            orderId,
+          );
+        } else {
+          next.add(
+            orderId,
+          );
+        }
+
+        return next;
+      },
+    );
+  }
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(
+        new Set(),
+      );
+
+      return;
+    }
+
+    setSelectedIds(
+      new Set(
+        orders.map(
+          (order) =>
+            order.id,
+        ),
+      ),
     );
   }
 
   async function updateStatus(
     orderId: string,
   ) {
-    setWorkingId(orderId);
-    setError("");
-    setMessage("");
+    clearNotices();
+
+    setWorkingId(
+      orderId,
+    );
 
     try {
+      const status =
+        selectedStatus[
+          orderId
+        ];
+
       const response =
         await fetch(
-          `/api/admin/orders/${orderId}`,
+          `/api/admin/orders/${encodeURIComponent(
+            orderId,
+          )}`,
           {
             method:
               "PATCH",
@@ -279,17 +360,20 @@ export function OrderManager({
             },
 
             body:
-              JSON.stringify({
-                status:
-                  selected[
-                    orderId
-                  ],
-              }),
+              JSON.stringify(
+                {
+                  status,
+                },
+              ),
           },
         );
 
       const result =
-        await response.json();
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
 
       if (!response.ok) {
         throw new Error(
@@ -299,13 +383,18 @@ export function OrderManager({
       }
 
       setMessage(
-        `Order ${result.reference || ""} updated to ${statusLabel(
+        `Order ${
+          result.reference ??
+          ""
+        } updated to ${statusLabel(
           result.status,
         )}.`,
       );
 
       router.refresh();
-    } catch (updateError) {
+    } catch (
+      updateError
+    ) {
       setError(
         updateError instanceof
           Error
@@ -313,534 +402,1039 @@ export function OrderManager({
           : "Unable to update order status.",
       );
     } finally {
-      setWorkingId(null);
+      setWorkingId(
+        null,
+      );
+    }
+  }
+
+  async function deleteOrder(
+    order: AdminOrder,
+  ) {
+    clearNotices();
+
+    const confirmed =
+      window.confirm(
+        `Permanently delete order ${order.reference}?\n\nDealer: ${order.dealer.companyName}\nTotal: ${money(
+          order.totalAmount,
+          order.currency,
+        )}\n\nThe order, its items and payment records will be permanently deleted.\n\nThis cannot be undone.`,
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setWorkingId(
+      order.id,
+    );
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/orders/${encodeURIComponent(
+            order.id,
+          )}`,
+          {
+            method:
+              "DELETE",
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to delete order.",
+        );
+      }
+
+      setSelectedIds(
+        (current) => {
+          const next =
+            new Set(current);
+
+          next.delete(
+            order.id,
+          );
+
+          return next;
+        },
+      );
+
+      setExpanded(
+        (current) => {
+          const next =
+            new Set(current);
+
+          next.delete(
+            order.id,
+          );
+
+          return next;
+        },
+      );
+
+      setMessage(
+        `Order ${order.reference} deleted successfully.`,
+      );
+
+      router.refresh();
+    } catch (
+      deleteError
+    ) {
+      setError(
+        deleteError instanceof
+          Error
+          ? deleteError.message
+          : "Unable to delete order.",
+      );
+    } finally {
+      setWorkingId(
+        null,
+      );
+    }
+  }
+
+  async function applyBulkAction() {
+    clearNotices();
+
+    if (
+      selectedIds.size ===
+      0
+    ) {
+      setError(
+        "Select at least one order.",
+      );
+
+      return;
+    }
+
+    if (!bulkAction) {
+      setError(
+        "Choose a bulk action first.",
+      );
+
+      return;
+    }
+
+    if (
+      bulkAction ===
+      "DELETE"
+    ) {
+      const preview =
+        selectedOrders
+          .slice(0, 6)
+          .map(
+            (order) =>
+              order.reference,
+          )
+          .join(", ");
+
+      const remaining =
+        selectedOrders.length >
+        6
+          ? ` and ${
+              selectedOrders
+                .length - 6
+            } more`
+          : "";
+
+      const confirmed =
+        window.confirm(
+          `Permanently delete ${selectedOrders.length} selected order${
+            selectedOrders.length ===
+            1
+              ? ""
+              : "s"
+          }?\n\n${preview}${remaining}\n\nAssociated payment records and order items will also be removed.\n\nThis cannot be undone.`,
+        );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setBulkWorking(true);
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/orders/bulk",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify(
+                {
+                  ids: [
+                    ...selectedIds,
+                  ],
+
+                  action:
+                    bulkAction ===
+                    "DELETE"
+                      ? "DELETE"
+                      : "STATUS",
+
+                  status:
+                    bulkAction ===
+                    "DELETE"
+                      ? undefined
+                      : bulkAction,
+                },
+              ),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to apply bulk action.",
+        );
+      }
+
+      const affected =
+        typeof result.count ===
+        "number"
+          ? result.count
+          : selectedIds.size;
+
+      if (
+        bulkAction ===
+        "DELETE"
+      ) {
+        setMessage(
+          `${affected} order${
+            affected === 1
+              ? ""
+              : "s"
+          } deleted successfully.`,
+        );
+      } else {
+        setMessage(
+          `${affected} order${
+            affected === 1
+              ? ""
+              : "s"
+          } updated to ${statusLabel(
+            bulkAction,
+          )}.`,
+        );
+      }
+
+      setSelectedIds(
+        new Set(),
+      );
+
+      setExpanded(
+        new Set(),
+      );
+
+      setBulkAction("");
+
+      router.refresh();
+    } catch (
+      bulkError
+    ) {
+      setError(
+        bulkError instanceof
+          Error
+          ? bulkError.message
+          : "Unable to apply bulk action.",
+      );
+    } finally {
+      setBulkWorking(false);
     }
   }
 
   if (!orders.length) {
     return (
-      <div className="card p-10 text-center">
-        <h2 className="text-xl font-black">
-          No matching orders
+      <section className="card p-10 text-center">
+        <h2 className="text-xl font-black text-[#17313d]">
+          No orders yet
         </h2>
 
         <p className="mt-3 text-sm text-[#71838b]">
-          No orders match the
-          current search and
-          filters.
+          Submitted dealer
+          orders will appear
+          here.
         </p>
-
-        <Link
-          href="/admin/orders"
-          className="btn btn-secondary mt-5 inline-flex"
-        >
-          Clear Filters
-        </Link>
-      </div>
+      </section>
     );
   }
 
   return (
     <div className="grid gap-4">
       {message && (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-700">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
           {message}
         </div>
       )}
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
           {error}
         </div>
       )}
 
-      {orders.map(
-        (order) => {
-          const expanded =
-            expandedId ===
-            order.id;
+      {/* BULK TOOLBAR */}
+      <section className="card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-xs font-black text-[#526872]">
+              <input
+                type="checkbox"
+                checked={
+                  allSelected
+                }
+                onChange={
+                  toggleSelectAll
+                }
+                className="h-4 w-4 accent-[#0a9c63]"
+              />
 
-          const latestPayment =
-            order.payments[0];
+              Select All
+            </label>
 
-          const paymentStatus:
-            PaymentStatus =
-            latestPayment
-              ?.status ||
-            "PENDING";
+            <span className="hidden h-5 w-px bg-[#dce7e2] sm:block" />
 
-          const itemQuantity =
-            order.items.reduce(
-              (
-                total,
-                item,
+            <span className="text-xs font-bold text-[#71838b]">
+              {
+                selectedIds.size
+              }{" "}
+              selected
+            </span>
+
+            <span className="text-xs text-[#a1ada8]">
+              ·
+            </span>
+
+            <span className="text-xs font-bold text-[#71838b]">
+              {
+                orders.length
+              }{" "}
+              total
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={
+                bulkAction
+              }
+              disabled={
+                bulkWorking
+              }
+              onChange={(
+                event,
               ) =>
-                total +
-                item.quantity,
+                setBulkAction(
+                  event.target
+                    .value as BulkAction,
+                )
+              }
+              className="min-w-[220px] rounded-md border border-[#d8e4df] bg-white px-3 py-2.5 text-xs font-bold text-[#526872]"
+            >
+              <option value="">
+                Bulk Actions
+              </option>
 
-              0,
-            );
+              <optgroup label="Change order status">
+                {statusOptions.map(
+                  (status) => (
+                    <option
+                      key={
+                        status
+                      }
+                      value={
+                        status
+                      }
+                    >
+                      Set:{" "}
+                      {statusLabel(
+                        status,
+                      )}
+                    </option>
+                  ),
+                )}
+              </optgroup>
 
-          return (
-            <article
-              key={order.id}
-              className={`card overflow-hidden transition ${
-                expanded
-                  ? "ring-1 ring-[#b8d9ca]"
-                  : "hover:border-[#b8d9ca]"
+              <optgroup label="Danger zone">
+                <option value="DELETE">
+                  Delete Permanently
+                </option>
+              </optgroup>
+            </select>
+
+            <button
+              type="button"
+              disabled={
+                bulkWorking ||
+                selectedIds.size ===
+                  0 ||
+                !bulkAction
+              }
+              onClick={
+                applyBulkAction
+              }
+              className={`rounded-md px-4 py-2.5 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                bulkAction ===
+                "DELETE"
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-[#0a9c63] text-white hover:bg-[#087c50]"
               }`}
             >
-              <button
-                type="button"
-                aria-expanded={
-                  expanded
-                }
-                aria-controls={`order-details-${order.id}`}
-                onClick={() =>
-                  toggleOrder(
+              {bulkWorking
+                ? "Applying..."
+                : "Apply"}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* TABLE-LIKE COMPACT LIST */}
+      <section className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="min-w-[1120px]">
+            {/* HEADER */}
+            <div className="grid grid-cols-[42px_38px_130px_minmax(190px,1fr)_135px_130px_145px_125px_80px_145px] items-center gap-3 border-b border-[#e1ebe7] bg-[#f7faf8] px-4 py-3 text-[9px] font-black uppercase tracking-[.08em] text-[#829198]">
+              <span />
+
+              <span />
+
+              <span>
+                Reference
+              </span>
+
+              <span>
+                Dealer
+              </span>
+
+              <span>
+                Date
+              </span>
+
+              <span>
+                Total
+              </span>
+
+              <span>
+                Order Status
+              </span>
+
+              <span>
+                Payment
+              </span>
+
+              <span>
+                Items
+              </span>
+
+              <span className="text-right">
+                Actions
+              </span>
+            </div>
+
+            {orders.map(
+              (order) => {
+                const latestPayment =
+                  order
+                    .payments[0];
+
+                const paymentStatus:
+                  PaymentStatus =
+                  latestPayment
+                    ?.status ??
+                  "PENDING";
+
+                const isExpanded =
+                  expanded.has(
                     order.id,
-                  )
-                }
-                className="grid w-full items-center gap-4 p-5 text-left transition hover:bg-[#f8fbf9] md:grid-cols-[minmax(0,1fr)_auto_auto_auto]"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-black text-[#17313d]">
-                      {
-                        order.reference
-                      }
-                    </span>
+                  );
 
-                    <span className="truncate text-sm font-bold text-[#526872]">
-                      {
-                        order.dealer
-                          .companyName
-                      }
-                    </span>
-                  </div>
+                const isSelected =
+                  selectedIds.has(
+                    order.id,
+                  );
 
-                  <div className="mt-1 truncate text-xs text-[#829198]">
-                    {
-                      order.dealer
-                        .contactName
-                    }{" "}
-                    ·{" "}
-                    {
-                      order.dealer
-                        .user.email
-                    }{" "}
-                    · {itemQuantity}{" "}
-                    item
-                    {itemQuantity === 1
-                      ? ""
-                      : "s"}
-                  </div>
-                </div>
+                const busy =
+                  workingId ===
+                  order.id;
 
-                <div className="text-left md:text-right">
-                  <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                    Total
-                  </div>
-
-                  <div className="mt-1 font-black text-[#08774f]">
-                    {money(
-                      order.totalAmount,
-                      order.currency,
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 md:justify-end">
-                  <span
-                    className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[.06em] ${statusClass(
-                      order.status,
-                    )}`}
-                  >
-                    {statusLabel(
-                      order.status,
-                    )}
-                  </span>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[.06em] ${paymentStatusClass(
-                      paymentStatus,
-                    )}`}
-                  >
-                    {statusLabel(
-                      paymentStatus,
-                    )}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 md:justify-end">
-                  <span className="text-xs text-[#829198]">
-                    {new Date(
-                      order.createdAt,
-                    ).toLocaleDateString()}
-                  </span>
-
-                  <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-full border border-[#d8e4df] text-lg font-black text-[#0a7c55] transition ${
-                      expanded
-                        ? "rotate-180 bg-[#eff9f4]"
+                return (
+                  <article
+                    key={
+                      order.id
+                    }
+                    className={`border-b border-[#e8efec] last:border-b-0 ${
+                      isSelected
+                        ? "bg-[#f5fbf8]"
                         : "bg-white"
                     }`}
                   >
-                    ⌄
-                  </span>
-                </div>
-              </button>
-
-              {expanded && (
-                <div
-                  id={`order-details-${order.id}`}
-                  className="border-t border-[#e1ebe7]"
-                >
-                  <header className="flex flex-wrap items-start justify-between gap-5 bg-[#fafcfb] px-6 py-5">
-                    <div>
-                      <div className="eyebrow">
-                        Dealer
+                    {/* COLLAPSED ONE-LINE ROW */}
+                    <div
+                      className={`grid min-h-[68px] grid-cols-[42px_38px_130px_minmax(190px,1fr)_135px_130px_145px_125px_80px_145px] items-center gap-3 px-4 transition ${
+                        isExpanded
+                          ? "bg-[#f9fbfa]"
+                          : "hover:bg-[#fafcfb]"
+                      }`}
+                    >
+                      <div className="flex justify-center">
+                        <input
+                          type="checkbox"
+                          checked={
+                            isSelected
+                          }
+                          onChange={() =>
+                            toggleSelected(
+                              order.id,
+                            )
+                          }
+                          className="h-4 w-4 accent-[#0a9c63]"
+                          aria-label={`Select ${order.reference}`}
+                        />
                       </div>
 
-                      <h2 className="mt-2 text-xl font-black">
-                        <Link
-                          href={`/admin/dealers/${order.dealer.id}`}
-                          className="transition hover:text-[#0a9c63]"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleExpanded(
+                            order.id,
+                          )
+                        }
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-lg font-black text-[#637971] transition hover:bg-[#edf7f2] hover:text-[#0a9c63]"
+                        aria-label={
+                          isExpanded
+                            ? `Collapse ${order.reference}`
+                            : `Expand ${order.reference}`
+                        }
+                      >
+                        <span
+                          className={`block transition-transform duration-200 ${
+                            isExpanded
+                              ? "rotate-90"
+                              : ""
+                          }`}
                         >
+                          ›
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleExpanded(
+                            order.id,
+                          )
+                        }
+                        className="whitespace-nowrap text-left text-xs font-black text-[#17313d] transition hover:text-[#0a9c63]"
+                      >
+                        {
+                          order.reference
+                        }
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleExpanded(
+                            order.id,
+                          )
+                        }
+                        className="min-w-0 text-left"
+                      >
+                        <div className="truncate text-sm font-black text-[#17313d]">
                           {
                             order
                               .dealer
                               .companyName
                           }
-                        </Link>
-                      </h2>
+                        </div>
 
-                      <p className="mt-2 text-xs text-[#71838b]">
-                        {
-                          order.dealer
-                            .contactName
-                        }{" "}
-                        ·{" "}
-                        {
-                          order.dealer
-                            .user.email
-                        }
-                      </p>
-                    </div>
+                        <div className="mt-0.5 truncate text-[10px] text-[#829198]">
+                          {
+                            order
+                              .dealer
+                              .user
+                              .email
+                          }
+                        </div>
+                      </button>
 
-                    <div className="text-right">
-                      <div className="text-2xl font-black text-[#08774f]">
+                      <div className="whitespace-nowrap text-xs font-bold text-[#64777f]">
+                        {new Date(
+                          order.createdAt,
+                        ).toLocaleDateString(
+                          "en-US",
+                          {
+                            year:
+                              "numeric",
+                            month:
+                              "short",
+                            day:
+                              "2-digit",
+                          },
+                        )}
+                      </div>
+
+                      <div className="whitespace-nowrap text-sm font-black text-[#08774f]">
                         {money(
                           order.totalAmount,
                           order.currency,
                         )}
                       </div>
 
-                      <p className="mt-2 text-xs text-[#829198]">
-                        Created{" "}
-                        {new Date(
-                          order.createdAt,
-                        ).toLocaleString()}
-                      </p>
+                      <div>
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.05em] ${orderStatusClass(
+                            order.status,
+                          )}`}
+                        >
+                          {statusLabel(
+                            order.status,
+                          )}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.05em] ${paymentStatusClass(
+                            paymentStatus,
+                          )}`}
+                        >
+                          {statusLabel(
+                            paymentStatus,
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="whitespace-nowrap text-xs font-black text-[#526872]">
+                        {
+                          order
+                            .items
+                            .length
+                        }{" "}
+                        {
+                          order.items
+                            .length ===
+                          1
+                            ? "item"
+                            : "items"
+                        }
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleExpanded(
+                              order.id,
+                            )
+                          }
+                          className="rounded-md border border-[#d7e4df] px-3 py-1.5 text-[10px] font-black text-[#526872] transition hover:border-[#0a9c63] hover:bg-[#edf7f2] hover:text-[#0a9c63]"
+                        >
+                          {isExpanded
+                            ? "Close"
+                            : "View"}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={
+                            busy
+                          }
+                          onClick={() =>
+                            deleteOrder(
+                              order,
+                            )
+                          }
+                          className="rounded-md border border-red-200 px-3 py-1.5 text-[10px] font-black text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  </header>
 
-                  <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-                    <div>
-                      <h3 className="font-black">
-                        Order Items
-                      </h3>
+                    {/* EXPANDED CONTENT */}
+                    {isExpanded && (
+                      <div className="border-t border-[#dfe8e4] bg-[#fbfcfc]">
+                        <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+                          <div className="min-w-0">
+                            {/* SUMMARY BOXES */}
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <div className="rounded-xl border border-[#e0e9e5] bg-white p-4">
+                                <div className="text-[9px] font-black uppercase tracking-[.08em] text-[#829198]">
+                                  Dealer Contact
+                                </div>
 
-                      <div className="table-wrap mt-4">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>
-                                Product
-                              </th>
+                                <div className="mt-2 text-sm font-black text-[#17313d]">
+                                  {
+                                    order
+                                      .dealer
+                                      .contactName
+                                  }
+                                </div>
 
-                              <th>
-                                Quantity
-                              </th>
+                                <div className="mt-1 break-all text-xs text-[#71838b]">
+                                  {
+                                    order
+                                      .dealer
+                                      .user
+                                      .email
+                                  }
+                                </div>
+                              </div>
 
-                              <th>
-                                Unit Price
-                              </th>
+                              <div className="rounded-xl border border-[#e0e9e5] bg-white p-4">
+                                <div className="text-[9px] font-black uppercase tracking-[.08em] text-[#829198]">
+                                  Delivery
+                                </div>
 
-                              <th>
-                                Subtotal
-                              </th>
-                            </tr>
-                          </thead>
+                                <div className="mt-2 text-sm font-black text-[#17313d]">
+                                  {order.deliveryCountry ||
+                                    "Not provided"}
+                                </div>
 
-                          <tbody>
-                            {order.items.map(
-                              (
-                                item,
-                              ) => {
-                                const unitPrice =
-                                  item.unitPrice !==
-                                  null
-                                    ? Number(
-                                        item.unitPrice,
-                                      )
-                                    : null;
+                                <div className="mt-1 text-xs leading-5 text-[#71838b]">
+                                  {order.deliveryAddress ||
+                                    "No delivery address provided."}
+                                </div>
+                              </div>
 
-                                const subtotal =
-                                  unitPrice !==
-                                  null
-                                    ? unitPrice *
-                                      item.quantity
-                                    : null;
+                              <div className="rounded-xl border border-[#e0e9e5] bg-white p-4">
+                                <div className="text-[9px] font-black uppercase tracking-[.08em] text-[#829198]">
+                                  Payment
+                                </div>
 
-                                return (
-                                  <tr
+                                <div className="mt-2 text-sm font-black text-[#17313d]">
+                                  {paymentMethodLabel(
+                                    latestPayment?.provider ??
+                                      null,
+                                  )}
+                                </div>
+
+                                <div className="mt-1 text-xs text-[#71838b]">
+                                  {money(
+                                    latestPayment?.amount ??
+                                      order.totalAmount,
+                                    latestPayment?.currency ??
+                                      order.currency,
+                                  )}
+                                </div>
+
+                                <div className="mt-1 text-xs font-bold text-[#71838b]">
+                                  {statusLabel(
+                                    paymentStatus,
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* ORDER ITEMS */}
+                            <div className="mt-6">
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <div className="eyebrow">
+                                    Order Items
+                                  </div>
+
+                                  <h3 className="mt-2 text-lg font-black text-[#17313d]">
+                                    Products in{" "}
+                                    {
+                                      order.reference
+                                    }
+                                  </h3>
+                                </div>
+
+                                <span className="status">
+                                  {
+                                    order
+                                      .items
+                                      .length
+                                  }{" "}
+                                  {
+                                    order
+                                      .items
+                                      .length ===
+                                    1
+                                      ? "item"
+                                      : "items"
+                                  }
+                                </span>
+                              </div>
+
+                              <div className="table-wrap mt-4">
+                                <table>
+                                  <thead>
+                                    <tr>
+                                      <th>
+                                        Product
+                                      </th>
+
+                                      <th>
+                                        Quantity
+                                      </th>
+
+                                      <th>
+                                        Unit Price
+                                      </th>
+
+                                      <th>
+                                        Subtotal
+                                      </th>
+                                    </tr>
+                                  </thead>
+
+                                  <tbody>
+                                    {order.items.map(
+                                      (
+                                        item,
+                                      ) => {
+                                        const unitPrice =
+                                          item.unitPrice !==
+                                          null
+                                            ? Number(
+                                                item.unitPrice,
+                                              )
+                                            : null;
+
+                                        const subtotal =
+                                          unitPrice !==
+                                            null &&
+                                          Number.isFinite(
+                                            unitPrice,
+                                          )
+                                            ? unitPrice *
+                                              item.quantity
+                                            : null;
+
+                                        return (
+                                          <tr
+                                            key={
+                                              item.id
+                                            }
+                                          >
+                                            <td>
+                                              <div className="font-black text-[#17313d]">
+                                                {
+                                                  item
+                                                    .product
+                                                    .name
+                                                }
+                                              </div>
+
+                                              <div className="mt-1 text-[10px] text-[#82938c]">
+                                                {
+                                                  item
+                                                    .product
+                                                    .slug
+                                                }
+                                              </div>
+                                            </td>
+
+                                            <td>
+                                              {
+                                                item.quantity
+                                              }
+                                            </td>
+
+                                            <td>
+                                              {money(
+                                                item.unitPrice,
+                                                order.currency,
+                                              )}
+                                            </td>
+
+                                            <td className="font-black">
+                                              {subtotal !==
+                                              null
+                                                ? money(
+                                                    String(
+                                                      subtotal,
+                                                    ),
+                                                    order.currency,
+                                                  )
+                                                : "—"}
+                                            </td>
+                                          </tr>
+                                        );
+                                      },
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* MANAGEMENT SIDEBAR */}
+                          <aside className="h-fit rounded-xl border border-[#dfe8e4] bg-white p-5">
+                            <div className="eyebrow">
+                              Order Management
+                            </div>
+
+                            <h3 className="mt-2 text-lg font-black text-[#17313d]">
+                              Update Order
+                            </h3>
+
+                            <label className="mt-5 block text-xs font-black text-[#526872]">
+                              Order Status
+                            </label>
+
+                            <select
+                              value={
+                                selectedStatus[
+                                  order.id
+                                ]
+                              }
+                              disabled={
+                                busy
+                              }
+                              onChange={(
+                                event,
+                              ) =>
+                                setSelectedStatus(
+                                  (
+                                    current,
+                                  ) => ({
+                                    ...current,
+
+                                    [order.id]:
+                                      event
+                                        .target
+                                        .value as OrderStatus,
+                                  }),
+                                )
+                              }
+                              className="mt-2 w-full rounded-md border border-[#d8e4df] bg-white px-3 py-3 text-sm"
+                            >
+                              {statusOptions.map(
+                                (
+                                  status,
+                                ) => (
+                                  <option
                                     key={
-                                      item.id
+                                      status
+                                    }
+                                    value={
+                                      status
                                     }
                                   >
-                                    <td>
-                                      <strong>
-                                        {
-                                          item
-                                            .product
-                                            .name
-                                        }
-                                      </strong>
-
-                                      <div className="mt-1 text-[10px] text-[#82938c]">
-                                        {
-                                          item
-                                            .product
-                                            .slug
-                                        }
-                                      </div>
-                                    </td>
-
-                                    <td>
-                                      {
-                                        item.quantity
-                                      }
-                                    </td>
-
-                                    <td>
-                                      {money(
-                                        item.unitPrice,
-                                        order.currency,
-                                      )}
-                                    </td>
-
-                                    <td className="font-black">
-                                      {subtotal !==
-                                      null
-                                        ? money(
-                                            subtotal.toString(),
-                                            order.currency,
-                                          )
-                                        : "—"}
-                                    </td>
-                                  </tr>
-                                );
-                              },
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        <div className="rounded-lg bg-[#f6f8f7] p-4 text-xs leading-6 text-[#657983]">
-                          <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                            Delivery
-                          </div>
-
-                          <div className="mt-2">
-                            <strong>
-                              {order.deliveryCountry ||
-                                "Not provided"}
-                            </strong>
-                          </div>
-
-                          <div className="mt-1 whitespace-pre-wrap">
-                            {order.deliveryAddress ||
-                              "No delivery address"}
-                          </div>
-                        </div>
-
-                        <div className="rounded-lg bg-[#f6f8f7] p-4 text-xs leading-6 text-[#657983]">
-                          <div className="text-[10px] font-black uppercase tracking-[.08em] text-[#829198]">
-                            Payment
-                            Details
-                          </div>
-
-                          <div className="mt-2">
-                            <strong>
-                              Method:
-                            </strong>{" "}
-                            {paymentMethodLabel(
-                              latestPayment
-                                ?.provider ??
-                                null,
-                            )}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Amount:
-                            </strong>{" "}
-                            {money(
-                              latestPayment
-                                ?.amount ??
-                                order.totalAmount,
-
-                              latestPayment
-                                ?.currency ||
-                                order.currency,
-                            )}
-                          </div>
-
-                          <div className="mt-1">
-                            <strong>
-                              Status:
-                            </strong>{" "}
-                            {statusLabel(
-                              paymentStatus,
-                            )}
-                          </div>
-
-                          {latestPayment
-                            ?.providerRef && (
-                            <div className="mt-1">
-                              <strong>
-                                Reference:
-                              </strong>{" "}
-                              {
-                                latestPayment.providerRef
-                              }
-                            </div>
-                          )}
-
-                          <Link
-                            href={`/admin/payments?q=${encodeURIComponent(
-                              order.reference,
-                            )}`}
-                            className="mt-3 inline-block font-black text-[#0a9c63] hover:underline"
-                          >
-                            View Payment
-                            Record →
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-
-                    <aside>
-                      <div className="text-xs font-black uppercase tracking-[.08em] text-[#71838b]">
-                        Order
-                        Management
-                      </div>
-
-                      <label className="mt-4 block text-xs font-black text-[#526872]">
-                        Order Status
-                      </label>
-
-                      <select
-                        value={
-                          selected[
-                            order.id
-                          ]
-                        }
-                        disabled={
-                          workingId ===
-                          order.id
-                        }
-                        onChange={(
-                          event,
-                        ) =>
-                          setSelected(
-                            (
-                              current,
-                            ) => ({
-                              ...current,
-
-                              [order.id]:
-                                event
-                                  .target
-                                  .value as OrderStatus,
-                            }),
-                          )
-                        }
-                        className="mt-2 w-full rounded-md border border-[#d8e4df] bg-white px-3 py-3 text-sm"
-                      >
-                        {statusOptions.map(
-                          (
-                            status,
-                          ) => (
-                            <option
-                              key={
-                                status
-                              }
-                              value={
-                                status
-                              }
-                            >
-                              {statusLabel(
-                                status,
+                                    {statusLabel(
+                                      status,
+                                    )}
+                                  </option>
+                                ),
                               )}
-                            </option>
-                          ),
-                        )}
-                      </select>
+                            </select>
 
-                      <button
-                        type="button"
-                        disabled={
-                          workingId ===
-                          order.id
-                        }
-                        onClick={() =>
-                          void updateStatus(
-                            order.id,
-                          )
-                        }
-                        className="btn btn-primary mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {workingId ===
-                        order.id
-                          ? "Updating Order..."
-                          : "Update Order Status"}
-                      </button>
+                            <button
+                              type="button"
+                              disabled={
+                                busy
+                              }
+                              onClick={() =>
+                                updateStatus(
+                                  order.id,
+                                )
+                              }
+                              className="btn btn-primary mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {busy
+                                ? "Updating..."
+                                : "Update Order Status"}
+                            </button>
 
-                      <OrderPaymentControl
-                        orderId={
-                          order.id
-                        }
-                        initialStatus={
-                          paymentStatus ===
-                          "PAID"
-                            ? "PAID"
-                            : "PENDING"
-                        }
-                        provider={
-                          latestPayment
-                            ?.provider ??
-                          null
-                        }
-                      />
+                            <div className="mt-5 border-t border-[#e5ece9] pt-5">
+                              <OrderPaymentControl
+                                orderId={
+                                  order.id
+                                }
+                                initialStatus={
+                                  paymentStatus ===
+                                  "PAID"
+                                    ? "PAID"
+                                    : "PENDING"
+                                }
+                                provider={
+                                  latestPayment?.provider ??
+                                  null
+                                }
+                              />
+                            </div>
 
-                      <p className="mt-4 text-xs leading-5 text-[#71838b]">
-                        Completed and
-                        cancelled orders
-                        remain editable if
-                        a correction is
-                        required.
-                      </p>
-                    </aside>
-                  </div>
-                </div>
-              )}
-            </article>
-          );
-        },
-      )}
+                            <div className="mt-5 border-t border-[#e5ece9] pt-5">
+                              <div className="text-[10px] font-black uppercase tracking-[.08em] text-red-500">
+                                Danger Zone
+                              </div>
+
+                              <p className="mt-2 text-xs leading-5 text-[#71838b]">
+                                Permanent
+                                deletion removes
+                                this order,
+                                related order
+                                items and its
+                                payment records.
+                              </p>
+
+                              <button
+                                type="button"
+                                disabled={
+                                  busy
+                                }
+                                onClick={() =>
+                                  deleteOrder(
+                                    order,
+                                  )
+                                }
+                                className="mt-4 w-full rounded-md border border-red-200 bg-white px-4 py-3 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                {busy
+                                  ? "Working..."
+                                  : "Delete Order Permanently"}
+                              </button>
+                            </div>
+
+                            <p className="mt-4 text-xs leading-5 text-[#829198]">
+                              Completed and
+                              cancelled orders
+                              remain editable
+                              when an
+                              administrative
+                              correction is
+                              required.
+                            </p>
+                          </aside>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              },
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

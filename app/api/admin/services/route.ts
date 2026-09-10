@@ -1,25 +1,473 @@
-import { revalidatePath } from "next/cache";
-import { NextResponse } from "next/server";
+import {
+  revalidatePath,
+} from "next/cache";
 
-import type { Service } from "@/data/site";
-import { isAdminSession } from "@/lib/adminAuth";
-import { getServices, upsertService } from "@/lib/catalog";
+import {
+  NextResponse,
+} from "next/server";
 
-export async function GET() {
-  if (!(await isAdminSession())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json({ services: await getServices({ activeOnly: false }) });
+import type {
+  Service,
+} from "@/data/site";
+
+import {
+  isAdminSession,
+} from "@/lib/adminAuth";
+
+import {
+  deleteServiceImage,
+} from "@/lib/cloudinary";
+
+import {
+  deleteService as deleteCatalogService,
+  upsertService as upsertCatalogService,
+} from "@/lib/catalog";
+
+import {
+  createService,
+  deleteService,
+  getAdminServices,
+  updateService,
+  type AdminService,
+  type ServiceInput,
+  type ServiceMediaState,
+} from "@/lib/databaseServices";
+
+async function unauthorized() {
+  return NextResponse.json(
+    {
+      error:
+        "Unauthorized",
+    },
+    {
+      status: 401,
+    },
+  );
 }
 
-export async function POST(request: Request) {
-  if (!(await isAdminSession())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+function refreshServicePaths() {
+  revalidatePath(
+    "/",
+  );
+
+  revalidatePath(
+    "/services",
+  );
+
+  revalidatePath(
+    "/services/category/[...segments]",
+    "page",
+  );
+
+  revalidatePath(
+    "/admin/services",
+  );
+}
+
+function asLegacyService(
+  service: AdminService,
+): Service {
+  return {
+    slug:
+      service.slug,
+
+    name:
+      service.name,
+
+    shortName:
+      service.shortName ??
+      "",
+
+    summary:
+      service.summary ??
+      "",
+
+    description:
+      service.description ??
+      "",
+
+    image:
+      service.image ??
+      "",
+
+    heroImage:
+      service.heroImage ??
+      "",
+
+    scope:
+      service.scope,
+
+    process:
+      service.process,
+
+    applications:
+      service.applications,
+
+    featured:
+      service.featured,
+
+    active:
+      service.isActive,
+  };
+}
+
+async function result() {
+  return NextResponse.json({
+    ok: true,
+
+    services:
+      await getAdminServices(),
+  });
+}
+
+function replacedPublicIds(
+  before:
+    ServiceMediaState,
+
+  after:
+    ServiceMediaState,
+) {
+  const values:
+    string[] = [];
+
+  if (
+    before.imagePublicId &&
+    before.imagePublicId !==
+      after.imagePublicId
+  ) {
+    values.push(
+      before.imagePublicId,
+    );
+  }
+
+  if (
+    before.heroImagePublicId &&
+    before.heroImagePublicId !==
+      after.heroImagePublicId
+  ) {
+    values.push(
+      before.heroImagePublicId,
+    );
+  }
+
+  return [
+    ...new Set(
+      values,
+    ),
+  ];
+}
+
+async function cleanupServiceImages(
+  publicIds: Array<
+    | string
+    | null
+    | undefined
+  >,
+) {
+  const unique =
+    [
+      ...new Set(
+        publicIds
+          .map(
+            (
+              value,
+            ) =>
+              value?.trim() ||
+              "",
+          )
+          .filter(Boolean),
+      ),
+    ];
+
+  await Promise.allSettled(
+    unique.map(
+      async (
+        publicId,
+      ) => {
+        try {
+          await deleteServiceImage(
+            publicId,
+          );
+        } catch (
+          error
+        ) {
+          console.error(
+            `Unable to clean up service image "${publicId}":`,
+            error,
+          );
+        }
+      },
+    ),
+  );
+}
+
+export async function GET() {
+  if (
+    !(await isAdminSession())
+  ) {
+    return unauthorized();
+  }
+
+  return NextResponse.json({
+    services:
+      await getAdminServices(),
+  });
+}
+
+export async function POST(
+  request: Request,
+) {
+  if (
+    !(await isAdminSession())
+  ) {
+    return unauthorized();
+  }
+
   try {
-    const body = (await request.json()) as Service;
-    if (!body.name?.trim()) return NextResponse.json({ error: "Service name is required." }, { status: 400 });
-    const service = await upsertService(body);
-    revalidatePath("/");
-    revalidatePath("/services");
-    return NextResponse.json({ ok: true, service }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to save service." }, { status: 400 });
+    const body =
+      (await request.json()) as
+        ServiceInput;
+
+    const service =
+      await createService(
+        body,
+      );
+
+    await upsertCatalogService(
+      asLegacyService(
+        service,
+      ),
+    );
+
+    refreshServicePaths();
+
+    return result();
+  } catch (
+    error
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to create service.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+}
+
+export async function PUT(
+  request: Request,
+) {
+  if (
+    !(await isAdminSession())
+  ) {
+    return unauthorized();
+  }
+
+  try {
+    const body =
+      (await request.json()) as
+        ServiceInput & {
+          id?: string;
+        };
+
+    if (!body.id) {
+      return NextResponse.json(
+        {
+          error:
+            "Service id is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const existing =
+      (
+        await getAdminServices()
+      ).find(
+        (
+          service,
+        ) =>
+          service.id ===
+          body.id,
+      );
+
+    if (!existing) {
+      return NextResponse.json(
+        {
+          error:
+            "Service not found.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    const {
+      id,
+      ...input
+    } = body;
+
+    const update =
+      await updateService(
+        id,
+        input,
+      );
+
+    /*
+     * Keep the legacy catalogue synchronized
+     * before deleting old Cloudinary media.
+     */
+    await upsertCatalogService(
+      asLegacyService(
+        update.service,
+      ),
+
+      existing.slug,
+    );
+
+    /*
+     * Neon and legacy catalogue now both
+     * reference the replacement media.
+     * Old Cloudinary assets may be removed.
+     */
+    await cleanupServiceImages(
+      replacedPublicIds(
+        update.before,
+        update.after,
+      ),
+    );
+
+    revalidatePath(
+      `/services/${existing.slug}`,
+    );
+
+    revalidatePath(
+      `/services/${update.service.slug}`,
+    );
+
+    refreshServicePaths();
+
+    return result();
+  } catch (
+    error
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to update service.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+) {
+  if (
+    !(await isAdminSession())
+  ) {
+    return unauthorized();
+  }
+
+  try {
+    const id =
+      new URL(
+        request.url,
+      ).searchParams.get(
+        "id",
+      );
+
+    if (!id) {
+      return NextResponse.json(
+        {
+          error:
+            "Service id is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const existing =
+      (
+        await getAdminServices()
+      ).find(
+        (
+          service,
+        ) =>
+          service.id ===
+          id,
+      );
+
+    if (!existing) {
+      return NextResponse.json(
+        {
+          error:
+            "Service not found.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    /*
+     * Neon performs child safety validation.
+     */
+    const deletion =
+      await deleteService(
+        id,
+      );
+
+    /*
+     * Keep legacy catalogue synchronized.
+     */
+    await deleteCatalogService(
+      existing.slug,
+    );
+
+    /*
+     * DB + legacy catalogue no longer need
+     * these images.
+     */
+    await cleanupServiceImages([
+      deletion.media
+        .imagePublicId,
+
+      deletion.media
+        .heroImagePublicId,
+    ]);
+
+    refreshServicePaths();
+
+    return result();
+  } catch (
+    error
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to delete service.",
+      },
+      {
+        status: 400,
+      },
+    );
   }
 }
