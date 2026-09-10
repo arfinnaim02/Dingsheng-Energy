@@ -23,7 +23,6 @@ import {
 } from "@/lib/databaseProducts";
 
 import {
-  deleteProduct,
   upsertProduct,
 } from "@/lib/catalog";
 
@@ -403,9 +402,6 @@ export async function DELETE(
      * Keep legacy catalog.json synchronized until
      * we complete the Neon-only catalog migration.
      */
-    await deleteProduct(
-      slug,
-    );
 
     return NextResponse.json(
       {
