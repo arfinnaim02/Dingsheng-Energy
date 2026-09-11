@@ -224,6 +224,10 @@ model Product {
   primaryCategorySlug     String?
   commercialMode          ProductCommercialMode       @default(RFQ_ONLY)
   dealerPriceProtected    Boolean                     @default(true)
+
+  showApplications        Boolean                     @default(false)
+  showStandards           Boolean                     @default(false)
+
   featured                Boolean                     @default(false)
   availability            String?
   unitLabel               String?                     @default("Unit")

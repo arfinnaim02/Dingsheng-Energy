@@ -283,6 +283,14 @@ export async function PUT(
         categorySlugs,
 
         primaryCategorySlug,
+
+        showStandards:
+          body.showStandards ===
+          true,
+
+        showApplications:
+          body.showApplications ===
+          true,
       };
 
     /*

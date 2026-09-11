@@ -333,8 +333,15 @@ export async function POST(
         categorySlugs,
 
         primaryCategorySlug,
-      };
 
+        showStandards:
+          body.showStandards ===
+          true,
+
+        showApplications:
+          body.showApplications ===
+          true,
+      };
     /*
      * ============================================
      * SAVE PRODUCT TO NEON

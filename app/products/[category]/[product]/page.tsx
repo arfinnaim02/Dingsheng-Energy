@@ -3,9 +3,14 @@ import Link from "next/link";
 import {
   notFound,
 } from "next/navigation";
+
 import {
   getPublicProductDocuments,
 } from "@/lib/databaseProductDocuments";
+
+import {
+  prisma,
+} from "@/lib/prisma";
 
 import {
   PublicShell,
@@ -175,16 +180,32 @@ export default async function ProductDetail({
     notFound();
   }
 
-  const [
-    product,
-    categories,
-  ] = await Promise.all([
-    getProduct(
-      productSlug,
-    ),
+    const [
+      product,
+      categories,
+      sectionVisibility,
+    ] = await Promise.all([
+      getProduct(
+        productSlug,
+      ),
 
-    getPublicProductCategories(),
-  ]);
+      getPublicProductCategories(),
+
+      prisma.product.findUnique({
+        where: {
+          slug:
+            productSlug,
+        },
+
+        select: {
+          showApplications:
+            true,
+
+          showStandards:
+            true,
+        },
+      }),
+    ]);
 
   if (
     !product ||
@@ -212,19 +233,19 @@ export default async function ProductDetail({
     notFound();
   }
 
-const [
-  relatedAll,
-  productDocuments,
-] =
-  await Promise.all([
-    getRelatedProducts(
-      product,
-    ),
+  const [
+    relatedAll,
+    productDocuments,
+  ] =
+    await Promise.all([
+      getRelatedProducts(
+        product,
+      ),
 
-    getPublicProductDocuments(
-      product.slug,
-    ),
-  ]);
+      getPublicProductDocuments(
+        product.slug,
+      ),
+    ]);
 
   const related =
     relatedAll
@@ -363,44 +384,6 @@ const [
                 </p>
               )}
 
-            {product.specs.length >
-              0 && (
-              <div className="mt-8 grid grid-cols-2 gap-3">
-                {product.specs
-                  .slice(
-                    0,
-                    4,
-                  )
-                  .map(
-                    (
-                      [
-                        label,
-                        value,
-                      ],
-                    ) => (
-                      <div
-                        key={
-                          label
-                        }
-                        className="min-h-[88px] border border-[#dfe8e4] bg-[#fafcfb] p-4"
-                      >
-                        <div className="text-[9px] font-black uppercase tracking-[.1em] text-[#82948c]">
-                          {
-                            label
-                          }
-                        </div>
-
-                        <div className="mt-2 text-[13px] font-black leading-5 text-[#17313d]">
-                          {
-                            value
-                          }
-                        </div>
-                      </div>
-                    ),
-                  )}
-              </div>
-            )}
-
             <div className="mt-7 flex flex-wrap gap-2">
               <span className="rounded-full border border-[#d7e6df] bg-[#eff8f3] px-3 py-1.5 text-[9px] font-black uppercase tracking-[.1em] text-[#197456]">
                 {commercialLabel(
@@ -417,89 +400,82 @@ const [
               )}
             </div>
 
-            {product.dealerPriceProtected && (
-              <div className="mt-7 overflow-hidden rounded-xl border border-[#e8d8aa] bg-[#fffaf0]">
-                <div className="border-b border-[#eadfbd] bg-[#fff5d9] px-5 py-4">
-                  <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[.08em] text-[#a66f00]">
-                    <Icon
-                      name="lock"
-                      className="h-4 w-4"
-                    />
-
-                    Dealer Commercial
-                    Access
+            {/* Technical Specifications */}
+            <div
+              id="specifications"
+              className="mt-8 scroll-mt-28 overflow-hidden rounded-xl border border-[#dfe8e4] bg-white"
+            >
+              <div className="flex items-end justify-between gap-4 border-b border-[#e5ece8] bg-[#fafcfb] px-5 py-4">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[.12em] text-[#0a9c63]">
+                    Technical Data
                   </div>
+
+                  <h2 className="mt-1 text-lg font-black text-[#17313d]">
+                    Technical Specifications
+                  </h2>
                 </div>
 
-                <div className="p-5">
-                  <div className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8b8064]">
-                    Dealer Price
-                  </div>
-
-                  <div className="mt-1 text-2xl font-black text-[#17313d]">
-                    Login to View Pricing
-                  </div>
-
-                  <p className="mt-3 text-[12px] leading-6 text-[#776e58]">
-                    Commercial pricing and
-                    applicable dealer
-                    information are available
-                    only to approved dealer
-                    accounts.
-                  </p>
-
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    <Link
-                      href="/dealer/login"
-                      className="flex h-11 items-center justify-center bg-[#0a9c63] px-5 text-[10px] font-black uppercase text-white"
-                    >
-                      Dealer Login →
-                    </Link>
-
-                    <Link
-                      href="/dealer/apply"
-                      className="flex h-11 items-center justify-center border border-[#0a9c63] px-5 text-[10px] font-black uppercase text-[#0a9c63]"
-                    >
-                      Apply for Access
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 border border-[#dfe8e4] bg-[#f8faf9] p-5">
-              <div className="text-[10px] font-black uppercase tracking-[.12em] text-[#0a9c63]">
-                Commercial Requirement
-              </div>
-
-              <h3 className="mt-2 text-base font-black">
-                {commercialLabel(
-                  product,
-                )}
-              </h3>
-
-              <p className="mt-2 text-[11px] leading-5 text-[#6f838b]">
-                Request a formal quotation
-                for commercial terms,
-                quantity, delivery and
-                project-specific
-                requirements.
-              </p>
-
-              <Link
-                href="/contact#rfq"
-                className="mt-4 flex h-11 w-full items-center justify-between bg-[#071f2c] px-5 text-[10px] font-black uppercase text-white"
-              >
-                <span>
-                  Request Formal
-                  Quotation
+                <span className="text-[9px] font-bold uppercase tracking-[.08em] text-[#899990]">
+                  {
+                    product.specs
+                      .length
+                  }{" "}
+                  specifications
                 </span>
+              </div>
 
-                <Icon
-                  name="arrow"
-                  className="h-4 w-4"
-                />
-              </Link>
+              {product.specs.length ? (
+                <div>
+                  {product.specs.map(
+                    (
+                      [
+                        label,
+                        value,
+                      ],
+                      i,
+                    ) => (
+                      <div
+                        key={`${label}-${value}`}
+                        className={`grid gap-2 px-5 py-3.5 sm:grid-cols-[.42fr_.58fr] ${
+                          i !==
+                          product.specs
+                            .length -
+                            1
+                            ? "border-b border-[#e5ece8]"
+                            : ""
+                        } ${
+                          i % 2 ===
+                          0
+                            ? "bg-white"
+                            : "bg-[#fafcfb]"
+                        }`}
+                      >
+                        <div className="text-[11px] font-black text-[#536b75]">
+                          {
+                            label
+                          }
+                        </div>
+
+                        <div className="text-[12px] font-semibold leading-6 text-[#1e3741]">
+                          {
+                            value
+                          }
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+              ) : (
+                <div className="p-5 text-xs leading-6 text-[#71858d]">
+                  Detailed specifications
+                  have not yet been supplied
+                  in the client technical
+                  material. Contact Dingsheng
+                  Energy for product-specific
+                  information.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -552,174 +528,108 @@ const [
                 </Link>
               </div>
             </div>
-
-            <div
-              id="specifications"
-              className="scroll-mt-28 rounded-xl border border-[#dfe8e4] bg-white p-7"
-            >
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <div className="eyebrow">
-                    Technical Data
-                  </div>
-
-                  <h2 className="mt-2 text-2xl font-black">
-                    Technical
-                    Specifications
-                  </h2>
-                </div>
-
-                <span className="text-[10px] font-bold uppercase text-[#899990]">
-                  {
-                    product.specs
-                      .length
-                  }{" "}
-                  specifications
-                </span>
-              </div>
-
-              {product.specs.length ? (
-                <div className="mt-6 overflow-hidden border border-[#dfe8e4]">
-                  {product.specs.map(
-                    (
-                      [
-                        label,
-                        value,
-                      ],
-                      i,
-                    ) => (
-                      <div
-                        key={`${label}-${value}`}
-                        className={`grid gap-2 px-5 py-4 sm:grid-cols-[.42fr_.58fr] ${
-                          i !==
-                          product.specs
-                            .length -
-                            1
-                            ? "border-b border-[#e5ece8]"
-                            : ""
-                        } ${
-                          i % 2 ===
-                          0
-                            ? "bg-[#fafcfb]"
-                            : "bg-white"
-                        }`}
-                      >
-                        <div className="text-[11px] font-black text-[#536b75]">
-                          {
-                            label
-                          }
-                        </div>
-
-                        <div className="text-[12px] font-bold leading-6 text-[#1e3741]">
-                          {
-                            value
-                          }
-                        </div>
-                      </div>
-                    ),
-                  )}
-                </div>
-              ) : (
-                <div className="mt-6 rounded-lg border border-[#dfe8e4] bg-[#fafcfb] p-5 text-xs leading-6 text-[#71858d]">
-                  Detailed specifications
-                  have not yet been supplied
-                  in the client technical
-                  material. Contact Dingsheng
-                  Energy for product-specific
-                  information.
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="rounded-xl border border-[#dfe8e4] bg-white p-6">
+            {/* Applications */}
+            {/* Applications */}
+{sectionVisibility
+  ?.showApplications ===
+  true && (
+  <div className="rounded-xl border border-[#dfe8e4] bg-white p-6">
+    <Icon
+      name="factory"
+      className="h-7 w-7 text-[#0a9c63]"
+    />
+
+    <div className="eyebrow mt-5">
+      Applications
+    </div>
+
+    <div className="mt-4 flex flex-wrap gap-2">
+      {(product.applications
+        ?.length
+        ? product.applications
+        : [
+            category.name,
+          ]
+      ).map(
+        (item) => (
+          <span
+            key={
+              item
+            }
+            className="pill"
+          >
+            {
+              item
+            }
+          </span>
+        ),
+      )}
+    </div>
+  </div>
+)}
+            {/* Standards */}
+            {/* Standards */}
+{sectionVisibility
+  ?.showStandards ===
+  true && (
+  <div className="rounded-xl border border-[#dfe8e4] bg-white p-6">
+    <Icon
+      name="shield"
+      className="h-7 w-7 text-[#0a9c63]"
+    />
+
+    <div className="eyebrow mt-5">
+      Standards / References
+    </div>
+
+    <p className="mt-3 text-[11px] leading-6 text-[#71838b]">
+      Displayed standards are
+      product-specific references
+      from supplied technical
+      material, not company-wide
+      certifications.
+    </p>
+
+    <div className="mt-4 grid gap-2">
+      {product.standards
+        ?.length ? (
+        product.standards.map(
+          (
+            standard,
+          ) => (
+            <div
+              key={
+                standard
+              }
+              className="flex items-center gap-3 border border-[#dfe8e4] bg-[#f8fbf9] px-4 py-3 text-[11px] font-black"
+            >
               <Icon
-                name="factory"
-                className="h-7 w-7 text-[#0a9c63]"
+                name="check"
+                className="h-4 w-4 text-[#0a9c63]"
               />
 
-              <div className="eyebrow mt-5">
-                Applications
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {(product.applications
-                  ?.length
-                  ? product.applications
-                  : [
-                      category.name,
-                    ]
-                ).map(
-                  (item) => (
-                    <span
-                      key={
-                        item
-                      }
-                      className="pill"
-                    >
-                      {
-                        item
-                      }
-                    </span>
-                  ),
-                )}
-              </div>
+              {
+                standard
+              }
             </div>
+          ),
+        )
+      ) : (
+        <div className="border border-[#e1e8e4] bg-[#fafcfb] p-4 text-[11px] text-[#75878f]">
+          Product-specific standard
+          information has not yet
+          been provided.
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
-            <div className="rounded-xl border border-[#dfe8e4] bg-white p-6">
-              <Icon
-                name="shield"
-                className="h-7 w-7 text-[#0a9c63]"
-              />
-
-              <div className="eyebrow mt-5">
-                Standards / References
-              </div>
-
-              <p className="mt-3 text-[11px] leading-6 text-[#71838b]">
-                Displayed standards are
-                product-specific references
-                from supplied technical
-                material, not company-wide
-                certifications.
-              </p>
-
-              <div className="mt-4 grid gap-2">
-                {product.standards
-                  ?.length ? (
-                  product.standards.map(
-                    (
-                      standard,
-                    ) => (
-                      <div
-                        key={
-                          standard
-                        }
-                        className="flex items-center gap-3 border border-[#dfe8e4] bg-[#f8fbf9] px-4 py-3 text-[11px] font-black"
-                      >
-                        <Icon
-                          name="check"
-                          className="h-4 w-4 text-[#0a9c63]"
-                        />
-
-                        {
-                          standard
-                        }
-                      </div>
-                    ),
-                  )
-                ) : (
-                  <div className="border border-[#e1e8e4] bg-[#fafcfb] p-4 text-[11px] text-[#75878f]">
-                    Product-specific standard
-                    information has not yet
-                    been provided.
-                  </div>
-                )}
-              </div>
-            </div>
-
+            {/* Downloads */}
             <div className="rounded-xl border border-[#dfe8e4] bg-white p-6">
               <Icon
                 name="download"
@@ -738,7 +648,9 @@ const [
                       index,
                     ) => (
                       <a
-                        key={document.id}
+                        key={
+                          document.id
+                        }
                         href={`/api/products/${encodeURIComponent(
                           product.slug,
                         )}/documents/${encodeURIComponent(
@@ -754,7 +666,9 @@ const [
                             `Public document ${index + 1}`}
                         </span>
 
-                        <span aria-hidden="true">
+                        <span
+                          aria-hidden="true"
+                        >
                           ↗
                         </span>
                       </a>
@@ -786,6 +700,7 @@ const [
               </div>
             </div>
 
+            {/* Technical Assistance */}
             <div className="rounded-xl bg-[#071f2c] p-6 text-white">
               <Icon
                 name="handshake"
@@ -805,17 +720,148 @@ const [
 
               <Link
                 href="/contact"
-                className="mt-5 flex h-10 items-center justify-between border border-white/20 px-4 text-[10px] font-black uppercase"
+                className="group mt-5 flex min-h-11 items-center justify-between rounded-md bg-[#0a9c63] px-4 text-[10px] font-black uppercase tracking-[.05em] text-white transition hover:bg-[#0b8756]"
               >
-                Contact Our Team
+                <span>
+                  Contact Technical Team
+                </span>
 
                 <Icon
                   name="arrow"
-                  className="h-4 w-4"
+                  className="h-4 w-4 transition-transform group-hover:translate-x-1"
                 />
               </Link>
             </div>
           </aside>
+        </div>
+      </section>
+
+      {/* Commercial access */}
+      <section className="border-y border-[#e4ece8] bg-white py-16 lg:py-20">
+        <div className="container-shell">
+          <div className="mb-8 max-w-3xl">
+            <div className="eyebrow">
+              Commercial Support
+            </div>
+
+            <h2 className="h2 mt-3">
+              Pricing, Dealer Access &
+              Project Enquiries
+            </h2>
+
+            <p className="mt-4 text-sm leading-7 text-[#687c85]">
+              Access protected dealer
+              pricing or contact Dingsheng
+              Energy for quotation,
+              availability, delivery and
+              project-specific support.
+            </p>
+          </div>
+
+          <div
+            className={`grid gap-6 ${
+              product.dealerPriceProtected
+                ? "lg:grid-cols-2"
+                : "lg:grid-cols-1"
+            }`}
+          >
+            {/* Dealer pricing */}
+            {product.dealerPriceProtected && (
+              <div className="overflow-hidden rounded-xl border border-[#e8d8aa] bg-[#fffaf0]">
+                <div className="border-b border-[#eadfbd] bg-[#fff5d9] px-6 py-4">
+                  <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[.08em] text-[#a66f00]">
+                    <Icon
+                      name="lock"
+                      className="h-4 w-4"
+                    />
+
+                    Dealer Commercial
+                    Access
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8b8064]">
+                    Dealer Price
+                  </div>
+
+                  <div className="mt-2 text-2xl font-black text-[#17313d]">
+                    Login to View Pricing
+                  </div>
+
+                  <p className="mt-3 max-w-xl text-[12px] leading-6 text-[#776e58]">
+                    Commercial pricing and
+                    applicable dealer
+                    information are available
+                    only to approved dealer
+                    accounts.
+                  </p>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <Link
+                      href="/dealer/login"
+                      className="flex min-h-12 items-center justify-center rounded-md bg-[#0a9c63] px-5 text-[10px] font-black uppercase tracking-[.05em] text-white transition hover:bg-[#087e50]"
+                    >
+                      Dealer Login →
+                    </Link>
+
+                    <Link
+                      href="/dealer/apply"
+                      className="flex min-h-12 items-center justify-center rounded-md border border-[#0a9c63] bg-white px-5 text-[10px] font-black uppercase tracking-[.05em] text-[#0a9c63] transition hover:bg-[#edf8f3]"
+                    >
+                      Apply for Access
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Commercial contact */}
+            <div className="rounded-xl bg-[#071f2c] p-6 text-white lg:p-7">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0a9c63]/15">
+                  <Icon
+                    name="handshake"
+                    className="h-5 w-5 text-[#59dfa8]"
+                  />
+                </span>
+
+                <div className="text-[10px] font-black uppercase tracking-[.13em] text-[#59dfa8]">
+                  Commercial Requirement
+                </div>
+              </div>
+
+              <h3 className="mt-5 text-2xl font-black leading-tight">
+                {commercialLabel(
+                  product,
+                )}
+              </h3>
+
+              <p className="mt-3 max-w-xl text-[12px] leading-6 text-white/65">
+                Share quantity, delivery
+                destination, operating
+                conditions and project
+                requirements with our
+                commercial team for a formal
+                quotation and technical
+                review.
+              </p>
+
+              <Link
+                href="/contact#rfq"
+                className="group mt-6 flex min-h-12 w-full items-center justify-between rounded-md bg-[#0a9c63] px-5 text-[10px] font-black uppercase tracking-[.06em] text-white transition hover:bg-[#0b8756] sm:w-auto sm:min-w-[260px]"
+              >
+                <span>
+                  Contact Commercial Team
+                </span>
+
+                <Icon
+                  name="arrow"
+                  className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

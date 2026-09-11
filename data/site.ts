@@ -112,8 +112,13 @@ export type Product = {
   image: string;
   gallery?: string[];
   specs: ProductSpecification[];
+
   standards?: string[];
   applications?: string[];
+
+  showStandards: boolean;
+  showApplications: boolean;
+
   commercialMode: CommercialMode;
   dealerPriceProtected: boolean;
   featured?: boolean;

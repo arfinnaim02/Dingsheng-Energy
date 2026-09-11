@@ -76,123 +76,104 @@ export default async function ProductsPage() {
       ======================================= */}
 
       <section className="bg-[#061f2d] text-white">
+        {/* DESKTOP */}
+        <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+          <ResponsiveHeroMedia
+            src="/media/products/hero-products.jpg"
+            alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
+            priority
+            position="center"
+          />
 
-  {/* DESKTOP */}
-  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
 
-    <ResponsiveHeroMedia
-      src="/media/products/hero-products.jpg"
-      alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
-      priority
-      position="center"
-    />
+          <div className="container-shell absolute inset-0 z-10 flex items-center">
+            <div className="max-w-[720px]">
+              <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#48d49c]">
+                <span className="h-[2px] w-8 bg-[#48d49c]" />
 
-    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
+                Premium LPG Equipment
+              </div>
 
-    <div className="container-shell absolute inset-0 z-10 flex items-center">
+              <h1 className="mt-4 text-[64px] font-black leading-[1.03] tracking-[-.04em]">
+                Our Products
+              </h1>
 
-      <div className="max-w-[720px]">
+              <p className="mt-6 max-w-[650px] text-base leading-8 text-white/80">
+                Integrated LPG equipment and
+                components for storage,
+                filling, transfer, transport,
+                autogas refueling and
+                industrial applications.
+              </p>
 
-        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#48d49c]">
-          <span className="h-[2px] w-8 bg-[#48d49c]" />
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="#categories"
+                  className="btn btn-primary"
+                >
+                  Browse Categories →
+                </Link>
 
-          Premium LPG Equipment
+                <Link
+                  href="/contact#rfq"
+                  className="btn border border-white/35 text-white"
+                >
+                  Request Assistance
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <h1 className="mt-4 text-[64px] font-black leading-[1.03] tracking-[-.04em]">
-          Our Products
-        </h1>
+        {/* MOBILE */}
+        <div className="lg:hidden">
+          <div className="relative aspect-[16/9] w-full overflow-hidden">
+            <ResponsiveHeroMedia
+              src="/media/products/hero-products.jpg"
+              alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
+              priority
+              position="center"
+            />
+          </div>
 
-        <p className="mt-6 max-w-[650px] text-base leading-8 text-white/80">
-          Integrated LPG equipment and
-          components for storage,
-          filling, transfer, transport,
-          autogas refueling and
-          industrial applications.
-        </p>
+          <div className="container-shell py-10">
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[.14em] text-[#48d49c]">
+              <span className="h-[2px] w-7 bg-[#48d49c]" />
 
-        <div className="mt-8 flex flex-wrap gap-3">
+              Premium LPG Equipment
+            </div>
 
-          <Link
-            href="#categories"
-            className="btn btn-primary"
-          >
-            Browse Categories →
-          </Link>
+            <h1 className="mt-4 text-[40px] font-black leading-[1.03] tracking-[-.04em]">
+              Our Products
+            </h1>
 
-          <Link
-            href="/contact#rfq"
-            className="btn border border-white/35 text-white"
-          >
-            Request Assistance
-          </Link>
+            <p className="mt-5 text-[15px] leading-7 text-white/75">
+              Integrated LPG equipment and
+              components for storage,
+              filling, transfer, transport,
+              autogas refueling and
+              industrial applications.
+            </p>
 
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="#categories"
+                className="btn btn-primary"
+              >
+                Browse Categories →
+              </Link>
+
+              <Link
+                href="/contact#rfq"
+                className="btn border border-white/35 text-white"
+              >
+                Request Assistance
+              </Link>
+            </div>
+          </div>
         </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  {/* MOBILE */}
-  <div className="lg:hidden">
-
-    <div className="relative aspect-[16/9] w-full overflow-hidden">
-
-      <ResponsiveHeroMedia
-        src="/media/products/hero-products.jpg"
-        alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
-        priority
-        position="center"
-      />
-
-    </div>
-
-    <div className="container-shell py-10">
-
-      <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[.14em] text-[#48d49c]">
-        <span className="h-[2px] w-7 bg-[#48d49c]" />
-
-        Premium LPG Equipment
-      </div>
-
-      <h1 className="mt-4 text-[40px] font-black leading-[1.03] tracking-[-.04em]">
-        Our Products
-      </h1>
-
-      <p className="mt-5 text-[15px] leading-7 text-white/75">
-        Integrated LPG equipment and
-        components for storage,
-        filling, transfer, transport,
-        autogas refueling and
-        industrial applications.
-      </p>
-
-      <div className="mt-7 flex flex-wrap gap-3">
-
-        <Link
-          href="#categories"
-          className="btn btn-primary"
-        >
-          Browse Categories →
-        </Link>
-
-        <Link
-          href="/contact#rfq"
-          className="btn border border-white/35 text-white"
-        >
-          Request Assistance
-        </Link>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
+      </section>
 
       {/* =======================================
           BREADCRUMB
@@ -283,16 +264,7 @@ export default async function ProductsPage() {
                       className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#dfe8e4] bg-white shadow-[0_8px_28px_rgba(13,42,53,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#0a9c63]/40 hover:shadow-[0_18px_42px_rgba(13,42,53,0.13)]"
                     >
                       {/* Category image */}
-
                       <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#edf2ef]">
-                        {/*
-                         * Soft background layer.
-                         *
-                         * It fills the complete frame
-                         * while the main image below
-                         * remains uncropped.
-                         */}
-
                         <Image
                           src={
                             categoryImage
@@ -305,14 +277,6 @@ export default async function ProductsPage() {
                         />
 
                         <div className="absolute inset-0 bg-white/15" />
-
-                        {/*
-                         * Main category image.
-                         *
-                         * object-contain ensures the
-                         * uploaded category artwork is
-                         * shown completely.
-                         */}
 
                         <div className="absolute inset-3 sm:inset-4">
                           <Image
@@ -342,7 +306,6 @@ export default async function ProductsPage() {
                       </div>
 
                       {/* Category information */}
-
                       <div className="flex flex-1 flex-col p-5 sm:p-6">
                         <h3 className="text-lg font-black leading-tight text-[#17313d] transition-colors group-hover:text-[#0a8b59] sm:text-xl">
                           {
@@ -439,7 +402,6 @@ export default async function ProductsPage() {
 
           <div className="mt-10 grid gap-7 lg:grid-cols-[245px_minmax(0,1fr)]">
             {/* Category sidebar */}
-
             <aside className="self-start rounded-xl border border-[#dfe8e4] bg-white p-5 lg:sticky lg:top-24">
               <div className="text-xs font-black uppercase tracking-[.12em]">
                 Browse Categories
@@ -502,7 +464,6 @@ export default async function ProductsPage() {
             </aside>
 
             {/* Products */}
-
             <div className="min-w-0">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#dfe8e4] bg-white px-4 py-3 text-xs text-[#6c7f87]">
                 <span>

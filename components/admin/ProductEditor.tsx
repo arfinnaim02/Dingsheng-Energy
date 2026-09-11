@@ -73,6 +73,10 @@ const blankProduct: Product = {
   specs: [],
   standards: [],
   applications: [],
+
+  showStandards: false,
+  showApplications: false,
+
   commercialMode:
     "dealer-purchase-rfq",
   dealerPriceProtected:
@@ -757,6 +761,14 @@ export function ProductEditor({
         {
           ...form,
 
+          showStandards:
+            form.showStandards ===
+            true,
+
+          showApplications:
+            form.showApplications ===
+            true,
+
           subcategory:
             form.subcategory ??
             "",
@@ -1413,69 +1425,110 @@ export function ProductEditor({
             )}
           </div>
 
-          <div className="form-grid mt-6">
-            <div className="field">
+          <div className="field">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <label>
                 Standards / references — one per line
               </label>
 
-              <textarea
-                value={
-                  standards
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setStandards(
-                    event
-                      .target
-                      .value,
-                  )
-                }
-              />
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[#d8e4df] bg-[#f8fbf9] px-3 py-2 text-xs font-bold text-[#536b75]">
+                <input
+                  type="checkbox"
+                  checked={
+                    form.showStandards ===
+                    true
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    patch(
+                      "showStandards",
+
+                      event
+                        .target
+                        .checked,
+                    )
+                  }
+                  className="h-4 w-4 accent-[#0a9c63]"
+                />
+
+                Show on website
+              </label>
             </div>
 
-            <div className="field">
+            <textarea
+              value={
+                standards
+              }
+              onChange={(
+                event,
+              ) =>
+                setStandards(
+                  event
+                    .target
+                    .value,
+                )
+              }
+            />
+
+            <p className="mt-2 text-[11px] leading-5 text-[#7a8c94]">
+              Standards can remain saved here even when
+              this section is hidden from the public
+              product page.
+            </p>
+          </div>
+
+          <div className="field">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <label>
                 Applications — one per line
               </label>
 
-              <textarea
-                value={
-                  applications
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setApplications(
-                    event
-                      .target
-                      .value,
-                  )
-                }
-              />
-            </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[#d8e4df] bg-[#f8fbf9] px-3 py-2 text-xs font-bold text-[#536b75]">
+                <input
+                  type="checkbox"
+                  checked={
+                    form.showApplications ===
+                    true
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    patch(
+                      "showApplications",
 
-            <div className="field">
-              <label>
-                Related product slugs — one per line
+                      event
+                        .target
+                        .checked,
+                    )
+                  }
+                  className="h-4 w-4 accent-[#0a9c63]"
+                />
+
+                Show on website
               </label>
-
-              <textarea
-                value={
-                  relatedProducts
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setRelatedProducts(
-                    event
-                      .target
-                      .value,
-                  )
-                }
-              />
             </div>
+
+            <textarea
+              value={
+                applications
+              }
+              onChange={(
+                event,
+              ) =>
+                setApplications(
+                  event
+                    .target
+                    .value,
+                )
+              }
+            />
+
+            <p className="mt-2 text-[11px] leading-5 text-[#7a8c94]">
+              Applications can remain saved here even
+              when this section is hidden from the public
+              product page.
+            </p>
           </div>
         </section>
 

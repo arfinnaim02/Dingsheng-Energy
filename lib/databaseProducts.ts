@@ -246,12 +246,20 @@ export async function saveDatabaseProduct(
         product.commercialMode,
       ),
 
-    dealerPriceProtected:
-      product.dealerPriceProtected,
+      dealerPriceProtected:
+        product.dealerPriceProtected,
 
-    featured:
-      product.featured ===
-      true,
+      showApplications:
+        product.showApplications ===
+        true,
+
+      showStandards:
+        product.showStandards ===
+        true,
+
+      featured:
+        product.featured ===
+        true,
 
     availability:
       cleanOptional(
