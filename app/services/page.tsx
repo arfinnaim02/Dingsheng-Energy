@@ -6,6 +6,10 @@ import {
 } from "@/components/Callout";
 
 import {
+  ResponsiveHeroMedia,
+} from "@/components/ResponsiveHeroMedia";
+
+import {
   Icon,
 } from "@/components/Icon";
 
@@ -82,58 +86,121 @@ export default async function ServicesPage() {
           PAGE HERO
       ===================================== */}
 
-      <section className="relative min-h-[420px] overflow-hidden bg-[#061f2d] sm:min-h-[455px]">
-        <Image
-          src="/media/services/hero-services.jpg"
-          alt="Dingsheng Energy engineering and technical services"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+      <section className="bg-[#061f2d] text-white">
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/96 via-[#061f2d]/73 to-[#061f2d]/22" />
+  {/* DESKTOP */}
+  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
 
-        <div className="container-shell relative z-10 flex min-h-[420px] items-center py-16 sm:min-h-[455px] sm:py-20">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[.14em] text-[#4ed7a1] sm:text-xs sm:tracking-[.17em]">
-              <span className="h-[2px] w-8 shrink-0 bg-[#4ed7a1]" />
+    <ResponsiveHeroMedia
+      src="/media/services/hero-services.jpg"
+      alt="Dingsheng Energy engineering and technical services"
+      priority
+      position="center"
+    />
 
-              <span>
-                Engineering Excellence · Complete Solutions
-              </span>
-            </div>
+    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
 
-            <h1 className="mt-4 text-[42px] font-black leading-[1.05] tracking-[-.04em] text-white sm:text-[50px] md:text-[64px]">
-              Our Services
-            </h1>
+    <div className="container-shell absolute inset-0 z-10 flex items-center">
 
-            <p className="mt-5 max-w-[660px] text-sm leading-7 text-white/74 sm:mt-6 sm:text-base sm:leading-8">
-              From concept to commissioning,
-              Dingsheng Energy delivers
-              integrated LPG engineering and
-              technical services for safe,
-              efficient and reliable operation.
-            </p>
+      <div className="max-w-3xl">
 
-            <div className="mt-7 flex flex-wrap gap-3 sm:mt-8">
-              <Link
-                href="#services"
-                className="btn btn-primary"
-              >
-                Explore Services →
-              </Link>
+        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#4ed7a1]">
+          <span className="h-[2px] w-8 bg-[#4ed7a1]" />
 
-              <Link
-                href="/contact#rfq"
-                className="btn border border-white/35 text-white"
-              >
-                Discuss a Project
-              </Link>
-            </div>
-          </div>
+          Engineering Excellence · Complete Solutions
         </div>
-      </section>
+
+        <h1 className="mt-4 text-[64px] font-black leading-[1.05] tracking-[-.04em]">
+          Our Services
+        </h1>
+
+        <p className="mt-6 max-w-[660px] text-base leading-8 text-white/74">
+          From concept to commissioning,
+          Dingsheng Energy delivers
+          integrated LPG engineering and
+          technical services for safe,
+          efficient and reliable operation.
+        </p>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+
+          <Link
+            href="#services"
+            className="btn btn-primary"
+          >
+            Explore Services →
+          </Link>
+
+          <Link
+            href="/contact#rfq"
+            className="btn border border-white/35 text-white"
+          >
+            Discuss a Project
+          </Link>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  {/* MOBILE */}
+  <div className="lg:hidden">
+
+    <div className="relative aspect-[16/9] w-full overflow-hidden">
+
+      <ResponsiveHeroMedia
+        src="/media/services/hero-services.jpg"
+        alt="Dingsheng Energy engineering and technical services"
+        priority
+        position="center"
+      />
+
+    </div>
+
+    <div className="container-shell py-10">
+
+      <div className="text-[10px] font-black uppercase leading-5 tracking-[.14em] text-[#4ed7a1]">
+        Engineering Excellence · Complete Solutions
+      </div>
+
+      <h1 className="mt-4 text-[40px] font-black leading-[1.05] tracking-[-.04em]">
+        Our Services
+      </h1>
+
+      <p className="mt-5 text-[15px] leading-7 text-white/70">
+        From concept to commissioning,
+        Dingsheng Energy delivers integrated
+        LPG engineering and technical services
+        for safe, efficient and reliable operation.
+      </p>
+
+      <div className="mt-7 flex flex-wrap gap-3">
+
+        <Link
+          href="#services"
+          className="btn btn-primary"
+        >
+          Explore Services →
+        </Link>
+
+        <Link
+          href="/contact#rfq"
+          className="btn border border-white/35 text-white"
+        >
+          Discuss a Project
+        </Link>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* =====================================
           ROOT SERVICE CARDS

@@ -19,6 +19,10 @@ import {
 } from "@/components/PublicShell";
 
 import {
+  ResponsiveHeroMedia,
+} from "@/components/ResponsiveHeroMedia";
+
+import {
   getProducts,
 } from "@/lib/catalog";
 
@@ -71,59 +75,124 @@ export default async function ProductsPage() {
           HERO
       ======================================= */}
 
-      <section className="relative flex min-h-[470px] overflow-hidden bg-[#061f2d] sm:min-h-[500px] lg:min-h-[540px]">
-        <Image
-          src="/media/products/hero-products.jpg"
-          alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
-          fill
-          priority
-          quality={90}
-          sizes="100vw"
-          className="object-cover object-[68%_center] sm:object-[64%_center] lg:object-center"
-        />
+      <section className="bg-[#061f2d] text-white">
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/98 via-[#061f2d]/84 to-[#061f2d]/30 sm:from-[#061f2d]/97 sm:via-[#061f2d]/78 sm:to-[#061f2d]/18 lg:via-[#061f2d]/72 lg:to-[#061f2d]/10" />
+  {/* DESKTOP */}
+  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#061f2d]/45 via-transparent to-[#061f2d]/15" />
+    <ResponsiveHeroMedia
+      src="/media/products/hero-products.jpg"
+      alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
+      priority
+      position="center"
+    />
 
-        <div className="container-shell relative z-10 flex min-h-[470px] items-center py-16 sm:min-h-[500px] sm:py-20 lg:min-h-[540px]">
-          <div className="max-w-[720px]">
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[.14em] text-[#48d49c] sm:text-xs sm:tracking-[.17em]">
-              <span className="h-[2px] w-7 shrink-0 bg-[#48d49c] sm:w-8" />
+    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
 
-              Premium LPG Equipment
-            </div>
+    <div className="container-shell absolute inset-0 z-10 flex items-center">
 
-            <h1 className="mt-4 max-w-[680px] text-[42px] font-black leading-[1.03] tracking-[-.04em] text-white sm:text-[52px] md:text-[64px]">
-              Our Products
-            </h1>
+      <div className="max-w-[720px]">
 
-            <p className="mt-5 max-w-[650px] text-sm leading-7 text-white/80 sm:mt-6 sm:text-base sm:leading-8">
-              Integrated LPG equipment and
-              components for storage,
-              filling, transfer, transport,
-              autogas refueling and
-              industrial applications.
-            </p>
+        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#48d49c]">
+          <span className="h-[2px] w-8 bg-[#48d49c]" />
 
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
-              <Link
-                href="#categories"
-                className="btn btn-primary justify-center"
-              >
-                Browse Categories →
-              </Link>
-
-              <Link
-                href="/contact#rfq"
-                className="btn justify-center border border-white/35 text-white transition hover:border-white/60 hover:bg-white/10"
-              >
-                Request Assistance
-              </Link>
-            </div>
-          </div>
+          Premium LPG Equipment
         </div>
-      </section>
+
+        <h1 className="mt-4 text-[64px] font-black leading-[1.03] tracking-[-.04em]">
+          Our Products
+        </h1>
+
+        <p className="mt-6 max-w-[650px] text-base leading-8 text-white/80">
+          Integrated LPG equipment and
+          components for storage,
+          filling, transfer, transport,
+          autogas refueling and
+          industrial applications.
+        </p>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+
+          <Link
+            href="#categories"
+            className="btn btn-primary"
+          >
+            Browse Categories →
+          </Link>
+
+          <Link
+            href="/contact#rfq"
+            className="btn border border-white/35 text-white"
+          >
+            Request Assistance
+          </Link>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  {/* MOBILE */}
+  <div className="lg:hidden">
+
+    <div className="relative aspect-[16/9] w-full overflow-hidden">
+
+      <ResponsiveHeroMedia
+        src="/media/products/hero-products.jpg"
+        alt="Dingsheng Energy LPG equipment and integrated industrial solutions"
+        priority
+        position="center"
+      />
+
+    </div>
+
+    <div className="container-shell py-10">
+
+      <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[.14em] text-[#48d49c]">
+        <span className="h-[2px] w-7 bg-[#48d49c]" />
+
+        Premium LPG Equipment
+      </div>
+
+      <h1 className="mt-4 text-[40px] font-black leading-[1.03] tracking-[-.04em]">
+        Our Products
+      </h1>
+
+      <p className="mt-5 text-[15px] leading-7 text-white/75">
+        Integrated LPG equipment and
+        components for storage,
+        filling, transfer, transport,
+        autogas refueling and
+        industrial applications.
+      </p>
+
+      <div className="mt-7 flex flex-wrap gap-3">
+
+        <Link
+          href="#categories"
+          className="btn btn-primary"
+        >
+          Browse Categories →
+        </Link>
+
+        <Link
+          href="/contact#rfq"
+          className="btn border border-white/35 text-white"
+        >
+          Request Assistance
+        </Link>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* =======================================
           BREADCRUMB

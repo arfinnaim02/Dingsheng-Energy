@@ -11,6 +11,10 @@ import {
 } from "@/components/Callout";
 
 import {
+  ResponsiveHeroMedia,
+} from "@/components/ResponsiveHeroMedia";
+
+import {
   ProductCard,
 } from "@/components/ProductCard";
 
@@ -100,56 +104,122 @@ export default async function RecursiveCategoryPage({
 
   return (
     <PublicShell>
-      <section className="relative min-h-[430px] overflow-hidden bg-[#061f2d]">
-        <Image
-          src={heroImage}
-          alt={category.name}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+      <section className="bg-[#061f2d] text-white">
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/97 via-[#061f2d]/82 to-[#061f2d]/25" />
+  {/* DESKTOP */}
+  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
 
-        <div className="container-shell relative z-10 flex min-h-[430px] items-center py-16">
-          <div className="max-w-[760px]">
-            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.16em] text-[#49d79e]">
-              <span className="h-[2px] w-8 bg-[#49d79e]" />
+    <ResponsiveHeroMedia
+      src={heroImage}
+      alt={category.name}
+      priority
+      position="center"
+    />
 
-              Product Category
-            </div>
+    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/60 to-[#061f2d]/5" />
 
-            <h1 className="mt-4 text-[42px] font-black leading-[1.03] tracking-[-.04em] text-white md:text-[58px]">
-              {category.name}
-            </h1>
+    <div className="container-shell absolute inset-0 z-10 flex items-center">
 
-            {(category.description ||
-              category.summary) && (
-              <p className="mt-6 max-w-[680px] text-base leading-8 text-white/75">
-                {category.description ||
-                  category.summary}
-              </p>
-            )}
+      <div className="max-w-[760px]">
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="#equipment"
-                className="btn btn-primary"
-              >
-                Explore Equipment →
-              </Link>
+        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.16em] text-[#49d79e]">
+          <span className="h-[2px] w-8 bg-[#49d79e]" />
 
-              <Link
-                href="/contact#rfq"
-                className="btn border border-white/35 text-white"
-              >
-                Request a Quote
-              </Link>
-            </div>
-          </div>
+          Product Category
         </div>
-      </section>
+
+        <h1 className="mt-4 text-[58px] font-black leading-[1.03] tracking-[-.04em]">
+          {category.name}
+        </h1>
+
+        {(category.description ||
+          category.summary) && (
+          <p className="mt-6 max-w-[680px] text-base leading-8 text-white/75">
+            {category.description ||
+              category.summary}
+          </p>
+        )}
+
+        <div className="mt-8 flex flex-wrap gap-3">
+
+          <Link
+            href="#equipment"
+            className="btn btn-primary"
+          >
+            Explore Equipment →
+          </Link>
+
+          <Link
+            href="/contact#rfq"
+            className="btn border border-white/35 text-white"
+          >
+            Request a Quote
+          </Link>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  {/* MOBILE */}
+  <div className="lg:hidden">
+
+    <div className="relative aspect-[16/9] w-full overflow-hidden">
+
+      <ResponsiveHeroMedia
+        src={heroImage}
+        alt={category.name}
+        priority
+        position="center"
+      />
+
+    </div>
+
+    <div className="container-shell py-10">
+
+      <div className="text-[10px] font-black uppercase tracking-[.14em] text-[#49d79e]">
+        Product Category
+      </div>
+
+      <h1 className="mt-4 text-[38px] font-black leading-[1.03] tracking-[-.04em]">
+        {category.name}
+      </h1>
+
+      {(category.description ||
+        category.summary) && (
+        <p className="mt-5 text-[15px] leading-7 text-white/70">
+          {category.description ||
+            category.summary}
+        </p>
+      )}
+
+      <div className="mt-7 flex flex-wrap gap-3">
+
+        <Link
+          href="#equipment"
+          className="btn btn-primary"
+        >
+          Explore Equipment →
+        </Link>
+
+        <Link
+          href="/contact#rfq"
+          className="btn border border-white/35 text-white"
+        >
+          Request a Quote
+        </Link>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* Breadcrumbs */}
       <div className="border-b border-[#e3ebe7] bg-white">

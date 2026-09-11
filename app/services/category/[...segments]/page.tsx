@@ -14,6 +14,10 @@ import {
 } from "@/components/Icon";
 
 import {
+  ResponsiveHeroMedia,
+} from "@/components/ResponsiveHeroMedia";
+
+import {
   Callout,
 } from "@/components/Callout";
 
@@ -113,66 +117,126 @@ export default async function ServiceCategoryPage({
 
   return (
     <PublicShell>
-      <section className="relative min-h-[470px] overflow-hidden bg-[#061f2d]">
-        {heroImage ? (
-          <Image
-            src={
-              heroImage
-            }
-            alt={
-              service.name
-            }
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
+      <section className="bg-[#061f2d] text-white">
+
+  {/* DESKTOP */}
+  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+
+    {heroImage ? (
+      <ResponsiveHeroMedia
+        src={heroImage}
+        alt={service.name}
+        priority
+        position="center"
+      />
+    ) : (
+      <div className="absolute inset-0 bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
+    )}
+
+    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
+
+    <div className="container-shell absolute inset-0 z-10 flex items-center">
+
+      <div className="max-w-3xl">
+
+        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#4ed7a1]">
+          <span className="h-[2px] w-8 bg-[#4ed7a1]" />
+
+          Engineering Service
+        </div>
+
+        <h1 className="mt-4 text-[58px] font-black leading-[1.03] tracking-[-.04em]">
+          {service.name}
+        </h1>
+
+        {service.summary && (
+          <p className="mt-6 max-w-[670px] text-base leading-8 text-white/74">
+            {service.summary}
+          </p>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/96 via-[#061f2d]/76 to-[#061f2d]/18" />
+        <div className="mt-8 flex flex-wrap gap-3">
 
-        <div className="container-shell relative z-10 flex min-h-[470px] items-center py-20">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#4ed7a1]">
-              <span className="h-[2px] w-8 bg-[#4ed7a1]" />
+          <Link
+            href="#overview"
+            className="btn btn-primary"
+          >
+            Explore Service →
+          </Link>
 
-              Engineering Service
-            </div>
+          <Link
+            href="/contact#rfq"
+            className="btn border border-white/35 text-white"
+          >
+            Discuss This Project
+          </Link>
 
-            <h1 className="mt-4 text-[44px] font-black leading-[1.03] tracking-[-.04em] text-white md:text-[58px]">
-              {
-                service.name
-              }
-            </h1>
-
-            {service.summary && (
-              <p className="mt-6 max-w-[670px] text-base leading-8 text-white/74">
-                {
-                  service.summary
-                }
-              </p>
-            )}
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="#overview"
-                className="btn btn-primary"
-              >
-                Explore Service →
-              </Link>
-
-              <Link
-                href="/contact#rfq"
-                className="btn border border-white/35 text-white"
-              >
-                Discuss This Project
-              </Link>
-            </div>
-          </div>
         </div>
-      </section>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  {/* MOBILE */}
+  <div className="lg:hidden">
+
+    {heroImage ? (
+      <div className="relative aspect-[16/9] w-full overflow-hidden">
+
+        <ResponsiveHeroMedia
+          src={heroImage}
+          alt={service.name}
+          priority
+          position="center"
+        />
+
+      </div>
+    ) : (
+      <div className="aspect-[16/9] w-full bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
+    )}
+
+    <div className="container-shell py-10">
+
+      <div className="text-[10px] font-black uppercase tracking-[.14em] text-[#4ed7a1]">
+        Engineering Service
+      </div>
+
+      <h1 className="mt-4 text-[38px] font-black leading-[1.03] tracking-[-.04em]">
+        {service.name}
+      </h1>
+
+      {service.summary && (
+        <p className="mt-5 text-[15px] leading-7 text-white/70">
+          {service.summary}
+        </p>
+      )}
+
+      <div className="mt-7 flex flex-wrap gap-3">
+
+        <Link
+          href="#overview"
+          className="btn btn-primary"
+        >
+          Explore Service →
+        </Link>
+
+        <Link
+          href="/contact#rfq"
+          className="btn border border-white/35 text-white"
+        >
+          Discuss This Project
+        </Link>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* Breadcrumb */}
       <div className="border-b border-[#e3ebe7] bg-white">

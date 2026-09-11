@@ -12,6 +12,10 @@ import {
 } from "@/data/site";
 
 import {
+  ResponsiveHeroMedia,
+} from "@/components/ResponsiveHeroMedia";
+
+import {
   buildCategoryHref,
   getPublicProductCategories,
 } from "@/lib/publicProductTree";
@@ -109,114 +113,265 @@ export default async function HomePage() {
           HERO
       ===================================== */}
 
-      <section className="relative min-h-[690px] overflow-hidden bg-[#061e2b] text-white">
-        <Image
-          src="/media/home/hero-home.jpg"
-          alt="Dingsheng Energy international energy infrastructure, equipment, engineering and logistics"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+      <section className="bg-[#061e2b] text-white">
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#061e2b]/96 via-[#061e2b]/76 to-[#061e2b]/18" />
+  {/* =====================================================
+      DESKTOP HERO
+  ===================================================== */}
+  <div className="relative hidden w-full aspect-[16/9] overflow-hidden lg:block">
 
-        <div className="container-shell relative z-10 flex min-h-[690px] items-center pb-36 pt-24">
-          <div className="max-w-[770px]">
-            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.18em] text-[#4dd8a1]">
-              <span className="h-[2px] w-8 bg-[#4dd8a1]" />
+    <ResponsiveHeroMedia
+      src="/media/home/hero-home.jpg"
+      alt="Dingsheng Energy international energy infrastructure, equipment, engineering and logistics"
+      priority
+      position="center"
+    />
 
-              Global Energy Trading, Engineering
-              & Complete Project Solutions
-            </div>
+    {/* Overlay */}
+    <div className="absolute inset-0 bg-gradient-to-r from-[#061e2b]/92 via-[#061e2b]/55 to-[#061e2b]/5" />
 
-            <h1 className="mt-5 text-[48px] font-black uppercase leading-[.98] tracking-[-.045em] sm:text-[60px] lg:text-[72px]">
-              Complete Energy
-              <br />
-              Solutions
-            </h1>
+    {/* Content */}
+    <div className="container-shell absolute inset-0 z-10 flex items-center">
 
-            <p className="mt-7 max-w-[650px] text-[17px] leading-8 text-white/76">
-              Reliable energy trading,
-              engineering, equipment supply
-              and end-to-end project support
-              for international, industrial
-              and infrastructure markets.
-            </p>
+      <div className="max-w-[770px] pb-32">
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/products"
-                className="btn btn-primary"
-              >
-                Explore Products →
-              </Link>
+        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.18em] text-[#4dd8a1]">
+          <span className="h-[2px] w-8 bg-[#4dd8a1]" />
 
-              <Link
-                href="/services"
-                className="btn border border-white/35 text-white"
-              >
-                Our Services
-              </Link>
-            </div>
-          </div>
+          Global Energy Trading, Engineering
+          & Complete Project Solutions
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 z-20">
-          <div className="container-shell">
-            <div className="grid overflow-hidden border border-white/10 bg-[#071f2c]/92 backdrop-blur-md md:grid-cols-4">
-              {[
-                [
-                  "shield",
-                  "Safety First",
-                  "International standards and careful engineering",
-                ],
-                [
-                  "globe",
-                  "Global Supply",
-                  "Trading and logistics across international markets",
-                ],
-                [
-                  "gear",
-                  "Engineering",
-                  "End-to-end energy project capability",
-                ],
-                [
-                  "handshake",
-                  "Trusted Partner",
-                  "Long-term technical and commercial relationships",
-                ],
-              ].map(
-                ([
-                  icon,
-                  title,
-                  copy,
-                ]) => (
-                  <div
-                    key={title}
-                    className="flex min-h-[108px] items-start gap-4 border-white/10 px-6 py-6 md:border-r last:border-r-0"
-                  >
-                    <Icon
-                      name={icon as any}
-                      className="h-7 w-7 shrink-0 text-[#49d89e]"
-                    />
+        <h1 className="mt-5 text-[48px] font-black uppercase leading-[.98] tracking-[-.045em] sm:text-[60px] lg:text-[72px]">
+          Complete Energy
+          <br />
+          Solutions
+        </h1>
 
-                    <div>
-                      <strong className="text-sm">
-                        {title}
-                      </strong>
+        <p className="mt-7 max-w-[650px] text-[17px] leading-8 text-white/76">
+          Reliable energy trading,
+          engineering, equipment supply
+          and end-to-end project support
+          for international, industrial
+          and infrastructure markets.
+        </p>
 
-                      <span className="mt-1 block text-xs leading-5 text-white/52">
-                        {copy}
-                      </span>
-                    </div>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+
+          <Link
+            href="/products"
+            className="btn btn-primary"
+          >
+            Explore Products →
+          </Link>
+
+          <Link
+            href="/services"
+            className="btn border border-white/35 text-white"
+          >
+            Our Services
+          </Link>
+
         </div>
-      </section>
+
+      </div>
+
+    </div>
+
+
+    {/* Feature strip */}
+    <div className="absolute bottom-0 left-0 right-0 z-20">
+
+      <div className="container-shell">
+
+        <div className="grid overflow-hidden border border-white/10 bg-[#071f2c]/92 backdrop-blur-md md:grid-cols-4">
+
+          {[
+            [
+              "shield",
+              "Safety First",
+              "International standards and careful engineering",
+            ],
+            [
+              "globe",
+              "Global Supply",
+              "Trading and logistics across international markets",
+            ],
+            [
+              "gear",
+              "Engineering",
+              "End-to-end energy project capability",
+            ],
+            [
+              "handshake",
+              "Trusted Partner",
+              "Long-term technical and commercial relationships",
+            ],
+          ].map(([icon, title, copy]) => (
+
+            <div
+              key={title}
+              className="flex min-h-[108px] items-start gap-4 border-white/10 px-6 py-6 md:border-r last:border-r-0"
+            >
+
+              <Icon
+                name={icon as any}
+                className="h-7 w-7 shrink-0 text-[#49d89e]"
+              />
+
+              <div>
+
+                <strong className="text-sm">
+                  {title}
+                </strong>
+
+                <span className="mt-1 block text-xs leading-5 text-white/52">
+                  {copy}
+                </span>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  {/* =====================================================
+      MOBILE + TABLET
+  ===================================================== */}
+  <div className="lg:hidden">
+
+    {/* FULL IMAGE */}
+    <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#061e2b]">
+
+      <ResponsiveHeroMedia
+        src="/media/home/hero-home.jpg"
+        alt="Dingsheng Energy international energy infrastructure, equipment, engineering and logistics"
+        priority
+        position="center"
+      />
+
+    </div>
+
+
+    {/* MOBILE CONTENT */}
+    <div className="container-shell py-10">
+
+      <div className="flex items-start gap-3 text-[10px] font-black uppercase leading-5 tracking-[.14em] text-[#4dd8a1]">
+
+        <span className="mt-2 h-[2px] w-6 shrink-0 bg-[#4dd8a1]" />
+
+        <span>
+          Global Energy Trading, Engineering
+          & Complete Project Solutions
+        </span>
+
+      </div>
+
+      <h1 className="mt-5 text-[40px] font-black uppercase leading-[.98] tracking-[-.04em] sm:text-[52px]">
+        Complete Energy
+        <br />
+        Solutions
+      </h1>
+
+      <p className="mt-6 max-w-xl text-[15px] leading-7 text-white/70">
+        Reliable energy trading,
+        engineering, equipment supply
+        and end-to-end project support
+        for international, industrial
+        and infrastructure markets.
+      </p>
+
+      <div className="mt-7 flex flex-wrap gap-3">
+
+        <Link
+          href="/products"
+          className="btn btn-primary"
+        >
+          Explore Products →
+        </Link>
+
+        <Link
+          href="/services"
+          className="btn border border-white/35 text-white"
+        >
+          Our Services
+        </Link>
+
+      </div>
+
+    </div>
+
+
+    {/* MOBILE FEATURE CARDS */}
+    <div className="container-shell pb-8">
+
+      <div className="grid overflow-hidden border border-white/10 bg-[#071f2c] sm:grid-cols-2">
+
+        {[
+          [
+            "shield",
+            "Safety First",
+            "International standards and careful engineering",
+          ],
+          [
+            "globe",
+            "Global Supply",
+            "Trading and logistics across international markets",
+          ],
+          [
+            "gear",
+            "Engineering",
+            "End-to-end energy project capability",
+          ],
+          [
+            "handshake",
+            "Trusted Partner",
+            "Long-term technical and commercial relationships",
+          ],
+        ].map(([icon, title, copy]) => (
+
+          <div
+            key={title}
+            className="flex gap-4 border-b border-white/10 p-5"
+          >
+
+            <Icon
+              name={icon as any}
+              className="h-6 w-6 shrink-0 text-[#49d89e]"
+            />
+
+            <div>
+
+              <strong className="text-sm">
+                {title}
+              </strong>
+
+              <span className="mt-1 block text-xs leading-5 text-white/50">
+                {copy}
+              </span>
+
+            </div>
+
+          </div>
+
+        ))}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
       {/* =====================================
           CORE SOLUTIONS
