@@ -11,14 +11,35 @@ import type {
 } from "@/data/site";
 
 import {
+  getDatabaseCatalogProduct,
+  getDatabaseCatalogProducts,
+} from "@/lib/databaseProductCatalog";
+
+import {
   enrichProductsWithDatabasePricing,
   getDatabasePriceGroups,
   updateDatabasePricing,
-} 
+} from "@/lib/databasePricing";
 
-from "@/lib/databasePricing";
+import {
+  deleteDatabaseProduct,
+  saveDatabaseProduct,
+} from "@/lib/databaseProducts";
 
-import { prisma } from "@/lib/prisma";
+/*
+ * ============================================
+ * LEGACY JSON CATALOGUE
+ * ============================================
+ *
+ * Products are now read from Neon.
+ *
+ * This JSON file remains temporarily because
+ * some older service/category/settings code may
+ * still depend on it.
+ *
+ * IMPORTANT:
+ * Product runtime CRUD must never write here.
+ */
 
 const DEFAULT_PATH = path.join(
   process.cwd(),
@@ -36,56 +57,91 @@ const CATALOG_PATH =
 let writeQueue: Promise<void> =
   Promise.resolve();
 
+/*
+ * ============================================
+ * DEFAULT PRICE GROUPS
+ * ============================================
+ */
+
 const DEFAULT_PRICE_GROUPS: PriceGroup[] = [
   {
     slug: "standard",
+
     name: "Standard",
+
     description:
       "Default approved dealer pricing",
+
     discountPercent: 0,
+
     active: true,
   },
 
   {
     slug: "tier-a",
+
     name: "Tier A",
+
     description:
       "Preferred dealer pricing",
+
     discountPercent: 5,
+
     active: true,
   },
 
   {
     slug: "tier-b",
+
     name: "Tier B",
+
     description:
       "Volume dealer pricing",
+
     discountPercent: 10,
+
     active: true,
   },
 
   {
     slug: "vip",
+
     name: "VIP / Custom",
+
     description:
       "Strategic-account pricing",
+
     discountPercent: 15,
+
     active: true,
   },
 ];
 
-const DEFAULT_DEALER_PORTAL: DealerPortalSettings =
-  {
-    demoPriceGroupSlug: "standard",
-    demoCompanyName: "Demo Dealer Company",
-    demoContactName: "Demo User",
-  };
+const DEFAULT_DEALER_PORTAL:
+  DealerPortalSettings = {
+  demoPriceGroupSlug:
+    "standard",
+
+  demoCompanyName:
+    "Demo Dealer Company",
+
+  demoContactName:
+    "Demo User",
+};
+
+/*
+ * ============================================
+ * LEGACY JSON NORMALIZATION
+ * ============================================
+ */
 
 function normalizeCatalog(
   value: CatalogContent,
 ): CatalogContent {
   const priceGroups =
-    Array.isArray(value.priceGroups) &&
+    Array.isArray(
+      value.priceGroups,
+    ) &&
     value.priceGroups.length
       ? value.priceGroups
       : DEFAULT_PRICE_GROUPS;
@@ -99,36 +155,52 @@ function normalizeCatalog(
       value.updatedAt ||
       new Date().toISOString(),
 
-    categories: Array.isArray(
-      value.categories,
-    )
-      ? value.categories
-      : [],
+    categories:
+      Array.isArray(
+        value.categories,
+      )
+        ? value.categories
+        : [],
 
-    products: Array.isArray(value.products)
-      ? value.products.map((product) => ({
-          ...product,
+    products:
+      Array.isArray(
+        value.products,
+      )
+        ? value.products.map(
+            (
+              product,
+            ) => ({
+              ...product,
 
-          dealerPrices: Array.isArray(
-            product.dealerPrices,
+              dealerPrices:
+                Array.isArray(
+                  product.dealerPrices,
+                )
+                  ? product.dealerPrices
+                  : [],
+
+              sku:
+                product.sku ??
+                "",
+
+              unitLabel:
+                product.unitLabel ??
+                "Unit",
+
+              dealerCommercialDetails:
+                product
+                  .dealerCommercialDetails ??
+                "",
+            }),
           )
-            ? product.dealerPrices
-            : [],
+        : [],
 
-          sku: product.sku ?? "",
-
-          unitLabel:
-            product.unitLabel ?? "Unit",
-
-          dealerCommercialDetails:
-            product.dealerCommercialDetails ??
-            "",
-        }))
-      : [],
-
-    services: Array.isArray(value.services)
-      ? value.services
-      : [],
+    services:
+      Array.isArray(
+        value.services,
+      )
+        ? value.services
+        : [],
 
     priceGroups,
 
@@ -139,252 +211,450 @@ function normalizeCatalog(
   };
 }
 
-export async function readCatalog(): Promise<CatalogContent> {
-  const raw = await fs.readFile(
-    CATALOG_PATH,
-    "utf8",
-  );
+/*
+ * ============================================
+ * LEGACY JSON READ
+ * ============================================
+ *
+ * Reading packaged files is allowed on Vercel.
+ */
+
+export async function readCatalog():
+  Promise<CatalogContent> {
+  const raw =
+    await fs.readFile(
+      CATALOG_PATH,
+      "utf8",
+    );
 
   return normalizeCatalog(
-    JSON.parse(raw) as CatalogContent,
+    JSON.parse(
+      raw,
+    ) as CatalogContent,
   );
 }
+
+/*
+ * ============================================
+ * LEGACY JSON WRITE
+ * ============================================
+ *
+ * Do NOT use this for products.
+ *
+ * Vercel deployment filesystems are read-only
+ * during runtime.
+ *
+ * This function remains temporarily only for
+ * older non-product compatibility code.
+ */
 
 export async function writeCatalog(
   next: CatalogContent,
 ): Promise<void> {
   const payload: CatalogContent = {
     ...next,
-    updatedAt: new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString(),
   };
 
-  writeQueue = writeQueue
-    .catch(() => undefined)
-    .then(async () => {
-      const directory =
-        path.dirname(CATALOG_PATH);
+  writeQueue =
+    writeQueue
+      .catch(
+        () =>
+          undefined,
+      )
+      .then(
+        async () => {
+          const directory =
+            path.dirname(
+              CATALOG_PATH,
+            );
 
-      await fs.mkdir(directory, {
-        recursive: true,
-      });
+          await fs.mkdir(
+            directory,
+            {
+              recursive:
+                true,
+            },
+          );
 
-      await fs.writeFile(
-        CATALOG_PATH,
-        JSON.stringify(payload, null, 2),
-        "utf8",
+          await fs.writeFile(
+            CATALOG_PATH,
+
+            JSON.stringify(
+              payload,
+              null,
+              2,
+            ),
+
+            "utf8",
+          );
+        },
       );
-    });
 
   return writeQueue;
 }
 
-export async function getCategories(): Promise<
-  ProductCategory[]
-> {
-  return (await readCatalog()).categories;
+/*
+ * ============================================
+ * LEGACY CATEGORY READS
+ * ============================================
+ *
+ * New category administration already uses
+ * databaseCategories.ts.
+ *
+ * These remain for older compatibility paths.
+ */
+
+export async function getCategories():
+  Promise<
+    ProductCategory[]
+  > {
+  return (
+    await readCatalog()
+  ).categories;
 }
 
 export async function getCategory(
   slug: string,
-): Promise<ProductCategory | undefined> {
-  return (await getCategories()).find(
-    (category) => category.slug === slug,
+): Promise<
+  ProductCategory |
+  undefined
+> {
+  return (
+    await getCategories()
+  ).find(
+    (
+      category,
+    ) =>
+      category.slug ===
+      slug,
   );
 }
+
+/*
+ * ============================================
+ * PUBLIC PRODUCT SANITIZATION
+ * ============================================
+ */
 
 function publicProduct(
   product: Product,
 ): Product {
   return {
     ...product,
-    dealerPrices: [],
-    dealerCommercialDetails: "",
-    dealerDownloads: [],
-  };
-}
-async function applyDatabaseProductState(
-  products: Product[],
-): Promise<Product[]> {
-  if (!products.length) {
-    return products;
-  }
-
-  const databaseProducts =
-    await prisma.product.findMany({
-      where: {
-        slug: {
-          in: products.map(
-            (product) => product.slug,
-          ),
-        },
-      },
-
-      select: {
-        slug: true,
-        isActive: true,
-        featured: true,
-      },
-    });
-
-  const stateBySlug = new Map(
-    databaseProducts.map(
-      (product) => [
-        product.slug,
-        product,
-      ],
-    ),
-  );
-
-  return products.map((product) => {
-    const databaseState =
-      stateBySlug.get(product.slug);
 
     /*
-     * Keep the JSON value for legacy products that
-     * have not yet been synchronized with Neon.
+     * Never expose protected dealer
+     * commercial information publicly.
      */
-    if (!databaseState) {
-      return product;
-    }
 
-    return {
-      ...product,
-      active:
-        databaseState.isActive,
-      featured:
-        databaseState.featured,
-    };
-  });
+    dealerPrices: [],
+
+    dealerCommercialDetails:
+      "",
+
+    dealerDownloads:
+      [],
+  };
 }
 
-export async function getProducts(options?: {
-  activeOnly?: boolean;
-  categorySlug?: string;
-  featuredOnly?: boolean;
-  includeProtected?: boolean;
-}): Promise<Product[]> {
+/*
+ * ============================================
+ * PRODUCTS — NEON AUTHORITATIVE
+ * ============================================
+ *
+ * This replaces the old architecture:
+ *
+ * catalog.json
+ *      ↓
+ * partial Neon overlay
+ *
+ * with:
+ *
+ * Neon
+ *      ↓
+ * complete website Product
+ */
+
+/*
+ * ============================================
+ * GET PRODUCTS
+ * ============================================
+ */
+
+export async function getProducts(
+  options?: {
+    activeOnly?: boolean;
+
+    categorySlug?:
+      string;
+
+    featuredOnly?:
+      boolean;
+
+    includeProtected?:
+      boolean;
+  },
+): Promise<Product[]> {
+  /*
+   * IMPORTANT:
+   *
+   * Product records are loaded directly
+   * from Neon.
+   *
+   * Newly created products therefore appear
+   * immediately without modifying catalog.json.
+   */
+
   let products =
-    await applyDatabaseProductState(
-      (await readCatalog()).products,
-    );
+    await getDatabaseCatalogProducts();
 
-  if (options?.activeOnly !== false) {
-    products = products.filter(
-      (product) =>
-        product.active !== false,
-    );
+  /*
+   * Public catalogue:
+   *
+   * hide inactive products by default.
+   *
+   * Admin passes:
+   *
+   * activeOnly: false
+   */
+
+  if (
+    options?.activeOnly !==
+    false
+  ) {
+    products =
+      products.filter(
+        (
+          product,
+        ) =>
+          product.active !==
+          false,
+      );
   }
 
-  if (options?.categorySlug) {
-    products = products.filter(
-      (product) =>
-        product.categorySlugs.includes(
-          options.categorySlug!,
-        ),
-    );
+  /*
+   * Optional category filtering.
+   */
+
+  if (
+    options?.categorySlug
+  ) {
+    const categorySlug =
+      options.categorySlug;
+
+    products =
+      products.filter(
+        (
+          product,
+        ) =>
+          product.categorySlugs.includes(
+            categorySlug,
+          ),
+      );
   }
 
-  if (options?.featuredOnly) {
-    products = products.filter(
-      (product) =>
-        product.featured === true,
-    );
+  /*
+   * Optional featured filtering.
+   */
+
+  if (
+    options?.featuredOnly
+  ) {
+    products =
+      products.filter(
+        (
+          product,
+        ) =>
+          product.featured ===
+          true,
+      );
   }
 
-  if (options?.includeProtected) {
+  /*
+   * Admin/dealer paths can request
+   * protected pricing.
+   */
+
+  if (
+    options?.includeProtected
+  ) {
     return enrichProductsWithDatabasePricing(
       products,
     );
   }
 
-  return products.map(publicProduct);
+  /*
+   * Public pages receive sanitized
+   * product objects.
+   */
+
+  return products.map(
+    publicProduct,
+  );
 }
+
+/*
+ * ============================================
+ * GET ONE PRODUCT
+ * ============================================
+ */
 
 export async function getProduct(
   slug: string,
-  options?: {
-    includeProtected?: boolean;
-    activeOnly?: boolean;
-  },
-): Promise<Product | undefined> {
-  const catalogProduct = (
-    await readCatalog()
-  ).products.find(
-    (item) =>
-      item.slug === slug,
-  );
 
-  if (!catalogProduct) {
+  options?: {
+    includeProtected?:
+      boolean;
+
+    activeOnly?:
+      boolean;
+  },
+): Promise<
+  Product |
+  undefined
+> {
+  const cleanSlug =
+    slug.trim();
+
+  if (!cleanSlug) {
     return undefined;
   }
 
-  const [product] =
-    await applyDatabaseProductState([
-      catalogProduct,
-    ]);
+  /*
+   * Read directly from Neon.
+   */
+
+  const product =
+    await getDatabaseCatalogProduct(
+      cleanSlug,
+    );
 
   if (!product) {
     return undefined;
   }
 
   /*
-   * Public and dealer product pages cannot open a
-   * hidden product directly through its old URL.
+   * Hidden products must not be directly
+   * accessible through public URLs.
    *
-   * Admin pages can explicitly request:
+   * Admin edit pages explicitly request:
+   *
    * activeOnly: false
    */
+
   if (
-    options?.activeOnly !== false &&
-    product.active === false
+    options?.activeOnly !==
+      false &&
+    product.active ===
+      false
   ) {
     return undefined;
   }
 
-  if (options?.includeProtected) {
-    const [enrichedProduct] =
-      await enrichProductsWithDatabasePricing([
-        product,
-      ]);
+  /*
+   * Admin/dealer protected result.
+   */
+
+  if (
+    options?.includeProtected
+  ) {
+    const [
+      enrichedProduct,
+    ] =
+      await enrichProductsWithDatabasePricing(
+        [
+          product,
+        ],
+      );
 
     return enrichedProduct;
   }
 
-  return publicProduct(product);
+  /*
+   * Public result.
+   */
+
+  return publicProduct(
+    product,
+  );
 }
+
+/*
+ * ============================================
+ * RELATED PRODUCTS
+ * ============================================
+ */
 
 export async function getRelatedProducts(
   product: Product,
 ): Promise<Product[]> {
-  const products = await getProducts();
+  /*
+   * getProducts() is now Neon-backed,
+   * therefore related products are also
+   * resolved from Neon.
+   */
 
-  const productsBySlug = new Map(
-    products.map((item) => [
-      item.slug,
-      item,
-    ]),
-  );
+  const products =
+    await getProducts();
 
-  const explicitlyRelated = (
-    product.relatedProducts ?? []
-  )
-    .map((slug) =>
-      productsBySlug.get(slug),
-    )
-    .filter(
-      (item): item is Product =>
-        Boolean(item),
+  const productsBySlug =
+    new Map(
+      products.map(
+        (
+          item,
+        ) => [
+          item.slug,
+          item,
+        ],
+      ),
     );
 
-  if (explicitlyRelated.length) {
+  const explicitlyRelated =
+    (
+      product.relatedProducts ??
+      []
+    )
+      .map(
+        (
+          slug,
+        ) =>
+          productsBySlug.get(
+            slug,
+          ),
+      )
+      .filter(
+        (
+          item,
+        ): item is Product =>
+          Boolean(
+            item,
+          ),
+      );
+
+  if (
+    explicitlyRelated.length
+  ) {
     return explicitlyRelated;
   }
 
+  /*
+   * If no explicit related products exist,
+   * fall back to products sharing categories.
+   */
+
   return products.filter(
-    (item) =>
-      item.slug !== product.slug &&
+    (
+      item,
+    ) =>
+      item.slug !==
+        product.slug &&
       item.categorySlugs.some(
-        (slug) =>
+        (
+          slug,
+        ) =>
           product.categorySlugs.includes(
             slug,
           ),
@@ -392,17 +662,116 @@ export async function getRelatedProducts(
   );
 }
 
-export async function getServices(options?: {
-  activeOnly?: boolean;
-}): Promise<Service[]> {
-  let services =
-    (await readCatalog()).services;
+/*
+ * ============================================
+ * PRODUCT COMPATIBILITY WRITE
+ * ============================================
+ *
+ * These two exports are retained so any old
+ * code importing upsertProduct/deleteProduct
+ * will not accidentally write catalog.json.
+ *
+ * They now delegate to Neon.
+ */
 
-  if (options?.activeOnly !== false) {
-    services = services.filter(
-      (service) =>
-        service.active !== false,
+/*
+ * ============================================
+ * UPSERT PRODUCT — NEON
+ * ============================================
+ */
+
+export async function upsertProduct(
+  product: Product,
+
+  originalSlug?: string,
+): Promise<Product> {
+  const result =
+    await saveDatabaseProduct(
+      product,
+
+      {
+        originalSlug,
+      },
     );
+
+  /*
+   * Convert the saved Prisma record back to the
+   * website Product type through the standard
+   * Neon catalogue mapper.
+   */
+
+  const savedProduct =
+    await getDatabaseCatalogProduct(
+      result.product.slug,
+    );
+
+  if (!savedProduct) {
+    throw new Error(
+      `Unable to reload saved product "${result.product.slug}" from Neon.`,
+    );
+  }
+
+  return savedProduct;
+}
+
+/*
+ * ============================================
+ * DELETE PRODUCT — NEON
+ * ============================================
+ */
+
+export async function deleteProduct(
+  slug: string,
+): Promise<void> {
+  const cleanSlug =
+    slug.trim();
+
+  if (!cleanSlug) {
+    return;
+  }
+
+  await deleteDatabaseProduct(
+    cleanSlug,
+  );
+}
+
+/*
+ * ============================================
+ * SERVICES
+ * ============================================
+ *
+ * NOTE:
+ *
+ * These remain legacy JSON implementations.
+ * Your current service administration uses
+ * the database-specific service system.
+ *
+ * Do not move product logic back into these
+ * JSON functions.
+ */
+
+export async function getServices(
+  options?: {
+    activeOnly?: boolean;
+  },
+): Promise<Service[]> {
+  let services =
+    (
+      await readCatalog()
+    ).services;
+
+  if (
+    options?.activeOnly !==
+    false
+  ) {
+    services =
+      services.filter(
+        (
+          service,
+        ) =>
+          service.active !==
+          false,
+      );
   }
 
   return services;
@@ -410,178 +779,106 @@ export async function getServices(options?: {
 
 export async function getService(
   slug: string,
-): Promise<Service | undefined> {
+): Promise<
+  Service |
+  undefined
+> {
   return (
     await readCatalog()
   ).services.find(
-    (service) => service.slug === slug,
+    (
+      service,
+    ) =>
+      service.slug ===
+      slug,
   );
 }
+
+/*
+ * ============================================
+ * LEGACY SLUG HELPER
+ * ============================================
+ */
 
 export function slugify(
   value: string,
 ): string {
   return value
-    .normalize("NFKD")
+    .normalize(
+      "NFKD",
+    )
     .toLowerCase()
     .trim()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-}
-
-export async function upsertProduct(
-  product: Product,
-  originalSlug?: string,
-): Promise<Product> {
-  const catalog = await readCatalog();
-
-  const slug = slugify(
-    product.slug || product.name,
-  );
-
-  const normalized: Product = {
-    ...product,
-    slug,
-
-    categorySlugs: [
-      ...new Set(
-        product.categorySlugs.filter(
-          Boolean,
-        ),
-      ),
-    ],
-
-    primaryCategorySlug:
-      product.primaryCategorySlug ||
-      product.categorySlugs[0] ||
-      catalog.categories[0]?.slug ||
+    .replace(
+      /&/g,
+      " and ",
+    )
+    .replace(
+      /[^a-z0-9]+/g,
+      "-",
+    )
+    .replace(
+      /^-+|-+$/g,
       "",
-
-    categoryGroups:
-      product.categoryGroups ??
-      Object.fromEntries(
-        product.categorySlugs.map(
-          (categorySlug) => [
-            categorySlug,
-            product.subcategory,
-          ],
-        ),
-      ),
-
-    gallery: product.gallery ?? [],
-    specs: product.specs ?? [],
-    standards: product.standards ?? [],
-    applications:
-      product.applications ?? [],
-    publicDownloads:
-      product.publicDownloads ?? [],
-    dealerDownloads:
-      product.dealerDownloads ?? [],
-    relatedProducts:
-      product.relatedProducts ?? [],
-
-    /*
-     * Product pricing is now stored in Neon. This JSON
-     * value is retained only for temporary compatibility.
-     */
-    dealerPrices:
-      product.dealerPrices ?? [],
-
-    sku: product.sku ?? "",
-    unitLabel:
-      product.unitLabel ?? "Unit",
-
-    dealerCommercialDetails:
-      product.dealerCommercialDetails ?? "",
-
-    active: product.active !== false,
-  };
-
-  const collision =
-    catalog.products.find(
-      (item) =>
-        item.slug === normalized.slug &&
-        item.slug !== originalSlug,
+    )
+    .replace(
+      /-{2,}/g,
+      "-",
     );
-
-  if (collision) {
-    throw new Error(
-      `A product with slug "${normalized.slug}" already exists.`,
-    );
-  }
-
-  const index = originalSlug
-    ? catalog.products.findIndex(
-        (item) =>
-          item.slug === originalSlug,
-      )
-    : catalog.products.findIndex(
-        (item) =>
-          item.slug ===
-          normalized.slug,
-      );
-
-  if (index >= 0) {
-    catalog.products[index] = normalized;
-  } else {
-    catalog.products.unshift(normalized);
-  }
-
-  await writeCatalog(catalog);
-
-  return normalized;
 }
 
-export async function deleteProduct(
-  slug: string,
-): Promise<void> {
-  const catalog = await readCatalog();
-
-  catalog.products =
-    catalog.products.filter(
-      (product) =>
-        product.slug !== slug,
-    );
-
-  for (const product of catalog.products) {
-    product.relatedProducts = (
-      product.relatedProducts ?? []
-    ).filter(
-      (relatedSlug) =>
-        relatedSlug !== slug,
-    );
-  }
-
-  await writeCatalog(catalog);
-}
+/*
+ * ============================================
+ * LEGACY SERVICE WRITE
+ * ============================================
+ */
 
 export async function upsertService(
   service: Service,
+
   originalSlug?: string,
 ): Promise<Service> {
-  const catalog = await readCatalog();
+  const catalog =
+    await readCatalog();
 
-  const slug = slugify(
-    service.slug || service.name,
-  );
+  const slug =
+    slugify(
+      service.slug ||
+        service.name,
+    );
 
-  const normalized: Service = {
+  const normalized:
+    Service = {
     ...service,
+
     slug,
-    scope: service.scope ?? [],
-    process: service.process ?? [],
+
+    scope:
+      service.scope ??
+      [],
+
+    process:
+      service.process ??
+      [],
+
     applications:
-      service.applications ?? [],
-    active: service.active !== false,
+      service.applications ??
+      [],
+
+    active:
+      service.active !==
+      false,
   };
 
   const collision =
     catalog.services.find(
-      (item) =>
-        item.slug === normalized.slug &&
-        item.slug !== originalSlug,
+      (
+        item,
+      ) =>
+        item.slug ===
+          normalized.slug &&
+        item.slug !==
+          originalSlug,
     );
 
   if (collision) {
@@ -590,19 +887,27 @@ export async function upsertService(
     );
   }
 
-  const index = originalSlug
-    ? catalog.services.findIndex(
-        (item) =>
-          item.slug === originalSlug,
-      )
-    : catalog.services.findIndex(
-        (item) =>
-          item.slug ===
-          normalized.slug,
-      );
+  const index =
+    originalSlug
+      ? catalog.services.findIndex(
+          (
+            item,
+          ) =>
+            item.slug ===
+            originalSlug,
+        )
+      : catalog.services.findIndex(
+          (
+            item,
+          ) =>
+            item.slug ===
+            normalized.slug,
+        );
 
   if (index >= 0) {
-    catalog.services[index] =
+    catalog.services[
+      index
+    ] =
       normalized;
   } else {
     catalog.services.unshift(
@@ -610,47 +915,80 @@ export async function upsertService(
     );
   }
 
-  await writeCatalog(catalog);
+  await writeCatalog(
+    catalog,
+  );
+
   return normalized;
 }
+
+/*
+ * ============================================
+ * LEGACY SERVICE DELETE
+ * ============================================
+ */
 
 export async function deleteService(
   slug: string,
 ): Promise<void> {
-  const catalog = await readCatalog();
+  const catalog =
+    await readCatalog();
 
   catalog.services =
     catalog.services.filter(
-      (service) =>
-        service.slug !== slug,
+      (
+        service,
+      ) =>
+        service.slug !==
+        slug,
     );
 
-  await writeCatalog(catalog);
+  await writeCatalog(
+    catalog,
+  );
 }
 
+/*
+ * ============================================
+ * LEGACY CATEGORY UPDATE
+ * ============================================
+ */
+
 export async function updateCategories(
-  categories: ProductCategory[],
+  categories:
+    ProductCategory[],
 ): Promise<void> {
-  const catalog = await readCatalog();
+  const catalog =
+    await readCatalog();
 
-  const normalized = categories.map(
-    (category) => ({
-      ...category,
+  const normalized =
+    categories.map(
+      (
+        category,
+      ) => ({
+        ...category,
 
-      slug: slugify(
-        category.slug ||
-          category.name,
+        slug:
+          slugify(
+            category.slug ||
+              category.name,
+          ),
+
+        groups:
+          category.groups ??
+          [],
+      }),
+    );
+
+  const uniqueSlugs =
+    new Set(
+      normalized.map(
+        (
+          category,
+        ) =>
+          category.slug,
       ),
-
-      groups: category.groups ?? [],
-    }),
-  );
-
-  const uniqueSlugs = new Set(
-    normalized.map(
-      (category) => category.slug,
-    ),
-  );
+    );
 
   if (
     uniqueSlugs.size !==
@@ -661,35 +999,74 @@ export async function updateCategories(
     );
   }
 
-  catalog.categories = normalized;
+  catalog.categories =
+    normalized;
 
-  await writeCatalog(catalog);
+  await writeCatalog(
+    catalog,
+  );
 }
 
-export async function getPriceGroups(): Promise<
-  PriceGroup[]
-> {
-  return getDatabasePriceGroups(true);
+/*
+ * ============================================
+ * PRICE GROUPS
+ * ============================================
+ */
+
+export async function getPriceGroups():
+  Promise<
+    PriceGroup[]
+  > {
+  return getDatabasePriceGroups(
+    true,
+  );
 }
 
-export async function getAllPriceGroups(): Promise<
-  PriceGroup[]
-> {
-  return getDatabasePriceGroups(false);
+export async function getAllPriceGroups():
+  Promise<
+    PriceGroup[]
+  > {
+  return getDatabasePriceGroups(
+    false,
+  );
 }
 
-export async function getDealerPortalSettings(): Promise<DealerPortalSettings> {
+/*
+ * ============================================
+ * DEALER PORTAL SETTINGS
+ * ============================================
+ */
+
+export async function getDealerPortalSettings():
+  Promise<
+    DealerPortalSettings
+  > {
   const setting =
-    await import("@/lib/prisma").then(
-      ({ prisma }) =>
-        prisma.dealerPortalSetting.findUnique(
-          {
-            where: {
-              id: "default",
+    await import(
+      "@/lib/prisma"
+    ).then(
+      (
+        {
+          prisma,
+        },
+      ) =>
+        prisma
+          .dealerPortalSetting
+          .findUnique(
+            {
+              where: {
+                id:
+                  "default",
+              },
             },
-          },
-        ),
+          ),
     );
+
+  /*
+   * Keep JSON fallback temporarily for
+   * installations where the DB setting has not
+   * been initialized.
+   */
 
   if (!setting) {
     return (
@@ -699,33 +1076,53 @@ export async function getDealerPortalSettings(): Promise<DealerPortalSettings> {
 
   return {
     demoPriceGroupSlug:
-      setting.demoPriceGroupSlug,
+      setting
+        .demoPriceGroupSlug,
 
     demoCompanyName:
-      setting.demoCompanyName,
+      setting
+        .demoCompanyName,
 
     demoContactName:
-      setting.demoContactName,
+      setting
+        .demoContactName,
   };
 }
 
+/*
+ * ============================================
+ * PRICING CONFIGURATION
+ * ============================================
+ */
+
 export async function updatePricingConfiguration(
   input: {
-    priceGroups: PriceGroup[];
+    priceGroups:
+      PriceGroup[];
 
     dealerPortal:
       DealerPortalSettings;
 
-    productBasePrices: Record<
-      string,
-      {
-        basePrice?: number;
-        baseCurrency?: string;
-        minimumQty?: number;
-        leadTimeText?: string;
-        pricingNote?: string;
-      }
-    >;
+    productBasePrices:
+      Record<
+        string,
+        {
+          basePrice?:
+            number;
+
+          baseCurrency?:
+            string;
+
+          minimumQty?:
+            number;
+
+          leadTimeText?:
+            string;
+
+          pricingNote?:
+            string;
+        }
+      >;
   },
 ): Promise<void> {
   await updateDatabasePricing(
