@@ -10,10 +10,6 @@ import {
   replaceProductDocuments,
 } from "@/lib/databaseProductDocuments";
 
-import {
-  readCatalog,
-  writeCatalog,
-} from "@/lib/catalog";
 
 import {
   replaceProductImages,
@@ -845,21 +841,44 @@ export async function applyProductBulkAction(
     );
   }
 
-  const catalog =
-    await readCatalog();
+  /*
+   * ========================================
+   * LOAD PRODUCTS DIRECTLY FROM NEON
+   * ========================================
+   *
+   * Do not use catalog.json here.
+   *
+   * Vercel's deployed filesystem is
+   * read-only at runtime.
+   */
 
-  const catalogueProducts =
-    catalog.products.filter(
-      (
-        product,
-      ) =>
-        slugs.includes(
-          product.slug,
-        ),
-    );
+  const databaseProducts =
+    await prisma.product.findMany({
+      where: {
+        slug: {
+          in: slugs,
+        },
+      },
+
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+
+        _count: {
+          select: {
+            orderItems:
+              true,
+
+            rfqItems:
+              true,
+          },
+        },
+      },
+    });
 
   if (
-    !catalogueProducts.length
+    !databaseProducts.length
   ) {
     throw new Error(
       "None of the selected products were found.",
@@ -867,7 +886,7 @@ export async function applyProductBulkAction(
   }
 
   const foundSlugs =
-    catalogueProducts.map(
+    databaseProducts.map(
       (
         product,
       ) =>
@@ -884,33 +903,10 @@ export async function applyProductBulkAction(
     action ===
     "delete"
   ) {
-    const databaseProducts =
-      await prisma.product.findMany(
-        {
-          where: {
-            slug: {
-              in:
-                foundSlugs,
-            },
-          },
-
-          select: {
-            id: true,
-            slug: true,
-            name: true,
-
-            _count: {
-              select: {
-                orderItems:
-                  true,
-
-                rfqItems:
-                  true,
-              },
-            },
-          },
-        },
-      );
+    /*
+     * Do not permanently remove products
+     * referenced by historical orders/RFQs.
+     */
 
     const referencedProducts =
       databaseProducts.filter(
@@ -943,69 +939,29 @@ export async function applyProductBulkAction(
       );
     }
 
-    await prisma.$transaction(
-      async (
-        transaction,
-      ) => {
-        await transaction.product.deleteMany(
-          {
-            where: {
-              slug: {
-                in:
-                  foundSlugs,
-              },
-            },
-          },
-        );
-      },
-
-      {
-        maxWait: 10000,
-        timeout: 20000,
-      },
-    );
-
     /*
-     * Keep legacy JSON catalogue aligned.
+     * Prisma cascading relations handle
+     * ProductImage, ProductDocument,
+     * category assignments, specifications,
+     * applications, standards, etc. according
+     * to the existing Prisma schema.
      */
 
-    catalog.products =
-      catalog.products.filter(
-        (
-          product,
-        ) =>
-          !foundSlugs.includes(
-            product.slug,
-          ),
-      );
-
-    for (
-      const product of
-      catalog.products
-    ) {
-      product.relatedProducts =
-        (
-          product.relatedProducts ??
-          []
-        ).filter(
-          (
-            relatedSlug,
-          ) =>
-            !foundSlugs.includes(
-              relatedSlug,
-            ),
-        );
-    }
-
-    await writeCatalog(
-      catalog,
-    );
+    const deleteResult =
+      await prisma.product.deleteMany({
+        where: {
+          slug: {
+            in:
+              foundSlugs,
+          },
+        },
+      });
 
     return {
       action,
 
       affected:
-        foundSlugs.length,
+        deleteResult.count,
 
       slugs:
         foundSlugs,
@@ -1043,19 +999,17 @@ export async function applyProductBulkAction(
             };
 
   const databaseUpdateResult =
-    await prisma.product.updateMany(
-      {
-        where: {
-          slug: {
-            in:
-              foundSlugs,
-          },
+    await prisma.product.updateMany({
+      where: {
+        slug: {
+          in:
+            foundSlugs,
         },
-
-        data:
-          databaseUpdate,
       },
-    );
+
+      data:
+        databaseUpdate,
+    });
 
   return {
     action,

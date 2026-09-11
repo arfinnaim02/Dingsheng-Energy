@@ -16,9 +16,7 @@ import {
 } from "@/lib/adminAuth";
 
 import {
-  deleteProduct,
   getProducts,
-  upsertProduct,
 } from "@/lib/catalog";
 
 import {
@@ -29,23 +27,37 @@ import {
   saveDatabaseProduct,
 } from "@/lib/databaseProducts";
 
-type ProductRequest = Product & {
-  managedImages?: ManagedProductImage[];
-};
+export const runtime =
+  "nodejs";
+
+export const dynamic =
+  "force-dynamic";
+
+type ProductRequest =
+  Product & {
+    managedImages?:
+      ManagedProductImage[];
+  };
 
 async function cleanupCloudinaryImages(
   publicIds: string[],
 ) {
   const results =
     await Promise.allSettled(
-      publicIds.map((publicId) =>
-        deleteProductImage(publicId),
+      publicIds.map(
+        (publicId) =>
+          deleteProductImage(
+            publicId,
+          ),
       ),
     );
 
   results.forEach(
     (result, index) => {
-      if (result.status === "rejected") {
+      if (
+        result.status ===
+        "rejected"
+      ) {
         console.error(
           `Unable to remove Cloudinary image ${publicIds[index]}:`,
           result.reason,
@@ -56,10 +68,13 @@ async function cleanupCloudinaryImages(
 }
 
 export async function GET() {
-  if (!(await isAdminSession())) {
+  if (
+    !(await isAdminSession())
+  ) {
     return NextResponse.json(
       {
-        error: "Unauthorized",
+        error:
+          "Unauthorized",
       },
       {
         status: 401,
@@ -67,21 +82,34 @@ export async function GET() {
     );
   }
 
+  /*
+   * TEMPORARY LEGACY READ
+   *
+   * Reading catalog.json is allowed on Vercel.
+   * Only runtime writes are forbidden.
+   *
+   * We will migrate product reads to Neon
+   * separately after CRUD is stable.
+   */
   return NextResponse.json({
-    products: await getProducts({
-      activeOnly: false,
-      includeProtected: true,
-    }),
+    products:
+      await getProducts({
+        activeOnly: false,
+        includeProtected: true,
+      }),
   });
 }
 
 export async function POST(
   request: Request,
 ) {
-  if (!(await isAdminSession())) {
+  if (
+    !(await isAdminSession())
+  ) {
     return NextResponse.json(
       {
-        error: "Unauthorized",
+        error:
+          "Unauthorized",
       },
       {
         status: 401,
@@ -89,13 +117,10 @@ export async function POST(
     );
   }
 
-  let catalogProduct:
-    | Product
-    | undefined;
-
   try {
     const body =
-      (await request.json()) as ProductRequest;
+      (await request.json()) as
+        ProductRequest;
 
     if (!body.name?.trim()) {
       return NextResponse.json(
@@ -109,7 +134,10 @@ export async function POST(
       );
     }
 
-    if (!body.categorySlugs?.length) {
+    if (
+      !body.categorySlugs
+        ?.length
+    ) {
       return NextResponse.json(
         {
           error:
@@ -126,65 +154,82 @@ export async function POST(
       ...productInput
     } = body;
 
-    catalogProduct =
-      await upsertProduct(
-        productInput as Product,
-      );
+    /*
+     * IMPORTANT:
+     *
+     * Save directly to Neon.
+     *
+     * Do NOT call:
+     *
+     * upsertProduct()
+     * writeCatalog()
+     *
+     * Those write catalog.json and fail on Vercel.
+     */
 
     const databaseResult =
       await saveDatabaseProduct(
-        catalogProduct,
+        productInput as Product,
         {
           managedImages:
-            Array.isArray(managedImages)
+            Array.isArray(
+              managedImages,
+            )
               ? managedImages
               : undefined,
         },
       );
+
+    /*
+     * Any old Cloudinary images that were replaced
+     * can now be safely deleted.
+     */
 
     await cleanupCloudinaryImages(
       databaseResult
         .removedCloudinaryPublicIds,
     );
 
+    const savedProduct =
+      databaseResult.product;
+
+    /*
+     * Refresh pages that may show product data.
+     */
+
     revalidatePath("/");
-    revalidatePath("/products");
-
     revalidatePath(
-      `/products/${catalogProduct.primaryCategorySlug}`,
+      "/products",
+    );
+    revalidatePath(
+      "/admin/products",
     );
 
-    revalidatePath(
-      `/products/${catalogProduct.primaryCategorySlug}/${catalogProduct.slug}`,
-    );
+    if (
+      productInput
+        .primaryCategorySlug
+    ) {
+      revalidatePath(
+        `/products/${productInput.primaryCategorySlug}`,
+      );
 
-    revalidatePath("/admin/products");
+      revalidatePath(
+        `/products/${productInput.primaryCategorySlug}/${savedProduct.slug}`,
+      );
+    }
 
     return NextResponse.json(
       {
         ok: true,
-        product: catalogProduct,
+
+        product:
+          savedProduct,
       },
       {
         status: 201,
       },
     );
   } catch (error) {
-    /*
-     * If JSON was created but Neon failed,
-     * remove the incomplete new catalogue entry.
-     */
-    if (catalogProduct) {
-      await deleteProduct(
-        catalogProduct.slug,
-      ).catch((rollbackError) => {
-        console.error(
-          "Unable to roll back catalogue product:",
-          rollbackError,
-        );
-      });
-    }
-
     console.error(
       "Unable to create product:",
       error,
