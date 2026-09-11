@@ -1,4 +1,8 @@
 import {
+  revalidatePath,
+} from "next/cache";
+
+import {
   NextResponse,
 } from "next/server";
 
@@ -21,10 +25,6 @@ import {
   deleteDatabaseProduct,
   saveDatabaseProduct,
 } from "@/lib/databaseProducts";
-
-import {
-  upsertProduct,
-} from "@/lib/catalog";
 
 export const runtime =
   "nodejs";
@@ -49,20 +49,40 @@ type RouteContext = {
 
 /*
  * ============================================
+ * PRODUCT SLUG
+ * ============================================
+ */
+function slugifyProduct(
+  value: string,
+) {
+  return value
+    .normalize("NFKD")
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, " and ")
+    .replace(
+      /[^a-z0-9]+/g,
+      "-",
+    )
+    .replace(
+      /^-+|-+$/g,
+      "",
+    )
+    .replace(
+      /-{2,}/g,
+      "-",
+    );
+}
+
+/*
+ * ============================================
  * UPDATE PRODUCT
  * ============================================
  */
-
 export async function PUT(
   request: Request,
   context: RouteContext,
 ) {
-  /*
-   * API routes must use isAdminSession().
-   *
-   * requireAdmin() is intended for protected
-   * server pages/layouts and returns void.
-   */
   if (
     !(await isAdminSession())
   ) {
@@ -89,8 +109,20 @@ export async function PUT(
     originalSlug =
       decodeURIComponent(
         rawSlug,
-      );
+      ).trim();
   } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Invalid product slug.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  if (!originalSlug) {
     return NextResponse.json(
       {
         error:
@@ -124,53 +156,178 @@ export async function PUT(
     }
 
     /*
-     * managedImages and managedDocuments are not
-     * part of the legacy Product object itself.
-     *
-     * Pass them separately to saveDatabaseProduct()
-     * so the dedicated DB managers can replace the
-     * relevant child records.
+     * ----------------------------------------
+     * PRODUCT NAME
+     * ----------------------------------------
+     */
+    const name =
+      body.name?.trim() ??
+      "";
+
+    if (!name) {
+      return NextResponse.json(
+        {
+          error:
+            "Product name is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    /*
+     * ----------------------------------------
+     * CATEGORY VALIDATION
+     * ----------------------------------------
+     */
+    if (
+      !Array.isArray(
+        body.categorySlugs,
+      ) ||
+      !body.categorySlugs.length
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Select at least one product category.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const categorySlugs = [
+      ...new Set(
+        body.categorySlugs
+          .map(
+            (slug) =>
+              slug.trim(),
+          )
+          .filter(Boolean),
+      ),
+    ];
+
+    if (
+      !categorySlugs.length
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Select at least one product category.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    /*
+     * ----------------------------------------
+     * NORMALIZE SLUG
+     * ----------------------------------------
+     */
+    const slug =
+      slugifyProduct(
+        body.slug?.trim() ||
+          name,
+      );
+
+    if (!slug) {
+      return NextResponse.json(
+        {
+          error:
+            "Unable to generate a valid product slug. Please enter a slug manually.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    /*
+     * ----------------------------------------
+     * PRIMARY CATEGORY
+     * ----------------------------------------
+     */
+    const requestedPrimary =
+      body.primaryCategorySlug
+        ?.trim() ?? "";
+
+    const primaryCategorySlug =
+      categorySlugs.includes(
+        requestedPrimary,
+      )
+        ? requestedPrimary
+        : categorySlugs[0];
+
+    /*
+     * Images and documents are handled through
+     * their dedicated DB managers.
      */
     const {
       managedImages,
       managedDocuments,
-      ...productInput
-    } =
-      body;
+      ...rawProductInput
+    } = body;
+
+    const productInput:
+      Product = {
+        ...rawProductInput,
+
+        name,
+
+        slug,
+
+        categorySlugs,
+
+        primaryCategorySlug,
+      };
 
     /*
      * ============================================
-     * SAVE NEON PRODUCT
+     * SAVE PRODUCT ONCE
      * ============================================
+     *
+     * IMPORTANT:
+     *
+     * There must be only ONE saveDatabaseProduct()
+     * operation.
+     *
+     * Do NOT call upsertProduct() afterwards.
+     *
+     * upsertProduct() now also saves to Neon,
+     * which caused the product to be written twice
+     * and caused slug-change errors.
      */
-
     const databaseResult =
       await saveDatabaseProduct(
         productInput,
         {
           originalSlug,
 
-          managedImages,
+          managedImages:
+            Array.isArray(
+              managedImages,
+            )
+              ? managedImages
+              : undefined,
 
-          /*
-           * IMPORTANT:
-           *
-           * [] means:
-           * delete all existing ProductDocument rows.
-           *
-           * undefined means:
-           * don't touch existing documents.
-           */
-          managedDocuments,
+          managedDocuments:
+            Array.isArray(
+              managedDocuments,
+            )
+              ? managedDocuments
+              : undefined,
         },
       );
 
     /*
      * ============================================
-     * DELETE REMOVED CLOUDINARY PRODUCT IMAGES
+     * DELETE REMOVED CLOUDINARY IMAGES
      * ============================================
      */
-
     const removedImageIds =
       databaseResult
         .removedCloudinaryPublicIds ??
@@ -196,14 +353,7 @@ export async function PUT(
      * ============================================
      * DELETE REMOVED CLOUDINARY DOCUMENTS
      * ============================================
-     *
-     * The DB rows have already been replaced by
-     * replaceProductDocuments().
-     *
-     * Only after that succeeds do we remove the old
-     * physical files from Cloudinary.
      */
-
     const removedDocumentIds =
       databaseResult
         .removedDocumentCloudinaryPublicIds ??
@@ -225,34 +375,72 @@ export async function PUT(
       );
     }
 
+    const savedProduct =
+      databaseResult.product;
+
     /*
      * ============================================
-     * LEGACY CATALOG COMPATIBILITY
+     * REFRESH PRODUCT PAGES
      * ============================================
-     *
-     * Parts of the website still read catalog.json.
-     * Keep this until the later Neon-only migration.
      */
+    revalidatePath("/");
 
-    await upsertProduct(
-      productInput,
-      originalSlug,
+    revalidatePath(
+      "/products",
     );
 
-    return NextResponse.json(
-      {
-        ok: true,
-
-        product:
-          databaseResult.product,
-
-        removedImages:
-          removedImageIds.length,
-
-        removedDocuments:
-          removedDocumentIds.length,
-      },
+    revalidatePath(
+      "/admin/products",
     );
+
+    revalidatePath(
+      "/dealer/products",
+    );
+
+    /*
+     * Refresh old URL too in case the product slug
+     * or category was changed.
+     */
+    if (
+      body.primaryCategorySlug
+    ) {
+      revalidatePath(
+        `/products/${body.primaryCategorySlug}`,
+      );
+
+      revalidatePath(
+        `/products/${body.primaryCategorySlug}/${originalSlug}`,
+      );
+    }
+
+    revalidatePath(
+      `/products/${primaryCategorySlug}`,
+    );
+
+    revalidatePath(
+      `/products/${primaryCategorySlug}/${savedProduct.slug}`,
+    );
+
+    revalidatePath(
+      `/admin/products/${originalSlug}`,
+    );
+
+    revalidatePath(
+      `/admin/products/${savedProduct.slug}`,
+    );
+
+    return NextResponse.json({
+      ok: true,
+
+      product:
+        savedProduct,
+
+      removedImages:
+        removedImageIds.length,
+
+      removedDocuments:
+        removedDocumentIds.length,
+    });
   } catch (error) {
     console.error(
       "Admin product update failed:",
@@ -278,7 +466,6 @@ export async function PUT(
  * DELETE PRODUCT
  * ============================================
  */
-
 export async function DELETE(
   _request: Request,
   context: RouteContext,
@@ -309,8 +496,20 @@ export async function DELETE(
     slug =
       decodeURIComponent(
         rawSlug,
-      );
+      ).trim();
   } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Invalid product slug.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  if (!slug) {
     return NextResponse.json(
       {
         error:
@@ -324,7 +523,7 @@ export async function DELETE(
 
   try {
     /*
-     * First read Cloudinary IDs and remove the
+     * Read Cloudinary IDs and remove the
      * product from Neon.
      */
     const databaseResult =
@@ -351,7 +550,6 @@ export async function DELETE(
      * DELETE PRODUCT IMAGES FROM CLOUDINARY
      * ============================================
      */
-
     if (
       databaseResult
         .cloudinaryPublicIds
@@ -377,7 +575,6 @@ export async function DELETE(
      * DELETE PRODUCT DOCUMENTS FROM CLOUDINARY
      * ============================================
      */
-
     if (
       databaseResult
         .documentCloudinaryPublicIds
@@ -399,15 +596,25 @@ export async function DELETE(
     }
 
     /*
-     * Keep legacy catalog.json synchronized until
-     * we complete the Neon-only catalog migration.
+     * Refresh product surfaces after deletion.
      */
+    revalidatePath("/");
 
-    return NextResponse.json(
-      {
-        ok: true,
-      },
+    revalidatePath(
+      "/products",
     );
+
+    revalidatePath(
+      "/admin/products",
+    );
+
+    revalidatePath(
+      "/dealer/products",
+    );
+
+    return NextResponse.json({
+      ok: true,
+    });
   } catch (error) {
     console.error(
       "Admin product delete failed:",

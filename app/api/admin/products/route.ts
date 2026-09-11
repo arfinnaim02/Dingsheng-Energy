@@ -7,6 +7,7 @@ import {
 } from "next/server";
 
 import type {
+  ManagedProductDocument,
   ManagedProductImage,
   Product,
 } from "@/data/site";
@@ -16,6 +17,7 @@ import {
 } from "@/lib/adminAuth";
 
 import {
+  getProduct,
   getProducts,
 } from "@/lib/catalog";
 
@@ -37,7 +39,44 @@ type ProductRequest =
   Product & {
     managedImages?:
       ManagedProductImage[];
+
+    managedDocuments?:
+      ManagedProductDocument[];
   };
+
+/*
+ * ============================================
+ * PRODUCT SLUG
+ * ============================================
+ *
+ * The old catalogue automatically generated
+ * product slugs when the admin left the slug
+ * field empty.
+ *
+ * Products now save directly to Neon, so that
+ * behaviour needs to happen before the DB save.
+ */
+function slugifyProduct(
+  value: string,
+) {
+  return value
+    .normalize("NFKD")
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, " and ")
+    .replace(
+      /[^a-z0-9]+/g,
+      "-",
+    )
+    .replace(
+      /^-+|-+$/g,
+      "",
+    )
+    .replace(
+      /-{2,}/g,
+      "-",
+    );
+}
 
 async function cleanupCloudinaryImages(
   publicIds: string[],
@@ -67,6 +106,14 @@ async function cleanupCloudinaryImages(
   );
 }
 
+/*
+ * ============================================
+ * GET PRODUCTS
+ * ============================================
+ *
+ * Admin receives all products including hidden
+ * products and protected commercial data.
+ */
 export async function GET() {
   if (
     !(await isAdminSession())
@@ -82,15 +129,6 @@ export async function GET() {
     );
   }
 
-  /*
-   * TEMPORARY LEGACY READ
-   *
-   * Reading catalog.json is allowed on Vercel.
-   * Only runtime writes are forbidden.
-   *
-   * We will migrate product reads to Neon
-   * separately after CRUD is stable.
-   */
   return NextResponse.json({
     products:
       await getProducts({
@@ -100,6 +138,11 @@ export async function GET() {
   });
 }
 
+/*
+ * ============================================
+ * CREATE PRODUCT
+ * ============================================
+ */
 export async function POST(
   request: Request,
 ) {
@@ -122,7 +165,16 @@ export async function POST(
       (await request.json()) as
         ProductRequest;
 
-    if (!body.name?.trim()) {
+    /*
+     * ----------------------------------------
+     * PRODUCT NAME
+     * ----------------------------------------
+     */
+    const name =
+      body.name?.trim() ??
+      "";
+
+    if (!name) {
       return NextResponse.json(
         {
           error:
@@ -134,9 +186,16 @@ export async function POST(
       );
     }
 
+    /*
+     * ----------------------------------------
+     * CATEGORIES
+     * ----------------------------------------
+     */
     if (
-      !body.categorySlugs
-        ?.length
+      !Array.isArray(
+        body.categorySlugs,
+      ) ||
+      !body.categorySlugs.length
     ) {
       return NextResponse.json(
         {
@@ -149,27 +208,144 @@ export async function POST(
       );
     }
 
-    const {
-      managedImages,
-      ...productInput
-    } = body;
+    const categorySlugs = [
+      ...new Set(
+        body.categorySlugs
+          .map(
+            (slug) =>
+              slug.trim(),
+          )
+          .filter(Boolean),
+      ),
+    ];
+
+    if (
+      !categorySlugs.length
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Select at least one product category.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
     /*
-     * IMPORTANT:
+     * ----------------------------------------
+     * SLUG
+     * ----------------------------------------
      *
-     * Save directly to Neon.
+     * Admin can provide a slug manually.
      *
-     * Do NOT call:
+     * If empty:
      *
-     * upsertProduct()
-     * writeCatalog()
+     * "LPG Storage Tank"
      *
-     * Those write catalog.json and fail on Vercel.
+     * becomes:
+     *
+     * "lpg-storage-tank"
      */
+    const slug =
+      slugifyProduct(
+        body.slug?.trim() ||
+          name,
+      );
 
+    if (!slug) {
+      return NextResponse.json(
+        {
+          error:
+            "Unable to generate a valid product slug. Please enter a slug manually.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    /*
+     * Prevent the Add Product page from
+     * accidentally overwriting another product
+     * with the same slug.
+     */
+    const existingProduct =
+      await getProduct(
+        slug,
+        {
+          activeOnly: false,
+        },
+      );
+
+    if (existingProduct) {
+      return NextResponse.json(
+        {
+          error:
+            `A product with slug "${slug}" already exists. Please use a different product name or slug.`,
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    /*
+     * ----------------------------------------
+     * PRIMARY CATEGORY
+     * ----------------------------------------
+     *
+     * A product must always have a valid primary
+     * category because ProductCard uses it when
+     * creating the public product link.
+     */
+    const requestedPrimary =
+      body.primaryCategorySlug
+        ?.trim() ?? "";
+
+    const primaryCategorySlug =
+      categorySlugs.includes(
+        requestedPrimary,
+      )
+        ? requestedPrimary
+        : categorySlugs[0];
+
+    /*
+     * managedImages and managedDocuments are
+     * database-management fields rather than
+     * fields on the base Product object.
+     */
+    const {
+      managedImages,
+      managedDocuments,
+      ...rawProductInput
+    } = body;
+
+    const productInput:
+      Product = {
+        ...rawProductInput,
+
+        name,
+
+        slug,
+
+        categorySlugs,
+
+        primaryCategorySlug,
+      };
+
+    /*
+     * ============================================
+     * SAVE PRODUCT TO NEON
+     * ============================================
+     *
+     * This is now the ONLY product catalogue
+     * persistence source.
+     */
     const databaseResult =
       await saveDatabaseProduct(
-        productInput as Product,
+        productInput,
         {
           managedImages:
             Array.isArray(
@@ -177,14 +353,20 @@ export async function POST(
             )
               ? managedImages
               : undefined,
+
+          managedDocuments:
+            Array.isArray(
+              managedDocuments,
+            )
+              ? managedDocuments
+              : undefined,
         },
       );
 
     /*
-     * Any old Cloudinary images that were replaced
-     * can now be safely deleted.
+     * Remove replaced physical Cloudinary images
+     * only after the DB operation succeeded.
      */
-
     await cleanupCloudinaryImages(
       databaseResult
         .removedCloudinaryPublicIds,
@@ -194,29 +376,31 @@ export async function POST(
       databaseResult.product;
 
     /*
-     * Refresh pages that may show product data.
+     * ============================================
+     * REFRESH PRODUCT SURFACES
+     * ============================================
      */
-
     revalidatePath("/");
+
     revalidatePath(
       "/products",
     );
+
     revalidatePath(
       "/admin/products",
     );
 
-    if (
-      productInput
-        .primaryCategorySlug
-    ) {
-      revalidatePath(
-        `/products/${productInput.primaryCategorySlug}`,
-      );
+    revalidatePath(
+      "/dealer/products",
+    );
 
-      revalidatePath(
-        `/products/${productInput.primaryCategorySlug}/${savedProduct.slug}`,
-      );
-    }
+    revalidatePath(
+      `/products/${primaryCategorySlug}`,
+    );
+
+    revalidatePath(
+      `/products/${primaryCategorySlug}/${savedProduct.slug}`,
+    );
 
     return NextResponse.json(
       {
