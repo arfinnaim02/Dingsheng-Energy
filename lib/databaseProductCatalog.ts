@@ -264,22 +264,30 @@ function mapProduct(
         ],
       ),
 
-    standards:
-      product.standards.map(
-        (standard) =>
-          standard.label,
-      ),
+      standards:
+        product.standards.map(
+          (standard) =>
+            standard.label,
+        ),
 
-    applications:
-      product.applications.map(
-        (application) =>
-          application.label,
-      ),
+      applications:
+        product.applications.map(
+          (application) =>
+            application.label,
+        ),
 
-    commercialMode:
-      commercialMode(
-        product.commercialMode,
-      ),
+      showStandards:
+        product.showStandards ===
+        true,
+
+      showApplications:
+        product.showApplications ===
+        true,
+
+      commercialMode:
+        commercialMode(
+          product.commercialMode,
+        ),
 
     dealerPriceProtected:
       product.dealerPriceProtected,
