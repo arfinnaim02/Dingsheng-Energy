@@ -160,6 +160,93 @@ function cleanNullable(
   );
 }
 
+const SERVICE_TEXT_PREFIX =
+  "__DS_SERVICE_TEXT_V1__:";
+
+type StoredServiceTextSize =
+  | "small"
+  | "normal"
+  | "large";
+
+type StoredServiceTextItem = {
+  text: string;
+  bold: boolean;
+  italic: boolean;
+  size: StoredServiceTextSize;
+};
+
+function normalizeStoredServiceText(
+  value: string,
+): string {
+  const cleaned =
+    value.trim();
+
+  if (
+    !cleaned.startsWith(
+      SERVICE_TEXT_PREFIX,
+    )
+  ) {
+    return cleaned;
+  }
+
+  try {
+    const parsed =
+      JSON.parse(
+        cleaned.slice(
+          SERVICE_TEXT_PREFIX.length,
+        ),
+      ) as Partial<StoredServiceTextItem>;
+
+    const text =
+      typeof parsed.text ===
+      "string"
+        ? parsed.text.trim()
+        : "";
+
+    if (!text) {
+      return "";
+    }
+
+    const size:
+      StoredServiceTextSize =
+      parsed.size === "small" ||
+      parsed.size === "large"
+        ? parsed.size
+        : "normal";
+
+    const bold =
+      parsed.bold === true;
+
+    const italic =
+      parsed.italic === true;
+
+    if (
+      !bold &&
+      !italic &&
+      size === "normal"
+    ) {
+      return text;
+    }
+
+    return (
+      SERVICE_TEXT_PREFIX +
+      JSON.stringify({
+        text,
+        bold,
+        italic,
+        size,
+      })
+    );
+  } catch {
+    /*
+     * If an older value happens to begin with the
+     * formatting prefix but is not valid metadata,
+     * preserve it as plain text instead of losing it.
+     */
+    return cleaned;
+  }
+}
+
 function toStringArray(
   value: unknown,
 ): string[] {
@@ -183,7 +270,9 @@ function toStringArray(
       (
         item,
       ) =>
-        item.trim(),
+        normalizeStoredServiceText(
+          item,
+        ),
     )
     .filter(Boolean);
 }
@@ -549,16 +638,22 @@ export async function createService(
         ),
 
       scopeJson:
-        input.scope ??
-        [],
+        toStringArray(
+          input.scope ??
+            [],
+        ),
 
       processJson:
-        input.process ??
-        [],
+        toStringArray(
+          input.process ??
+            [],
+        ),
 
       applicationsJson:
-        input.applications ??
-        [],
+        toStringArray(
+          input.applications ??
+            [],
+        ),
 
       featured:
         input.featured ===
@@ -717,16 +812,22 @@ export async function updateService(
         ),
 
       scopeJson:
-        input.scope ??
-        [],
+        toStringArray(
+          input.scope ??
+            [],
+        ),
 
       processJson:
-        input.process ??
-        [],
+        toStringArray(
+          input.process ??
+            [],
+        ),
 
       applicationsJson:
-        input.applications ??
-        [],
+        toStringArray(
+          input.applications ??
+            [],
+        ),
 
       featured:
         input.featured ===

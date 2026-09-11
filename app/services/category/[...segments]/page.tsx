@@ -27,6 +27,99 @@ import {
   getPublicServicePageData,
 } from "@/lib/publicServiceTree";
 
+import {
+  serviceRichTextParagraphs,
+  type ServiceRichTextNode,
+} from "@/lib/serviceRichText";
+
+function serviceTextClass(
+  node: ServiceRichTextNode,
+) {
+  const marks =
+    node.marks ?? [];
+
+  const isBold =
+    marks.some(
+      (mark) =>
+        mark.type ===
+        "bold",
+    );
+
+  const isItalic =
+    marks.some(
+      (mark) =>
+        mark.type ===
+        "italic",
+    );
+
+  const fontSize =
+    marks.find(
+      (mark) =>
+        mark.type ===
+        "textStyle",
+    )?.attrs?.fontSize;
+
+  const sizeClass =
+    fontSize === "13px"
+      ? "text-[13px]"
+      : fontSize === "18px"
+        ? "text-[18px]"
+        : "text-[15px]";
+
+  return `${sizeClass} ${
+    isBold
+      ? "font-bold"
+      : "font-normal"
+  } ${
+    isItalic
+      ? "italic"
+      : ""
+  }`;
+}
+
+function renderServiceInline(
+  content:
+    | ServiceRichTextNode[]
+    | undefined,
+  keyPrefix: string,
+) {
+  return (content ?? []).map(
+    (node, index) => {
+      const key =
+        `${keyPrefix}-${index}`;
+
+      if (
+        node.type ===
+        "hardBreak"
+      ) {
+        return (
+          <br key={key} />
+        );
+      }
+
+      if (
+        node.type !== "text" ||
+        !node.text
+      ) {
+        return null;
+      }
+
+      return (
+        <span
+          key={key}
+          className={
+            serviceTextClass(
+              node,
+            )
+          }
+        >
+          {node.text}
+        </span>
+      );
+    },
+  );
+}
+
 export const dynamic =
   "force-dynamic";
 
@@ -99,6 +192,21 @@ export default async function ServiceCategoryPage({
     getPublicServiceImage(
       service,
       "card",
+    );
+
+  const scopeParagraphs =
+    serviceRichTextParagraphs(
+      service.scope,
+    );
+
+  const processParagraphs =
+    serviceRichTextParagraphs(
+      service.process,
+    );
+
+  const applicationParagraphs =
+    serviceRichTextParagraphs(
+      service.applications,
     );
 
   const siblingServices =
@@ -430,19 +538,17 @@ export default async function ServiceCategoryPage({
                 `Dingsheng Energy provides ${service.name} technical and engineering support according to project requirements.`}
             </p>
 
-            {service.scope.length >
+            {scopeParagraphs.length >
               0 && (
               <div className="mt-8 grid gap-3">
-                {service.scope.map(
+                {scopeParagraphs.map(
                   (
-                    scope,
+                    paragraph,
                     index,
                   ) => (
                     <div
-                      className="flex items-center gap-3 border-b border-[#e1e9e6] py-3"
-                      key={
-                        scope
-                      }
+                      className="flex items-start gap-3 border-b border-[#e1e9e6] py-3"
+                      key={`scope-${index}`}
                     >
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e9f7f0] text-xs font-black text-[#0a9c63]">
                         {String(
@@ -454,11 +560,12 @@ export default async function ServiceCategoryPage({
                         )}
                       </span>
 
-                      <strong className="text-sm">
-                        {
-                          scope
-                        }
-                      </strong>
+                      <p className="pt-1 leading-7 text-[#18313d]">
+                        {renderServiceInline(
+                          paragraph.content,
+                          `scope-${index}`,
+                        )}
+                      </p>
                     </div>
                   ),
                 )}
@@ -502,7 +609,7 @@ export default async function ServiceCategoryPage({
       </section>
 
       {/* Process */}
-      {service.process.length >
+      {processParagraphs.length >
         0 && (
         <section className="section dark-section">
           <div className="container-shell">
@@ -518,15 +625,13 @@ export default async function ServiceCategoryPage({
             </div>
 
             <div className="mt-11 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-              {service.process.map(
+              {processParagraphs.map(
                 (
-                  step,
+                  paragraph,
                   index,
                 ) => (
                   <div
-                    key={
-                      step
-                    }
+                    key={`process-${index}`}
                     className="border border-white/10 bg-white/[.04] p-5"
                   >
                     <div className="text-3xl font-black text-[#59dfa8]/35">
@@ -539,11 +644,12 @@ export default async function ServiceCategoryPage({
                       )}
                     </div>
 
-                    <h3 className="mt-5 text-sm font-black">
-                      {
-                        step
-                      }
-                    </h3>
+                    <p className="mt-5 leading-6 text-white/90">
+                      {renderServiceInline(
+                        paragraph.content,
+                        `process-${index}`,
+                      )}
+                    </p>
                   </div>
                 ),
               )}
@@ -625,27 +731,27 @@ export default async function ServiceCategoryPage({
             </h2>
 
             <div className="mt-6 flex flex-wrap gap-2">
-              {(service.applications
-                .length
-                ? service.applications
-                : [
-                    service.name,
-                  ]
-              ).map(
-                (
-                  application,
-                ) => (
-                  <span
-                    className="pill"
-                    key={
-                      application
-                    }
-                  >
-                    {
-                      application
-                    }
-                  </span>
-                ),
+              {applicationParagraphs.length ? (
+                applicationParagraphs.map(
+                  (
+                    paragraph,
+                    index,
+                  ) => (
+                    <span
+                      className="pill !font-normal"
+                      key={`application-${index}`}
+                    >
+                      {renderServiceInline(
+                        paragraph.content,
+                        `application-${index}`,
+                      )}
+                    </span>
+                  ),
+                )
+              ) : (
+                <span className="pill !font-normal">
+                  {service.name}
+                </span>
               )}
             </div>
 

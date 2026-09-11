@@ -8,6 +8,11 @@ import {
   prisma,
 } from "@/lib/prisma";
 
+import {
+  storedServiceTextToDocument,
+  type ServiceRichTextDocument,
+} from "@/lib/serviceRichText";
+
 export type PublicService = {
   id: string;
 
@@ -24,30 +29,25 @@ export type PublicService = {
   parentId: string | null;
   position: number;
 
-  scope: string[];
-  process: string[];
-  applications: string[];
+  scope: ServiceRichTextDocument;
+  process: ServiceRichTextDocument;
+  applications: ServiceRichTextDocument;
 
   featured: boolean;
   isActive: boolean;
 };
 
-function toStringArray(
+function toStoredStringArray(
   value: unknown,
 ): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value
-    .filter(
-      (item): item is string =>
-        typeof item === "string",
-    )
-    .map(
-      (item) => item.trim(),
-    )
-    .filter(Boolean);
+  return value.filter(
+    (item): item is string =>
+      typeof item === "string",
+  );
 }
 
 function cleanImageUrl(
@@ -156,18 +156,24 @@ export async function getPublicServices(): Promise<
         service.position,
 
       scope:
-        toStringArray(
-          service.scopeJson,
+        storedServiceTextToDocument(
+          toStoredStringArray(
+            service.scopeJson,
+          ),
         ),
 
       process:
-        toStringArray(
-          service.processJson,
+        storedServiceTextToDocument(
+          toStoredStringArray(
+            service.processJson,
+          ),
         ),
 
       applications:
-        toStringArray(
-          service.applicationsJson,
+        storedServiceTextToDocument(
+          toStoredStringArray(
+            service.applicationsJson,
+          ),
         ),
 
       featured:

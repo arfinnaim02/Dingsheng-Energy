@@ -21,6 +21,17 @@ import type {
   AdminService,
 } from "@/lib/databaseServices";
 
+import {
+  ServiceRichTextEditor,
+} from "@/components/admin/ServiceRichTextEditor";
+
+import {
+  documentToStoredServiceText,
+  emptyServiceRichTextDocument,
+  storedServiceTextToDocument,
+  type ServiceRichTextDocument,
+} from "@/lib/serviceRichText";
+
 type Draft = {
   id?: string;
 
@@ -40,24 +51,13 @@ type Draft = {
   parentId: string | null;
   position: number;
 
-  scope: string;
-  process: string;
-  applications: string;
+  scope: ServiceRichTextDocument;
+  process: ServiceRichTextDocument;
+  applications: ServiceRichTextDocument;
 
   featured: boolean;
   isActive: boolean;
 };
-
-function lines(value: string[]) {
-  return value.join("\n");
-}
-
-function parseLines(value: string) {
-  return value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
 
 function emptyDraft(
   parentId: string | null = null,
@@ -79,9 +79,12 @@ function emptyDraft(
     parentId,
     position: 0,
 
-    scope: "",
-    process: "",
-    applications: "",
+    scope:
+      emptyServiceRichTextDocument(),
+    process:
+      emptyServiceRichTextDocument(),
+    applications:
+      emptyServiceRichTextDocument(),
 
     featured: false,
     isActive: true,
@@ -110,9 +113,20 @@ function fromService(
     parentId: service.parentId,
     position: service.position,
 
-    scope: lines(service.scope),
-    process: lines(service.process),
-    applications: lines(service.applications),
+    scope:
+      storedServiceTextToDocument(
+        service.scope,
+      ),
+
+    process:
+      storedServiceTextToDocument(
+        service.process,
+      ),
+
+    applications:
+      storedServiceTextToDocument(
+        service.applications,
+      ),
 
     featured: service.featured,
     isActive: service.isActive,
@@ -121,18 +135,28 @@ function fromService(
 
 export function ServiceEditor({
   initial,
+  selectedSlug,
 }: {
   initial: AdminService[];
+  selectedSlug?: string;
 }) {
   const router = useRouter();
+
+  const initialService =
+    selectedSlug
+      ? initial.find(
+          (service) =>
+            service.slug === selectedSlug,
+        ) ?? initial[0]
+      : initial[0];
 
   const [services, setServices] =
     useState(initial);
 
   const [draft, setDraft] =
     useState<Draft>(() =>
-      initial[0]
-        ? fromService(initial[0])
+      initialService
+        ? fromService(initialService)
         : emptyDraft(),
     );
 
@@ -201,6 +225,12 @@ export function ServiceEditor({
     );
 
     setMessage("");
+
+    router.replace(
+      `/admin/services/${encodeURIComponent(
+        service.slug,
+      )}`,
+    );
   }
 
   function addRoot() {
@@ -434,16 +464,18 @@ export function ServiceEditor({
         parentId: draft.parentId,
         position: draft.position,
 
-        scope: parseLines(
-          draft.scope,
-        ),
+        scope:
+          documentToStoredServiceText(
+            draft.scope,
+          ),
 
-        process: parseLines(
-          draft.process,
-        ),
+        process:
+          documentToStoredServiceText(
+            draft.process,
+          ),
 
         applications:
-          parseLines(
+          documentToStoredServiceText(
             draft.applications,
           ),
 
@@ -516,7 +548,18 @@ export function ServiceEditor({
           : "Service created successfully.",
       );
 
-      router.refresh();
+      if (
+        saved &&
+        saved.slug !== selectedSlug
+      ) {
+        router.replace(
+          `/admin/services/${encodeURIComponent(
+            saved.slug,
+          )}`,
+        );
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -580,10 +623,13 @@ export function ServiceEditor({
 
       setServices(next);
 
+      const nextService =
+        next[0] ?? null;
+
       setDraft(
-        next[0]
+        nextService
           ? fromService(
-              next[0],
+              nextService,
             )
           : emptyDraft(),
       );
@@ -592,7 +638,17 @@ export function ServiceEditor({
         "Service deleted successfully.",
       );
 
-      router.refresh();
+      if (nextService) {
+        router.replace(
+          `/admin/services/${encodeURIComponent(
+            nextService.slug,
+          )}`,
+        );
+      } else {
+        router.replace(
+          "/admin/services",
+        );
+      }
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -735,18 +791,33 @@ async function deleteServiceNode(
     setServices(next);
 
     if (draft.id === service.id) {
+      const nextService =
+        next[0] ?? null;
+
       setDraft(
-        next[0]
-          ? fromService(next[0])
+        nextService
+          ? fromService(nextService)
           : emptyDraft(),
       );
+
+      if (nextService) {
+        router.replace(
+          `/admin/services/${encodeURIComponent(
+            nextService.slug,
+          )}`,
+        );
+      } else {
+        router.replace(
+          "/admin/services",
+        );
+      }
+    } else {
+      router.refresh();
     }
 
     setMessage(
       `"${service.name}" deleted successfully.`,
     );
-
-    router.refresh();
   } catch (error) {
     setMessage(
       error instanceof Error
@@ -1234,76 +1305,87 @@ async function deleteServiceNode(
             Applications
           </h2>
 
-          <div className="form-grid mt-6">
-            <div className="field">
-              <label>
-                Scope of work —
-                one per line
-              </label>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#71838b]">
+            Write naturally in each editor. Select any word, phrase or sentence,
+            then use Bold, Italic or Text Size. Press Enter to create another paragraph.
+          </p>
 
-              <textarea
-                className="!min-h-[220px]"
-                value={
-                  draft.scope
-                }
-                onChange={(e) =>
-                  setDraft(
-                    (current) => ({
-                      ...current,
-                      scope:
-                        e.target
-                          .value,
-                    }),
-                  )
-                }
-              />
+          <div className="mt-6 grid gap-6">
+            <div className="rounded-xl border border-[#dfe8e4] bg-[#fafcfb] p-5">
+              <div className="text-sm font-black text-[#17313d]">
+                Scope of work
+              </div>
+
+              <p className="mt-1 text-xs leading-5 text-[#71838b]">
+                Add multiple paragraphs in one editor and format only the selected text.
+              </p>
+
+              <div className="mt-4">
+                <ServiceRichTextEditor
+                  value={draft.scope}
+                  disabled={saving}
+                  onChange={(value) =>
+                    setDraft(
+                      (current) => ({
+                        ...current,
+                        scope: value,
+                      }),
+                    )
+                  }
+                />
+              </div>
             </div>
 
-            <div className="field">
-              <label>
-                Delivery process —
-                one per line
-              </label>
+            <div className="rounded-xl border border-[#dfe8e4] bg-[#fafcfb] p-5">
+              <div className="text-sm font-black text-[#17313d]">
+                Delivery process
+              </div>
 
-              <textarea
-                className="!min-h-[220px]"
-                value={
-                  draft.process
-                }
-                onChange={(e) =>
-                  setDraft(
-                    (current) => ({
-                      ...current,
-                      process:
-                        e.target
-                          .value,
-                    }),
-                  )
-                }
-              />
+              <p className="mt-1 text-xs leading-5 text-[#71838b]">
+                Each paragraph becomes one process step on the public service page.
+              </p>
+
+              <div className="mt-4">
+                <ServiceRichTextEditor
+                  value={draft.process}
+                  disabled={saving}
+                  minHeightClass="min-h-[190px]"
+                  onChange={(value) =>
+                    setDraft(
+                      (current) => ({
+                        ...current,
+                        process: value,
+                      }),
+                    )
+                  }
+                />
+              </div>
             </div>
 
-            <div className="field span-2">
-              <label>
-                Applications —
-                one per line
-              </label>
+            <div className="rounded-xl border border-[#dfe8e4] bg-[#fafcfb] p-5">
+              <div className="text-sm font-black text-[#17313d]">
+                Applications
+              </div>
 
-              <textarea
-                value={
-                  draft.applications
-                }
-                onChange={(e) =>
-                  setDraft(
-                    (current) => ({
-                      ...current,
-                      applications:
-                        e.target
-                          .value,
-                    }),
-                  )
-                }
-              />
+              <p className="mt-1 text-xs leading-5 text-[#71838b]">
+                Each paragraph becomes one application item on the public service page.
+              </p>
+
+              <div className="mt-4">
+                <ServiceRichTextEditor
+                  value={draft.applications}
+                  disabled={saving}
+                  minHeightClass="min-h-[160px]"
+                  onChange={(value) =>
+                    setDraft(
+                      (current) => ({
+                        ...current,
+                        applications: value,
+                      }),
+                    )
+                  }
+                />
+              </div>
             </div>
           </div>
         </section>
