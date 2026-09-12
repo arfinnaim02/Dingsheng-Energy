@@ -47,12 +47,7 @@ export function ProductCategoryTreePicker({
   const [query, setQuery] = useState("");
 
   const [expanded, setExpanded] = useState<Set<string>>(
-    () =>
-      new Set(
-        categories.map(
-          (category) => category.id,
-        ),
-      ),
+    () => new Set(),
   );
 
   const tree = useMemo(

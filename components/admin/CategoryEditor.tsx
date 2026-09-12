@@ -1749,7 +1749,25 @@ export function CategoryEditor({
                   Root category
                 </option>
 
-                {categories.map(
+                {[...categories]
+                .sort(
+                  (
+                    a,
+                    b,
+                  ) =>
+                    a.name.localeCompare(
+                      b.name,
+                      undefined,
+                      {
+                        sensitivity:
+                          "base",
+
+                        numeric:
+                          true,
+                      },
+                    ),
+                )
+                .map(
                   (
                     category,
                   ) => (
