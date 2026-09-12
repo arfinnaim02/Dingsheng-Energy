@@ -6,9 +6,7 @@ import {
   NextResponse,
 } from "next/server";
 
-import type {
-  Service,
-} from "@/data/site";
+
 
 import {
   isAdminSession,
@@ -18,10 +16,7 @@ import {
   deleteServiceImage,
 } from "@/lib/cloudinary";
 
-import {
-  deleteService as deleteCatalogService,
-  upsertService as upsertCatalogService,
-} from "@/lib/catalog";
+
 
 import {
   createService,
@@ -62,53 +57,6 @@ function refreshServicePaths() {
   revalidatePath(
     "/admin/services",
   );
-}
-
-function asLegacyService(
-  service: AdminService,
-): Service {
-  return {
-    slug:
-      service.slug,
-
-    name:
-      service.name,
-
-    shortName:
-      service.shortName ??
-      "",
-
-    summary:
-      service.summary ??
-      "",
-
-    description:
-      service.description ??
-      "",
-
-    image:
-      service.image ??
-      "",
-
-    heroImage:
-      service.heroImage ??
-      "",
-
-    scope:
-      service.scope,
-
-    process:
-      service.process,
-
-    applications:
-      service.applications,
-
-    featured:
-      service.featured,
-
-    active:
-      service.isActive,
-  };
 }
 
 async function result() {
@@ -233,11 +181,6 @@ export async function POST(
         body,
       );
 
-    await upsertCatalogService(
-      asLegacyService(
-        service,
-      ),
-    );
 
     refreshServicePaths();
 
@@ -320,18 +263,6 @@ export async function PUT(
         id,
         input,
       );
-
-    /*
-     * Keep the legacy catalogue synchronized
-     * before deleting old Cloudinary media.
-     */
-    await upsertCatalogService(
-      asLegacyService(
-        update.service,
-      ),
-
-      existing.slug,
-    );
 
     /*
      * Neon and legacy catalogue now both
@@ -432,13 +363,6 @@ export async function DELETE(
       await deleteService(
         id,
       );
-
-    /*
-     * Keep legacy catalogue synchronized.
-     */
-    await deleteCatalogService(
-      existing.slug,
-    );
 
     /*
      * DB + legacy catalogue no longer need
