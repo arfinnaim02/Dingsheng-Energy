@@ -117,7 +117,7 @@ export default async function ServicesPage() {
         <p className="mt-6 max-w-[660px] text-base leading-8 text-white/74">
           From concept to commissioning,
           Dingsheng Energy delivers
-          integrated LPG engineering and
+          integrated engineering and
           technical services for safe,
           efficient and reliable operation.
         </p>
@@ -214,7 +214,7 @@ export default async function ServicesPage() {
             </div>
 
             <h2 className="h2 mt-3">
-              Comprehensive LPG Engineering & Technical Services
+              Comprehensive Engineering & Technical Services
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-[#687b84]">

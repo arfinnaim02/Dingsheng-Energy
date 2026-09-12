@@ -8,7 +8,9 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   MAX_TREE_DEPTH,
@@ -26,6 +28,7 @@ import {
 } from "@/components/admin/ServiceRichTextEditor";
 
 import {
+  SERVICE_RICH_TEXT_PREFIX,
   documentToStoredServiceText,
   emptyServiceRichTextDocument,
   storedServiceTextToDocument,
@@ -40,7 +43,7 @@ type Draft = {
   shortName: string;
 
   summary: string;
-  description: string;
+  description: ServiceRichTextDocument;
 
   image: string;
   imagePublicId: string;
@@ -48,19 +51,29 @@ type Draft = {
   heroImage: string;
   heroImagePublicId: string;
 
-  parentId: string | null;
+  parentId:
+    | string
+    | null;
+
   position: number;
 
-  scope: ServiceRichTextDocument;
-  process: ServiceRichTextDocument;
-  applications: ServiceRichTextDocument;
+  scope:
+    ServiceRichTextDocument;
+
+  process:
+    ServiceRichTextDocument;
+
+  applications:
+    ServiceRichTextDocument;
 
   featured: boolean;
   isActive: boolean;
 };
 
 function emptyDraft(
-  parentId: string | null = null,
+  parentId:
+    | string
+    | null = null,
 ): Draft {
   return {
     name: "",
@@ -68,7 +81,9 @@ function emptyDraft(
     shortName: "",
 
     summary: "",
-    description: "",
+
+    description:
+      emptyServiceRichTextDocument(),
 
     image: "",
     imagePublicId: "",
@@ -81,8 +96,10 @@ function emptyDraft(
 
     scope:
       emptyServiceRichTextDocument(),
+
     process:
       emptyServiceRichTextDocument(),
+
     applications:
       emptyServiceRichTextDocument(),
 
@@ -91,27 +108,99 @@ function emptyDraft(
   };
 }
 
+function serviceDescriptionToDocument(
+  value:
+    | string
+    | null
+    | undefined,
+): ServiceRichTextDocument {
+  const cleaned =
+    value?.trim() ?? "";
+
+  if (!cleaned) {
+    return emptyServiceRichTextDocument();
+  }
+
+  /*
+   * New descriptions are stored as one
+   * serialized rich-text value.
+   *
+   * Existing plain descriptions remain
+   * backwards compatible. Existing line
+   * breaks become individual paragraphs.
+   */
+  const values =
+    cleaned.startsWith(
+      SERVICE_RICH_TEXT_PREFIX,
+    )
+      ? [cleaned]
+      : cleaned
+          .split(
+            /\r?\n+/,
+          )
+          .map(
+            (
+              item,
+            ) =>
+              item.trim(),
+          )
+          .filter(
+            Boolean,
+          );
+
+  return storedServiceTextToDocument(
+    values,
+  );
+}
+
 function fromService(
-  service: AdminService,
+  service:
+    AdminService,
 ): Draft {
   return {
-    id: service.id,
+    id:
+      service.id,
 
-    name: service.name,
-    slug: service.slug,
-    shortName: service.shortName ?? "",
+    name:
+      service.name,
 
-    summary: service.summary ?? "",
-    description: service.description ?? "",
+    slug:
+      service.slug,
 
-    image: service.image ?? "",
-    imagePublicId: service.imagePublicId ?? "",
+    shortName:
+      service.shortName ??
+      "",
 
-    heroImage: service.heroImage ?? "",
-    heroImagePublicId: service.heroImagePublicId ?? "",
+    summary:
+      service.summary ??
+      "",
 
-    parentId: service.parentId,
-    position: service.position,
+    description:
+      serviceDescriptionToDocument(
+        service.description,
+      ),
+
+    image:
+      service.image ??
+      "",
+
+    imagePublicId:
+      service.imagePublicId ??
+      "",
+
+    heroImage:
+      service.heroImage ??
+      "",
+
+    heroImagePublicId:
+      service.heroImagePublicId ??
+      "",
+
+    parentId:
+      service.parentId,
+
+    position:
+      service.position,
 
     scope:
       storedServiceTextToDocument(
@@ -128,8 +217,11 @@ function fromService(
         service.applications,
       ),
 
-    featured: service.featured,
-    isActive: service.isActive,
+    featured:
+      service.featured,
+
+    isActive:
+      service.isActive,
   };
 }
 
@@ -137,187 +229,306 @@ export function ServiceEditor({
   initial,
   selectedSlug,
 }: {
-  initial: AdminService[];
-  selectedSlug?: string;
+  initial:
+    AdminService[];
+
+  selectedSlug?:
+    string;
 }) {
-  const router = useRouter();
+  const router =
+    useRouter();
 
   const initialService =
     selectedSlug
       ? initial.find(
-          (service) =>
-            service.slug === selectedSlug,
-        ) ?? initial[0]
+          (
+            service,
+          ) =>
+            service.slug ===
+            selectedSlug,
+        ) ??
+        initial[0]
       : initial[0];
 
-  const [services, setServices] =
-    useState(initial);
-
-  const [draft, setDraft] =
-    useState<Draft>(() =>
-      initialService
-        ? fromService(initialService)
-        : emptyDraft(),
-    );
-
-  const [expanded, setExpanded] =
-    useState<Set<string>>(
-      () =>
-        new Set(
-          initial.map((item) => item.id),
-        ),
-    );
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const cardInputReference =
-    useRef<HTMLInputElement>(null);
-
-  const heroInputReference =
-    useRef<HTMLInputElement>(null);
-
-  const [uploading, setUploading] =
-    useState<"image" | "heroImage" | null>(null);
-
-  const [message, setMessage] =
-    useState("");
-
-  /*
-   * categoryTree's generic tree builder only needs
-   * id, parentId and position-compatible records.
-   */
-  const tree = useMemo(
-    () =>
-      buildTree(
-        services as any,
-      ) as TreeNode<AdminService>[],
-    [services],
+  const [
+    services,
+    setServices,
+  ] = useState(
+    initial,
   );
 
-  const forbiddenParents =
-    useMemo(() => {
-      if (!draft.id) {
-        return new Set<string>();
-      }
+  const [
+    draft,
+    setDraft,
+  ] = useState<Draft>(
+    () =>
+      initialService
+        ? fromService(
+            initialService,
+          )
+        : emptyDraft(),
+  );
 
-      const descendants =
-        getDescendantIds(
-          services,
+  const [
+    expanded,
+    setExpanded,
+  ] = useState<
+    Set<string>
+  >(
+    () =>
+      new Set(
+        initial.map(
+          (
+            item,
+          ) =>
+            item.id,
+        ),
+      ),
+  );
+
+  const [
+    saving,
+    setSaving,
+  ] = useState(
+    false,
+  );
+
+  const cardInputReference =
+    useRef<HTMLInputElement>(
+      null,
+    );
+
+  const heroInputReference =
+    useRef<HTMLInputElement>(
+      null,
+    );
+
+  const [
+    uploading,
+    setUploading,
+  ] = useState<
+    | "image"
+    | "heroImage"
+    | null
+  >(
+    null,
+  );
+
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  /*
+   * categoryTree's generic tree
+   * builder only needs id, parentId
+   * and position-compatible records.
+   */
+  const tree =
+    useMemo(
+      () =>
+        buildTree(
+          services as any,
+        ) as TreeNode<AdminService>[],
+      [
+        services,
+      ],
+    );
+
+  const forbiddenParents =
+    useMemo(
+      () => {
+        if (!draft.id) {
+          return new Set<
+            string
+          >();
+        }
+
+        const descendants =
+          getDescendantIds(
+            services,
+            draft.id,
+          );
+
+        descendants.add(
           draft.id,
         );
 
-      descendants.add(
+        return descendants;
+      },
+      [
+        services,
         draft.id,
-      );
+      ],
+    );
 
-      return descendants;
-    }, [
-      services,
-      draft.id,
-    ]);
-
+  /*
+   * IMPORTANT:
+   *
+   * Service selection behaves exactly
+   * like the Category tree now.
+   *
+   * We only change the local draft.
+   * We do NOT navigate to another URL,
+   * so the left tree keeps its current
+   * scroll position.
+   */
   function select(
-    service: AdminService,
+    service:
+      AdminService,
   ) {
     setDraft(
-      fromService(service),
+      fromService(
+        service,
+      ),
     );
 
     setMessage("");
-
-    router.replace(
-      `/admin/services/${encodeURIComponent(
-        service.slug,
-      )}`,
-    );
   }
 
   function addRoot() {
     setDraft(
-      emptyDraft(null),
+      emptyDraft(
+        null,
+      ),
     );
 
     setMessage("");
   }
 
   function addChild(
-    parent: AdminService,
+    parent:
+      AdminService,
   ) {
-    setExpanded((current) => {
-      const next =
-        new Set(current);
+    setExpanded(
+      (
+        current,
+      ) => {
+        const next =
+          new Set(
+            current,
+          );
 
-      next.add(parent.id);
+        next.add(
+          parent.id,
+        );
 
-      return next;
-    });
+        return next;
+      },
+    );
 
     setDraft(
-      emptyDraft(parent.id),
+      emptyDraft(
+        parent.id,
+      ),
     );
 
     setMessage("");
   }
 
   function toggle(
-    id: string,
+    id:
+      string,
   ) {
-    setExpanded((current) => {
-      const next =
-        new Set(current);
+    setExpanded(
+      (
+        current,
+      ) => {
+        const next =
+          new Set(
+            current,
+          );
 
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+        if (
+          next.has(
+            id,
+          )
+        ) {
+          next.delete(
+            id,
+          );
+        } else {
+          next.add(
+            id,
+          );
+        }
 
-      return next;
-    });
+        return next;
+      },
+    );
   }
 
   async function upload(
-    file: File | undefined,
-    field: "image" | "heroImage",
+    file:
+      | File
+      | undefined,
+
+    field:
+      | "image"
+      | "heroImage",
   ) {
-    if (!file || saving || uploading !== null) {
+    if (
+      !file ||
+      saving ||
+      uploading !==
+        null
+    ) {
       return;
     }
 
-    const allowedTypes = new Set([
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/avif",
-    ]);
+    const allowedTypes =
+      new Set([
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/avif",
+      ]);
 
-    if (!allowedTypes.has(file.type)) {
+    if (
+      !allowedTypes.has(
+        file.type,
+      )
+    ) {
       setMessage(
         "Only JPG, PNG, WebP and AVIF images are allowed.",
       );
+
       return;
     }
 
-    if (file.size <= 0) {
+    if (
+      file.size <=
+      0
+    ) {
       setMessage(
         "The selected image is empty.",
       );
+
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (
+      file.size >
+      10 *
+        1024 *
+        1024
+    ) {
       setMessage(
         "The image must be 10 MB or smaller.",
       );
+
       return;
     }
 
-    setUploading(field);
+    setUploading(
+      field,
+    );
+
     setMessage("");
 
     try {
-      const data = new FormData();
+      const data =
+        new FormData();
 
       data.set(
         "file",
@@ -340,17 +551,24 @@ export function ServiceEditor({
         await fetch(
           "/api/admin/cloudinary/upload",
           {
-            method: "POST",
-            body: data,
+            method:
+              "POST",
+
+            body:
+              data,
           },
         );
 
       const result =
         await response
           .json()
-          .catch(() => ({}));
+          .catch(
+            () => ({}),
+          );
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
         throw new Error(
           result.error ||
             "Unable to upload service image.",
@@ -358,77 +576,126 @@ export function ServiceEditor({
       }
 
       const url =
-        result.image?.secureUrl ||
-        result.image?.url;
+        result.image
+          ?.secureUrl ||
+        result.image
+          ?.url;
 
       const publicId =
-        result.image?.cloudinaryPublicId;
+        result.image
+          ?.cloudinaryPublicId;
 
-      if (!url || !publicId) {
+      if (
+        !url ||
+        !publicId
+      ) {
         throw new Error(
           "Cloudinary returned incomplete image information.",
         );
       }
 
-      setDraft((current) =>
-        field === "image"
-          ? {
-              ...current,
-              image: url,
-              imagePublicId: publicId,
-            }
-          : {
-              ...current,
-              heroImage: url,
-              heroImagePublicId: publicId,
-            },
+      setDraft(
+        (
+          current,
+        ) =>
+          field ===
+          "image"
+            ? {
+                ...current,
+
+                image:
+                  url,
+
+                imagePublicId:
+                  publicId,
+              }
+            : {
+                ...current,
+
+                heroImage:
+                  url,
+
+                heroImagePublicId:
+                  publicId,
+              },
       );
 
       setMessage(
-        field === "image"
+        field ===
+        "image"
           ? "Card image uploaded to Cloudinary. Save the service to apply it."
           : "Hero image uploaded to Cloudinary. Save the service to apply it.",
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       setMessage(
-        error instanceof Error
+        error instanceof
+          Error
           ? error.message
           : "Unable to upload service image.",
       );
     } finally {
-      setUploading(null);
+      setUploading(
+        null,
+      );
 
       if (
-        field === "image" &&
+        field ===
+          "image" &&
         cardInputReference.current
       ) {
-        cardInputReference.current.value = "";
+        cardInputReference.current.value =
+          "";
       }
 
       if (
-        field === "heroImage" &&
+        field ===
+          "heroImage" &&
         heroInputReference.current
       ) {
-        heroInputReference.current.value = "";
+        heroInputReference.current.value =
+          "";
       }
     }
   }
 
   function clearImage(
-    field: "image" | "heroImage",
+    field:
+      | "image"
+      | "heroImage",
   ) {
-    if (field === "image") {
-      setDraft((current) => ({
-        ...current,
-        image: "",
-        imagePublicId: "",
-      }));
+    if (
+      field ===
+      "image"
+    ) {
+      setDraft(
+        (
+          current,
+        ) => ({
+          ...current,
+
+          image:
+            "",
+
+          imagePublicId:
+            "",
+        }),
+      );
     } else {
-      setDraft((current) => ({
-        ...current,
-        heroImage: "",
-        heroImagePublicId: "",
-      }));
+      setDraft(
+        (
+          current,
+        ) => ({
+          ...current,
+
+          heroImage:
+            "",
+
+          heroImagePublicId:
+            "",
+        }),
+      );
     }
 
     setMessage(
@@ -437,32 +704,63 @@ export function ServiceEditor({
   }
 
   async function submit(
-    event: FormEvent<HTMLFormElement>,
+    event:
+      FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
-    setSaving(true);
+    setSaving(
+      true,
+    );
+
     setMessage("");
 
     try {
       const payload = {
-        id: draft.id,
+        id:
+          draft.id,
 
-        name: draft.name,
-        slug: draft.slug,
-        shortName: draft.shortName,
+        name:
+          draft.name,
 
-        summary: draft.summary,
-        description: draft.description,
+        slug:
+          draft.slug,
 
-        image: draft.image,
-        imagePublicId: draft.imagePublicId,
+        shortName:
+          draft.shortName,
 
-        heroImage: draft.heroImage,
-        heroImagePublicId: draft.heroImagePublicId,
+        summary:
+          draft.summary,
 
-        parentId: draft.parentId,
-        position: draft.position,
+        /*
+         * Description is stored in the
+         * existing string field as the
+         * same serialized rich-text format
+         * already used by the other
+         * service rich-text sections.
+         */
+        description:
+          documentToStoredServiceText(
+            draft.description,
+          )[0] ?? "",
+
+        image:
+          draft.image,
+
+        imagePublicId:
+          draft.imagePublicId,
+
+        heroImage:
+          draft.heroImage,
+
+        heroImagePublicId:
+          draft.heroImagePublicId,
+
+        parentId:
+          draft.parentId,
+
+        position:
+          draft.position,
 
         scope:
           documentToStoredServiceText(
@@ -479,8 +777,11 @@ export function ServiceEditor({
             draft.applications,
           ),
 
-        featured: draft.featured,
-        isActive: draft.isActive,
+        featured:
+          draft.featured,
+
+        isActive:
+          draft.isActive,
       };
 
       const response =
@@ -507,9 +808,13 @@ export function ServiceEditor({
       const result =
         await response
           .json()
-          .catch(() => ({}));
+          .catch(
+            () => ({}),
+          );
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
         throw new Error(
           result.error ||
             "Unable to save service.",
@@ -517,28 +822,41 @@ export function ServiceEditor({
       }
 
       const next =
-        (result.services ??
-          []) as AdminService[];
+        (
+          result.services ??
+          []
+        ) as AdminService[];
 
-      setServices(next);
+      setServices(
+        next,
+      );
 
       const saved =
         draft.id
           ? next.find(
-              (item) =>
-                item.id === draft.id,
+              (
+                item,
+              ) =>
+                item.id ===
+                draft.id,
             )
           : next.find(
-              (item) =>
+              (
+                item,
+              ) =>
                 item.name ===
                   draft.name.trim() &&
                 item.parentId ===
                   draft.parentId,
             );
 
-      if (saved) {
+      if (
+        saved
+      ) {
         setDraft(
-          fromService(saved),
+          fromService(
+            saved,
+          ),
         );
       }
 
@@ -548,39 +866,49 @@ export function ServiceEditor({
           : "Service created successfully.",
       );
 
-      if (
-        saved &&
-        saved.slug !== selectedSlug
-      ) {
-        router.replace(
-          `/admin/services/${encodeURIComponent(
-            saved.slug,
-          )}`,
-        );
-      } else {
-        router.refresh();
-      }
-    } catch (error) {
+      /*
+       * Keep the current editor mounted so
+       * the left tree does not jump back to
+       * its top position after saving.
+       */
+      router.refresh();
+    } catch (
+      error
+    ) {
       setMessage(
-        error instanceof Error
+        error instanceof
+          Error
           ? error.message
           : "Unable to save service.",
       );
     } finally {
-      setSaving(false);
+      setSaving(
+        false,
+      );
     }
   }
 
   async function remove() {
-    if (!draft.id) return;
+    if (
+      !draft.id
+    ) {
+      return;
+    }
 
     const service =
       services.find(
-        (item) =>
-          item.id === draft.id,
+        (
+          item,
+        ) =>
+          item.id ===
+          draft.id,
       );
 
-    if (!service) return;
+    if (
+      !service
+    ) {
+      return;
+    }
 
     if (
       !confirm(
@@ -590,7 +918,10 @@ export function ServiceEditor({
       return;
     }
 
-    setSaving(true);
+    setSaving(
+      true,
+    );
+
     setMessage("");
 
     try {
@@ -608,9 +939,13 @@ export function ServiceEditor({
       const result =
         await response
           .json()
-          .catch(() => ({}));
+          .catch(
+            () => ({}),
+          );
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
         throw new Error(
           result.error ||
             "Unable to delete service.",
@@ -618,13 +953,18 @@ export function ServiceEditor({
       }
 
       const next =
-        (result.services ??
-          []) as AdminService[];
+        (
+          result.services ??
+          []
+        ) as AdminService[];
 
-      setServices(next);
+      setServices(
+        next,
+      );
 
       const nextService =
-        next[0] ?? null;
+        next[0] ??
+        null;
 
       setDraft(
         nextService
@@ -638,7 +978,9 @@ export function ServiceEditor({
         "Service deleted successfully.",
       );
 
-      if (nextService) {
+      if (
+        nextService
+      ) {
         router.replace(
           `/admin/services/${encodeURIComponent(
             nextService.slug,
@@ -649,188 +991,300 @@ export function ServiceEditor({
           "/admin/services",
         );
       }
-    } catch (error) {
+    } catch (
+      error
+    ) {
       setMessage(
-        error instanceof Error
+        error instanceof
+          Error
           ? error.message
           : "Unable to delete service.",
       );
     } finally {
-      setSaving(false);
+      setSaving(
+        false,
+      );
     }
   }
 
   async function toggleVisibility(
-  service: AdminService,
-) {
-  setSaving(true);
-  setMessage("");
-
-  try {
-    const response = await fetch(
-      "/api/admin/services",
-      {
-        method: "PUT",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          id: service.id,
-
-          name: service.name,
-          slug: service.slug,
-          shortName: service.shortName ?? "",
-
-          summary: service.summary ?? "",
-          description: service.description ?? "",
-
-          image: service.image ?? "",
-          imagePublicId: service.imagePublicId ?? "",
-
-          heroImage: service.heroImage ?? "",
-          heroImagePublicId: service.heroImagePublicId ?? "",
-
-          parentId: service.parentId,
-          position: service.position,
-
-          scope: service.scope,
-          process: service.process,
-          applications: service.applications,
-
-          featured: service.featured,
-
-          isActive: !service.isActive,
-        }),
-      },
-    );
-
-    const result = await response
-      .json()
-      .catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(
-        result.error ||
-          "Unable to update service visibility.",
-      );
-    }
-
-    const next =
-      (result.services ?? []) as AdminService[];
-
-    setServices(next);
-
-    if (draft.id === service.id) {
-      const updated = next.find(
-        (item) => item.id === service.id,
-      );
-
-      if (updated) {
-        setDraft(fromService(updated));
-      }
-    }
-
-    setMessage(
-      service.isActive
-        ? `"${service.name}" hidden successfully.`
-        : `"${service.name}" is now visible.`,
-    );
-
-    router.refresh();
-  } catch (error) {
-    setMessage(
-      error instanceof Error
-        ? error.message
-        : "Unable to update service visibility.",
-    );
-  } finally {
-    setSaving(false);
-  }
-}
-
-async function deleteServiceNode(
-  service: AdminService,
-) {
-  if (
-    !confirm(
-      `Delete "${service.name}"?\n\nOnly empty leaf services can be deleted.`,
-    )
+    service:
+      AdminService,
   ) {
-    return;
-  }
-
-  setSaving(true);
-  setMessage("");
-
-  try {
-    const response = await fetch(
-      `/api/admin/services?id=${encodeURIComponent(
-        service.id,
-      )}`,
-      {
-        method: "DELETE",
-      },
+    setSaving(
+      true,
     );
 
-    const result = await response
-      .json()
-      .catch(() => ({}));
+    setMessage("");
 
-    if (!response.ok) {
-      throw new Error(
-        result.error ||
-          "Unable to delete service.",
-      );
-    }
+    try {
+      const response =
+        await fetch(
+          "/api/admin/services",
+          {
+            method:
+              "PUT",
 
-    const next =
-      (result.services ?? []) as AdminService[];
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-    setServices(next);
+            body:
+              JSON.stringify(
+                {
+                  id:
+                    service.id,
 
-    if (draft.id === service.id) {
-      const nextService =
-        next[0] ?? null;
+                  name:
+                    service.name,
 
-      setDraft(
-        nextService
-          ? fromService(nextService)
-          : emptyDraft(),
-      );
+                  slug:
+                    service.slug,
 
-      if (nextService) {
-        router.replace(
-          `/admin/services/${encodeURIComponent(
-            nextService.slug,
-          )}`,
+                  shortName:
+                    service.shortName ??
+                    "",
+
+                  summary:
+                    service.summary ??
+                    "",
+
+                  /*
+                   * Preserve the stored
+                   * serialized description
+                   * when only toggling
+                   * visibility.
+                   */
+                  description:
+                    service.description ??
+                    "",
+
+                  image:
+                    service.image ??
+                    "",
+
+                  imagePublicId:
+                    service.imagePublicId ??
+                    "",
+
+                  heroImage:
+                    service.heroImage ??
+                    "",
+
+                  heroImagePublicId:
+                    service.heroImagePublicId ??
+                    "",
+
+                  parentId:
+                    service.parentId,
+
+                  position:
+                    service.position,
+
+                  scope:
+                    service.scope,
+
+                  process:
+                    service.process,
+
+                  applications:
+                    service.applications,
+
+                  featured:
+                    service.featured,
+
+                  isActive:
+                    !service.isActive,
+                },
+              ),
+          },
         );
-      } else {
-        router.replace(
-          "/admin/services",
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to update service visibility.",
         );
       }
-    } else {
+
+      const next =
+        (
+          result.services ??
+          []
+        ) as AdminService[];
+
+      setServices(
+        next,
+      );
+
+      if (
+        draft.id ===
+        service.id
+      ) {
+        const updated =
+          next.find(
+            (
+              item,
+            ) =>
+              item.id ===
+              service.id,
+          );
+
+        if (
+          updated
+        ) {
+          setDraft(
+            fromService(
+              updated,
+            ),
+          );
+        }
+      }
+
+      setMessage(
+        service.isActive
+          ? `"${service.name}" hidden successfully.`
+          : `"${service.name}" is now visible.`,
+      );
+
       router.refresh();
+    } catch (
+      error
+    ) {
+      setMessage(
+        error instanceof
+          Error
+          ? error.message
+          : "Unable to update service visibility.",
+      );
+    } finally {
+      setSaving(
+        false,
+      );
+    }
+  }
+
+  async function deleteServiceNode(
+    service:
+      AdminService,
+  ) {
+    if (
+      !confirm(
+        `Delete "${service.name}"?\n\nOnly empty leaf services can be deleted.`,
+      )
+    ) {
+      return;
     }
 
-    setMessage(
-      `"${service.name}" deleted successfully.`,
+    setSaving(
+      true,
     );
-  } catch (error) {
-    setMessage(
-      error instanceof Error
-        ? error.message
-        : "Unable to delete service.",
-    );
-  } finally {
-    setSaving(false);
+
+    setMessage("");
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/services?id=${encodeURIComponent(
+            service.id,
+          )}`,
+          {
+            method:
+              "DELETE",
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to delete service.",
+        );
+      }
+
+      const next =
+        (
+          result.services ??
+          []
+        ) as AdminService[];
+
+      setServices(
+        next,
+      );
+
+      if (
+        draft.id ===
+        service.id
+      ) {
+        const nextService =
+          next[0] ??
+          null;
+
+        setDraft(
+          nextService
+            ? fromService(
+                nextService,
+              )
+            : emptyDraft(),
+        );
+
+        if (
+          nextService
+        ) {
+          router.replace(
+            `/admin/services/${encodeURIComponent(
+              nextService.slug,
+            )}`,
+          );
+        } else {
+          router.replace(
+            "/admin/services",
+          );
+        }
+      } else {
+        router.refresh();
+      }
+
+      setMessage(
+        `"${service.name}" deleted successfully.`,
+      );
+    } catch (
+      error
+    ) {
+      setMessage(
+        error instanceof
+          Error
+          ? error.message
+          : "Unable to delete service.",
+      );
+    } finally {
+      setSaving(
+        false,
+      );
+    }
   }
-}
 
   function renderNode(
-    node: TreeNode<AdminService>,
+    node:
+      TreeNode<AdminService>,
   ) {
     const hasChildren =
       node.children.length >
@@ -841,7 +1295,11 @@ async function deleteServiceNode(
       node.id;
 
     return (
-      <div key={node.id}>
+      <div
+        key={
+          node.id
+        }
+      >
         <div
           className={`group flex w-max min-w-full items-center gap-2 rounded-lg border px-3 py-2.5 transition ${
             isSelected
@@ -849,12 +1307,15 @@ async function deleteServiceNode(
               : "border-transparent hover:border-[#dfe8e4] hover:bg-[#f8fbfa]"
           }`}
           style={{
-            marginLeft: `${
-              Math.max(
-                0,
-                node.depth - 1,
-              ) * 18
-            }px`,
+            marginLeft:
+              `${
+                Math.max(
+                  0,
+                  node.depth -
+                    1,
+                ) *
+                18
+              }px`,
           }}
         >
           <button
@@ -866,7 +1327,9 @@ async function deleteServiceNode(
             }
             onClick={() =>
               hasChildren &&
-              toggle(node.id)
+              toggle(
+                node.id,
+              )
             }
             className="w-5 shrink-0 text-xs font-black text-[#627780]"
           >
@@ -882,18 +1345,24 @@ async function deleteServiceNode(
           <button
             type="button"
             onClick={() =>
-              select(node)
+              select(
+                node,
+              )
             }
             className="min-w-0 flex-1 text-left"
           >
             <div className="whitespace-nowrap text-sm font-black text-[#17313d]">
-              {node.name}
+              {
+                node.name
+              }
             </div>
 
             <div className="mt-0.5 flex flex-wrap gap-x-3 text-[10px] font-bold uppercase tracking-wide text-[#71858d]">
               <span>
                 Level{" "}
-                {node.depth}
+                {
+                  node.depth
+                }
               </span>
 
               {node.featured && (
@@ -913,9 +1382,13 @@ async function deleteServiceNode(
           <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
             <button
               type="button"
-              disabled={saving}
+              disabled={
+                saving
+              }
               onClick={() =>
-                toggleVisibility(node)
+                toggleVisibility(
+                  node,
+                )
               }
               className={`rounded-md border px-2 py-1 text-[10px] font-black ${
                 node.isActive
@@ -932,9 +1405,13 @@ async function deleteServiceNode(
               MAX_TREE_DEPTH && (
               <button
                 type="button"
-                disabled={saving}
+                disabled={
+                  saving
+                }
                 onClick={() =>
-                  addChild(node)
+                  addChild(
+                    node,
+                  )
                 }
                 className="rounded-md border border-[#d7e4df] px-2 py-1 text-[10px] font-black text-[#17313d] hover:bg-[#f3f7f5]"
               >
@@ -944,7 +1421,9 @@ async function deleteServiceNode(
 
             <button
               type="button"
-              disabled={saving}
+              disabled={
+                saving
+              }
               onClick={() =>
                 deleteServiceNode(
                   node,
@@ -962,7 +1441,9 @@ async function deleteServiceNode(
             node.id,
           ) &&
           node.children.map(
-            (child) =>
+            (
+              child,
+            ) =>
               renderNode(
                 child,
               ),
@@ -996,7 +1477,9 @@ async function deleteServiceNode(
 
           <button
             type="button"
-            onClick={addRoot}
+            onClick={
+              addRoot
+            }
             className="btn btn-primary"
           >
             + Root
@@ -1006,7 +1489,9 @@ async function deleteServiceNode(
         <div className="mt-5 max-h-[70vh] space-y-1 overflow-auto pb-2 pr-1">
           {tree.length ? (
             tree.map(
-              (node) =>
+              (
+                node,
+              ) =>
                 renderNode(
                   node,
                 ),
@@ -1023,7 +1508,9 @@ async function deleteServiceNode(
 
       {/* EDITOR */}
       <form
-        onSubmit={submit}
+        onSubmit={
+          submit
+        }
         className="space-y-6"
       >
         <section className="card p-6 md:p-7">
@@ -1066,13 +1553,21 @@ async function deleteServiceNode(
 
               <input
                 required
-                value={draft.name}
-                onChange={(e) =>
+                value={
+                  draft.name
+                }
+                onChange={(
+                  event,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       name:
-                        e.target
+                        event
+                          .target
                           .value,
                     }),
                   )
@@ -1086,14 +1581,22 @@ async function deleteServiceNode(
               </label>
 
               <input
-                value={draft.slug}
+                value={
+                  draft.slug
+                }
                 placeholder="auto-generated if blank"
-                onChange={(e) =>
+                onChange={(
+                  event,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       slug:
-                        e.target
+                        event
+                          .target
                           .value,
                     }),
                   )
@@ -1110,12 +1613,18 @@ async function deleteServiceNode(
                 value={
                   draft.shortName
                 }
-                onChange={(e) =>
+                onChange={(
+                  event,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       shortName:
-                        e.target
+                        event
+                          .target
                           .value,
                     }),
                   )
@@ -1133,12 +1642,18 @@ async function deleteServiceNode(
                   draft.parentId ??
                   ""
                 }
-                onChange={(e) =>
+                onChange={(
+                  event,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       parentId:
-                        e.target
+                        event
+                          .target
                           .value ||
                         null,
                     }),
@@ -1150,7 +1665,9 @@ async function deleteServiceNode(
                 </option>
 
                 {services.map(
-                  (service) => (
+                  (
+                    service,
+                  ) => (
                     <option
                       key={
                         service.id
@@ -1158,9 +1675,11 @@ async function deleteServiceNode(
                       value={
                         service.id
                       }
-                      disabled={forbiddenParents.has(
-                        service.id,
-                      )}
+                      disabled={
+                        forbiddenParents.has(
+                          service.id,
+                        )
+                      }
                     >
                       {
                         service.name
@@ -1178,19 +1697,28 @@ async function deleteServiceNode(
 
               <input
                 type="number"
-                min={0}
+                min={
+                  0
+                }
                 value={
                   draft.position
                 }
-                onChange={(e) =>
+                onChange={(
+                  event,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       position:
                         Number(
-                          e.target
+                          event
+                            .target
                             .value,
-                        ) || 0,
+                        ) ||
+                        0,
                     }),
                   )
                 }
@@ -1204,12 +1732,18 @@ async function deleteServiceNode(
                   checked={
                     draft.isActive
                   }
-                  onChange={(e) =>
+                  onChange={(
+                    event,
+                  ) =>
                     setDraft(
-                      (current) => ({
+                      (
+                        current,
+                      ) => ({
                         ...current,
+
                         isActive:
-                          e.target
+                          event
+                            .target
                             .checked,
                       }),
                     )
@@ -1230,12 +1764,18 @@ async function deleteServiceNode(
                   checked={
                     draft.featured
                   }
-                  onChange={(e) =>
+                  onChange={(
+                    event,
+                  ) =>
                     setDraft(
-                      (current) => ({
+                      (
+                        current,
+                      ) => ({
                         ...current,
+
                         featured:
-                          e.target
+                          event
+                            .target
                             .checked,
                       }),
                     )
@@ -1257,12 +1797,18 @@ async function deleteServiceNode(
                 value={
                   draft.summary
                 }
-                onChange={(e) =>
+                onChange={(
+                  event,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       summary:
-                        e.target
+                        event
+                          .target
                           .value,
                     }),
                   )
@@ -1270,27 +1816,43 @@ async function deleteServiceNode(
               />
             </div>
 
+            {/* Rich Description */}
             <div className="field span-2">
               <label>
                 Description
               </label>
 
-              <textarea
-                className="!min-h-[170px]"
+              <ServiceRichTextEditor
                 value={
                   draft.description
                 }
-                onChange={(e) =>
+                disabled={
+                  saving
+                }
+                minHeightClass="min-h-[220px]"
+                onChange={(
+                  value,
+                ) =>
                   setDraft(
-                    (current) => ({
+                    (
+                      current,
+                    ) => ({
                       ...current,
+
                       description:
-                        e.target
-                          .value,
+                        value,
                     }),
                   )
                 }
               />
+
+              <p className="mt-2 text-xs leading-5 text-[#71838b]">
+                Press Enter to create
+                separate paragraphs.
+                Select text to apply
+                Bold, Italic or Text
+                Size formatting.
+              </p>
             </div>
           </div>
         </section>
@@ -1322,13 +1884,23 @@ async function deleteServiceNode(
 
               <div className="mt-4">
                 <ServiceRichTextEditor
-                  value={draft.scope}
-                  disabled={saving}
-                  onChange={(value) =>
+                  value={
+                    draft.scope
+                  }
+                  disabled={
+                    saving
+                  }
+                  onChange={(
+                    value,
+                  ) =>
                     setDraft(
-                      (current) => ({
+                      (
+                        current,
+                      ) => ({
                         ...current,
-                        scope: value,
+
+                        scope:
+                          value,
                       }),
                     )
                   }
@@ -1347,14 +1919,24 @@ async function deleteServiceNode(
 
               <div className="mt-4">
                 <ServiceRichTextEditor
-                  value={draft.process}
-                  disabled={saving}
+                  value={
+                    draft.process
+                  }
+                  disabled={
+                    saving
+                  }
                   minHeightClass="min-h-[190px]"
-                  onChange={(value) =>
+                  onChange={(
+                    value,
+                  ) =>
                     setDraft(
-                      (current) => ({
+                      (
+                        current,
+                      ) => ({
                         ...current,
-                        process: value,
+
+                        process:
+                          value,
                       }),
                     )
                   }
@@ -1373,14 +1955,24 @@ async function deleteServiceNode(
 
               <div className="mt-4">
                 <ServiceRichTextEditor
-                  value={draft.applications}
-                  disabled={saving}
+                  value={
+                    draft.applications
+                  }
+                  disabled={
+                    saving
+                  }
                   minHeightClass="min-h-[160px]"
-                  onChange={(value) =>
+                  onChange={(
+                    value,
+                  ) =>
                     setDraft(
-                      (current) => ({
+                      (
+                        current,
+                      ) => ({
                         ...current,
-                        applications: value,
+
+                        applications:
+                          value,
                       }),
                     )
                   }
@@ -1419,8 +2011,13 @@ async function deleteServiceNode(
               <div className="mt-4 overflow-hidden rounded-xl border border-[#dfe8e4] bg-white">
                 {draft.image ? (
                   <img
-                    src={draft.image}
-                    alt={draft.name || "Service card"}
+                    src={
+                      draft.image
+                    }
+                    alt={
+                      draft.name ||
+                      "Service card"
+                    }
                     className="h-56 w-full object-contain p-3"
                   />
                 ) : (
@@ -1431,16 +2028,24 @@ async function deleteServiceNode(
               </div>
 
               <input
-                ref={cardInputReference}
+                ref={
+                  cardInputReference
+                }
                 className="hidden"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/avif"
-                disabled={saving || uploading !== null}
+                disabled={
+                  saving ||
+                  uploading !==
+                    null
+                }
                 onChange={(
-                  event: ChangeEvent<HTMLInputElement>,
+                  event:
+                    ChangeEvent<HTMLInputElement>,
                 ) =>
                   void upload(
-                    event.target.files?.[0],
+                    event.target
+                      .files?.[0],
                     "image",
                   )
                 }
@@ -1450,12 +2055,17 @@ async function deleteServiceNode(
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  disabled={saving || uploading !== null}
+                  disabled={
+                    saving ||
+                    uploading !==
+                      null
+                  }
                   onClick={() =>
                     cardInputReference.current?.click()
                   }
                 >
-                  {uploading === "image"
+                  {uploading ===
+                  "image"
                     ? "Uploading..."
                     : draft.image
                       ? "Replace Card Image"
@@ -1465,9 +2075,15 @@ async function deleteServiceNode(
                 {draft.image && (
                   <button
                     type="button"
-                    disabled={saving || uploading !== null}
+                    disabled={
+                      saving ||
+                      uploading !==
+                        null
+                    }
                     onClick={() =>
-                      clearImage("image")
+                      clearImage(
+                        "image",
+                      )
                     }
                     className="rounded-md border border-red-200 px-4 py-3 text-xs font-extrabold text-red-600 hover:bg-red-50"
                   >
@@ -1478,7 +2094,9 @@ async function deleteServiceNode(
 
               {draft.image && (
                 <div className="mt-4 break-all rounded-lg bg-white p-3 text-[10px] leading-5 text-[#71838b]">
-                  {draft.image}
+                  {
+                    draft.image
+                  }
                 </div>
               )}
             </div>
@@ -1496,8 +2114,13 @@ async function deleteServiceNode(
               <div className="mt-4 overflow-hidden rounded-xl border border-[#dfe8e4] bg-white">
                 {draft.heroImage ? (
                   <img
-                    src={draft.heroImage}
-                    alt={draft.name || "Service hero"}
+                    src={
+                      draft.heroImage
+                    }
+                    alt={
+                      draft.name ||
+                      "Service hero"
+                    }
                     className="h-56 w-full object-cover"
                   />
                 ) : (
@@ -1508,16 +2131,24 @@ async function deleteServiceNode(
               </div>
 
               <input
-                ref={heroInputReference}
+                ref={
+                  heroInputReference
+                }
                 className="hidden"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/avif"
-                disabled={saving || uploading !== null}
+                disabled={
+                  saving ||
+                  uploading !==
+                    null
+                }
                 onChange={(
-                  event: ChangeEvent<HTMLInputElement>,
+                  event:
+                    ChangeEvent<HTMLInputElement>,
                 ) =>
                   void upload(
-                    event.target.files?.[0],
+                    event.target
+                      .files?.[0],
                     "heroImage",
                   )
                 }
@@ -1527,12 +2158,17 @@ async function deleteServiceNode(
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  disabled={saving || uploading !== null}
+                  disabled={
+                    saving ||
+                    uploading !==
+                      null
+                  }
                   onClick={() =>
                     heroInputReference.current?.click()
                   }
                 >
-                  {uploading === "heroImage"
+                  {uploading ===
+                  "heroImage"
                     ? "Uploading..."
                     : draft.heroImage
                       ? "Replace Hero Image"
@@ -1542,9 +2178,15 @@ async function deleteServiceNode(
                 {draft.heroImage && (
                   <button
                     type="button"
-                    disabled={saving || uploading !== null}
+                    disabled={
+                      saving ||
+                      uploading !==
+                        null
+                    }
                     onClick={() =>
-                      clearImage("heroImage")
+                      clearImage(
+                        "heroImage",
+                      )
                     }
                     className="rounded-md border border-red-200 px-4 py-3 text-xs font-extrabold text-red-600 hover:bg-red-50"
                   >
@@ -1555,7 +2197,9 @@ async function deleteServiceNode(
 
               {draft.heroImage && (
                 <div className="mt-4 break-all rounded-lg bg-white p-3 text-[10px] leading-5 text-[#71838b]">
-                  {draft.heroImage}
+                  {
+                    draft.heroImage
+                  }
                 </div>
               )}
             </div>
@@ -1595,7 +2239,9 @@ async function deleteServiceNode(
                 : "text-[#627780]"
             }`}
           >
-            {message}
+            {
+              message
+            }
           </span>
 
           <div className="flex gap-2">
@@ -1617,7 +2263,8 @@ async function deleteServiceNode(
             <button
               disabled={
                 saving ||
-                uploading !== null
+                uploading !==
+                  null
               }
               className="btn btn-primary"
             >

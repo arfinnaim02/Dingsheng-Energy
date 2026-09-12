@@ -23,6 +23,18 @@ import type {
   AdminCategory,
 } from "@/lib/databaseCategories";
 
+import {
+  ServiceRichTextEditor,
+} from "@/components/admin/ServiceRichTextEditor";
+
+import {
+  SERVICE_RICH_TEXT_PREFIX,
+  documentToStoredServiceText,
+  emptyServiceRichTextDocument,
+  storedServiceTextToDocument,
+  type ServiceRichTextDocument,
+} from "@/lib/serviceRichText";
+
 type Draft = {
   id?: string;
 
@@ -31,7 +43,7 @@ type Draft = {
   shortName: string;
 
   summary: string;
-  description: string;
+  description: ServiceRichTextDocument;
 
   image: string;
   imagePublicId: string;
@@ -83,7 +95,9 @@ function emptyDraft(
     shortName: "",
 
     summary: "",
-    description: "",
+
+    description:
+      emptyServiceRichTextDocument(),
 
     image: "",
     imagePublicId: "",
@@ -120,8 +134,9 @@ function fromCategory(
       "",
 
     description:
-      category.description ??
-      "",
+      categoryDescriptionToDocument(
+        category.description,
+      ),
 
     image:
       category.image ??
@@ -148,6 +163,49 @@ function fromCategory(
     isActive:
       category.isActive,
   };
+}
+
+function categoryDescriptionToDocument(
+  value:
+    | string
+    | null
+    | undefined,
+): ServiceRichTextDocument {
+  const cleaned =
+    value?.trim() ?? "";
+
+  if (!cleaned) {
+    return emptyServiceRichTextDocument();
+  }
+
+  /*
+   * New rich-text descriptions are stored
+   * as one serialized value.
+   *
+   * Existing plain descriptions are split
+   * by line breaks so old multi-paragraph
+   * content is preserved correctly.
+   */
+  const values =
+    cleaned.startsWith(
+      SERVICE_RICH_TEXT_PREFIX,
+    )
+      ? [cleaned]
+      : cleaned
+          .split(
+            /\r?\n+/,
+          )
+          .map(
+            (item) =>
+              item.trim(),
+          )
+          .filter(
+            Boolean,
+          );
+
+  return storedServiceTextToDocument(
+    values,
+  );
 }
 
 function imageErrorMessage(
@@ -306,6 +364,7 @@ export function CategoryEditor({
             JSON.stringify(
               {
                 publicId,
+
                 kind:
                   "category",
               },
@@ -850,6 +909,15 @@ export function CategoryEditor({
     setMessage("");
 
     try {
+      const payload = {
+        ...draft,
+
+        description:
+          documentToStoredServiceText(
+            draft.description,
+          )[0] ?? "",
+      };
+
       const response =
         await fetch(
           "/api/admin/categories",
@@ -866,7 +934,7 @@ export function CategoryEditor({
 
             body:
               JSON.stringify(
-                draft,
+                payload,
               ),
           },
         );
@@ -1098,6 +1166,12 @@ export function CategoryEditor({
                     category.summary ??
                     "",
 
+                  /*
+                   * IMPORTANT:
+                   * Preserve the already-stored
+                   * serialized rich text exactly
+                   * when only toggling visibility.
+                   */
                   description:
                     category.description ??
                     "",
@@ -1772,13 +1846,15 @@ export function CategoryEditor({
 
             <div className="field span-2">
               <label>
-                Summary
+                Card Summary
               </label>
 
               <textarea
+                className="!min-h-[100px]"
                 value={
                   draft.summary
                 }
+                placeholder="Short description used on category cards."
                 onChange={
                   (
                     event,
@@ -1797,36 +1873,49 @@ export function CategoryEditor({
                     )
                 }
               />
+
+              <div className="mt-1 text-[11px] leading-5 text-[#7b8d94]">
+                Keep this concise. It is
+                used on category and
+                subcategory cards.
+              </div>
             </div>
 
             <div className="field span-2">
               <label>
-                Description
+                Hero Description
               </label>
 
-              <textarea
-                className="!min-h-[170px]"
+              <ServiceRichTextEditor
                 value={
                   draft.description
                 }
-                onChange={
-                  (
-                    event,
-                  ) =>
-                    setDraft(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
+                disabled={
+                  busy
+                }
+                minHeightClass="min-h-[220px]"
+                onChange={(
+                  description,
+                ) =>
+                  setDraft(
+                    (
+                      current,
+                    ) => ({
+                      ...current,
 
-                        description:
-                          event
-                            .target
-                            .value,
-                      }),
-                    )
+                      description,
+                    }),
+                  )
                 }
               />
+
+              <div className="mt-2 text-[11px] leading-5 text-[#7b8d94]">
+                This content appears in the
+                category hero banner. You can
+                create multiple paragraphs and
+                format selected text with bold,
+                italic, and text size controls.
+              </div>
             </div>
           </div>
         </section>

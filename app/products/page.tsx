@@ -100,11 +100,8 @@ export default async function ProductsPage() {
               </h1>
 
               <p className="mt-6 max-w-[650px] text-base leading-8 text-white/80">
-                Integrated LPG equipment and
-                components for storage,
-                filling, transfer, transport,
-                autogas refueling and
-                industrial applications.
+                Integrated energy solutions and equipment for LPG, LNG, petrochemicals, and renewable energy across storage, processing, transportation, distribution, and industrial applications.
+We provide reliable, safe, and efficient products and technologies tailored to meet the evolving energy needs of diverse industries.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -214,14 +211,11 @@ export default async function ProductsPage() {
               </div>
 
               <h2 className="h2 mt-3">
-                Explore Our LPG Product Systems
+                Explore Our Product Systems
               </h2>
 
               <p className="mt-4 text-sm leading-7 text-[#687b84]">
-                Browse our product hierarchy
-                from complete LPG systems down
-                to specific equipment categories
-                and technical products.
+                Browse  our comprehensive product portfolio across LPG, LNG, petrochemicals, and renewable energy—from complete systems and solutions to individual equipment, components, and technical products.
               </p>
             </div>
 
@@ -370,7 +364,7 @@ export default async function ProductsPage() {
               </div>
 
               <h2 className="h2 mt-3">
-                Explore LPG Equipment
+                Explore Equipment
               </h2>
 
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#687b84]">

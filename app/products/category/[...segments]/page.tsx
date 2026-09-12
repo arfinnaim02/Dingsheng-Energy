@@ -27,6 +27,164 @@ import {
   getPublicCategoryPageData,
 } from "@/lib/publicProductTree";
 
+import {
+  SERVICE_RICH_TEXT_PREFIX,
+  serviceRichTextParagraphs,
+  storedServiceTextToDocument,
+  storedServiceTextToPlainLines,
+  type ServiceRichTextNode,
+} from "@/lib/serviceRichText";
+
+/* =========================================
+   CATEGORY DESCRIPTION HELPERS
+========================================= */
+
+function categoryDescriptionValues(
+  value:
+    | string
+    | null
+    | undefined,
+): string[] {
+  const cleaned =
+    value?.trim() ?? "";
+
+  if (!cleaned) {
+    return [];
+  }
+
+  /*
+   * New rich-text descriptions are stored
+   * as one serialized rich-text value.
+   */
+  if (
+    cleaned.startsWith(
+      SERVICE_RICH_TEXT_PREFIX,
+    )
+  ) {
+    return [cleaned];
+  }
+
+  /*
+   * Existing plain descriptions remain
+   * backwards compatible.
+   *
+   * Multiple existing lines become
+   * separate paragraphs.
+   */
+  return cleaned
+    .split(/\r?\n+/)
+    .map(
+      (item) =>
+        item.trim(),
+    )
+    .filter(Boolean);
+}
+
+function categoryTextClass(
+  node:
+    ServiceRichTextNode,
+) {
+  const marks =
+    node.marks ?? [];
+
+  const isBold =
+    marks.some(
+      (mark) =>
+        mark.type ===
+        "bold",
+    );
+
+  const isItalic =
+    marks.some(
+      (mark) =>
+        mark.type ===
+        "italic",
+    );
+
+  const fontSize =
+    marks.find(
+      (mark) =>
+        mark.type ===
+        "textStyle",
+    )?.attrs?.fontSize;
+
+  const sizeClass =
+    fontSize ===
+    "13px"
+      ? "text-[13px]"
+      : fontSize ===
+          "18px"
+        ? "text-[18px]"
+        : "text-[15px]";
+
+  return `${sizeClass} ${
+    isBold
+      ? "font-bold"
+      : "font-normal"
+  } ${
+    isItalic
+      ? "italic"
+      : ""
+  }`;
+}
+
+function renderCategoryInline(
+  content:
+    | ServiceRichTextNode[]
+    | undefined,
+
+  keyPrefix:
+    string,
+) {
+  return (
+    content ?? []
+  ).map(
+    (
+      node,
+      index,
+    ) => {
+      const key =
+        `${keyPrefix}-${index}`;
+
+      if (
+        node.type ===
+        "hardBreak"
+      ) {
+        return (
+          <br
+            key={key}
+          />
+        );
+      }
+
+      if (
+        node.type !==
+          "text" ||
+        !node.text
+      ) {
+        return null;
+      }
+
+      return (
+        <span
+          key={key}
+          className={
+            categoryTextClass(
+              node,
+            )
+          }
+        >
+          {node.text}
+        </span>
+      );
+    },
+  );
+}
+
+/* =========================================
+   PAGE SETTINGS
+========================================= */
+
 export const dynamic =
   "force-dynamic";
 
@@ -35,6 +193,10 @@ type Props = {
     segments: string[];
   }>;
 };
+
+/* =========================================
+   METADATA
+========================================= */
 
 export async function generateMetadata({
   params,
@@ -55,10 +217,29 @@ export async function generateMetadata({
     };
   }
 
+  /*
+   * IMPORTANT:
+   *
+   * storedServiceTextToPlainLines()
+   * expects string[] directly.
+   *
+   * Do NOT pass a ServiceRichTextDocument
+   * into it.
+   */
+  const descriptionValues =
+    categoryDescriptionValues(
+      data.category.description,
+    );
+
+  const descriptionText =
+    storedServiceTextToPlainLines(
+      descriptionValues,
+    ).join(" ");
+
   const description =
-    data.category.description ||
     data.category.summary ||
-    `Explore ${data.category.name} products and LPG equipment from Dingsheng Energy Limited.`;
+    descriptionText ||
+    `Explore ${data.category.name} products and equipment from Dingsheng Energy Limited.`;
 
   return {
     title:
@@ -67,6 +248,10 @@ export async function generateMetadata({
     description,
   };
 }
+
+/* =========================================
+   PAGE
+========================================= */
 
 export default async function RecursiveCategoryPage({
   params,
@@ -97,131 +282,176 @@ export default async function RecursiveCategoryPage({
     category.image ||
     "/media/products/hero-products.jpg";
 
-  const cardImage =
-    category.image ||
-    category.heroImage ||
-    "/media/products/hero-products.jpg";
+  /*
+   * Convert the stored category description
+   * into the same rich-text document format
+   * already used by Services.
+   */
+  const descriptionValues =
+    categoryDescriptionValues(
+      category.description,
+    );
+
+  const descriptionDocument =
+    storedServiceTextToDocument(
+      descriptionValues,
+    );
+
+  const descriptionParagraphs =
+    serviceRichTextParagraphs(
+      descriptionDocument,
+    );
 
   return (
     <PublicShell>
+      {/* =====================================
+          HERO
+      ===================================== */}
+
       <section className="bg-[#061f2d] text-white">
+        {/* DESKTOP */}
+        <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+          <ResponsiveHeroMedia
+            src={heroImage}
+            alt={category.name}
+            priority
+            position="center"
+          />
 
-  {/* DESKTOP */}
-  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/60 to-[#061f2d]/5" />
 
-    <ResponsiveHeroMedia
-      src={heroImage}
-      alt={category.name}
-      priority
-      position="center"
-    />
+          <div className="container-shell absolute inset-0 z-10 flex items-center">
+            <div className="max-w-[760px]">
+              <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.16em] text-[#49d79e]">
+                <span className="h-[2px] w-8 bg-[#49d79e]" />
 
-    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/60 to-[#061f2d]/5" />
+                Product Category
+              </div>
 
-    <div className="container-shell absolute inset-0 z-10 flex items-center">
+              <h1 className="mt-4 text-[58px] font-black leading-[1.03] tracking-[-.04em]">
+                {category.name}
+              </h1>
 
-      <div className="max-w-[760px]">
+              {/* Rich Hero Description */}
+              {descriptionParagraphs.length >
+              0 ? (
+                <div className="mt-6 max-w-[680px] space-y-3 text-white/75">
+                  {descriptionParagraphs.map(
+                    (
+                      paragraph,
+                      index,
+                    ) => (
+                      <p
+                        key={`hero-description-${index}`}
+                        className="leading-7"
+                      >
+                        {renderCategoryInline(
+                          paragraph.content,
+                          `hero-description-${index}`,
+                        )}
+                      </p>
+                    ),
+                  )}
+                </div>
+              ) : (
+                category.summary && (
+                  <p className="mt-6 max-w-[680px] text-base leading-8 text-white/75">
+                    {category.summary}
+                  </p>
+                )
+              )}
 
-        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.16em] text-[#49d79e]">
-          <span className="h-[2px] w-8 bg-[#49d79e]" />
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="#equipment"
+                  className="btn btn-primary"
+                >
+                  Explore Equipment →
+                </Link>
 
-          Product Category
+                <Link
+                  href="/contact#rfq"
+                  className="btn border border-white/35 text-white"
+                >
+                  Request a Quote
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <h1 className="mt-4 text-[58px] font-black leading-[1.03] tracking-[-.04em]">
-          {category.name}
-        </h1>
+        {/* MOBILE */}
+        <div className="lg:hidden">
+          <div className="relative aspect-[16/9] w-full overflow-hidden">
+            <ResponsiveHeroMedia
+              src={heroImage}
+              alt={category.name}
+              priority
+              position="center"
+            />
+          </div>
 
-        {(category.description ||
-          category.summary) && (
-          <p className="mt-6 max-w-[680px] text-base leading-8 text-white/75">
-            {category.description ||
-              category.summary}
-          </p>
-        )}
+          <div className="container-shell py-10">
+            <div className="text-[10px] font-black uppercase tracking-[.14em] text-[#49d79e]">
+              Product Category
+            </div>
 
-        <div className="mt-8 flex flex-wrap gap-3">
+            <h1 className="mt-4 text-[38px] font-black leading-[1.03] tracking-[-.04em]">
+              {category.name}
+            </h1>
 
-          <Link
-            href="#equipment"
-            className="btn btn-primary"
-          >
-            Explore Equipment →
-          </Link>
+            {/* Rich Hero Description */}
+            {descriptionParagraphs.length >
+            0 ? (
+              <div className="mt-5 space-y-3 text-white/70">
+                {descriptionParagraphs.map(
+                  (
+                    paragraph,
+                    index,
+                  ) => (
+                    <p
+                      key={`mobile-description-${index}`}
+                      className="leading-7"
+                    >
+                      {renderCategoryInline(
+                        paragraph.content,
+                        `mobile-description-${index}`,
+                      )}
+                    </p>
+                  ),
+                )}
+              </div>
+            ) : (
+              category.summary && (
+                <p className="mt-5 text-[15px] leading-7 text-white/70">
+                  {category.summary}
+                </p>
+              )
+            )}
 
-          <Link
-            href="/contact#rfq"
-            className="btn border border-white/35 text-white"
-          >
-            Request a Quote
-          </Link>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="#equipment"
+                className="btn btn-primary"
+              >
+                Explore Equipment →
+              </Link>
 
+              <Link
+                href="/contact#rfq"
+                className="btn border border-white/35 text-white"
+              >
+                Request a Quote
+              </Link>
+            </div>
+          </div>
         </div>
+      </section>
 
-      </div>
+      {/* =====================================
+          BREADCRUMBS
+      ===================================== */}
 
-    </div>
-
-  </div>
-
-
-  {/* MOBILE */}
-  <div className="lg:hidden">
-
-    <div className="relative aspect-[16/9] w-full overflow-hidden">
-
-      <ResponsiveHeroMedia
-        src={heroImage}
-        alt={category.name}
-        priority
-        position="center"
-      />
-
-    </div>
-
-    <div className="container-shell py-10">
-
-      <div className="text-[10px] font-black uppercase tracking-[.14em] text-[#49d79e]">
-        Product Category
-      </div>
-
-      <h1 className="mt-4 text-[38px] font-black leading-[1.03] tracking-[-.04em]">
-        {category.name}
-      </h1>
-
-      {(category.description ||
-        category.summary) && (
-        <p className="mt-5 text-[15px] leading-7 text-white/70">
-          {category.description ||
-            category.summary}
-        </p>
-      )}
-
-      <div className="mt-7 flex flex-wrap gap-3">
-
-        <Link
-          href="#equipment"
-          className="btn btn-primary"
-        >
-          Explore Equipment →
-        </Link>
-
-        <Link
-          href="/contact#rfq"
-          className="btn border border-white/35 text-white"
-        >
-          Request a Quote
-        </Link>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-      {/* Breadcrumbs */}
       <div className="border-b border-[#e3ebe7] bg-white">
         <div className="container-shell flex min-h-[58px] flex-wrap items-center gap-2 text-xs font-semibold text-[#7a8d94]">
           <Link
@@ -231,7 +461,9 @@ export default async function RecursiveCategoryPage({
             Home
           </Link>
 
-          <span>›</span>
+          <span>
+            ›
+          </span>
 
           <Link
             href="/products"
@@ -257,13 +489,13 @@ export default async function RecursiveCategoryPage({
                   }
                   className="contents"
                 >
-                  <span>›</span>
+                  <span>
+                    ›
+                  </span>
 
                   {last ? (
                     <span className="text-[#18313d]">
-                      {
-                        breadcrumb.name
-                      }
+                      {breadcrumb.name}
                     </span>
                   ) : (
                     <Link
@@ -273,9 +505,7 @@ export default async function RecursiveCategoryPage({
                       )}
                       className="hover:text-[#0a9c63]"
                     >
-                      {
-                        breadcrumb.name
-                      }
+                      {breadcrumb.name}
                     </Link>
                   )}
                 </div>
@@ -285,67 +515,19 @@ export default async function RecursiveCategoryPage({
         </div>
       </div>
 
-      {/* Overview */}
-      <section className="section bg-white">
-        <div className="container-shell grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
-          <div>
-            <div className="eyebrow">
-              Category Overview
-            </div>
+      {/*
+       * CATEGORY OVERVIEW REMOVED.
+       *
+       * The full category description now
+       * appears only in the hero.
+       */}
 
-            <h2 className="h2 mt-3">
-              {category.name}
-            </h2>
+      {/* =====================================
+          CHILD CATEGORIES
+      ===================================== */}
 
-            <p className="mt-5 text-[15px] leading-8 text-[#687c85]">
-              {category.description ||
-                category.summary ||
-                "Explore equipment and solutions available within this product category."}
-            </p>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              <span className="pill">
-                {children.length} child{" "}
-                {children.length === 1
-                  ? "category"
-                  : "categories"}
-              </span>
-
-              <span className="pill">
-                {products.length}{" "}
-                {products.length === 1
-                  ? "product"
-                  : "products"}
-              </span>
-            </div>
-          </div>
-
-          <div className="relative min-h-[360px] overflow-hidden rounded-xl border border-[#dde8e3]">
-            <Image
-              src={cardImage}
-              alt={category.name}
-              fill
-              sizes="(max-width: 1023px) 100vw, 50vw"
-              className="object-cover object-center"
-            />
-
-            <div className="absolute inset-0 bg-gradient-to-t from-[#061f2d]/65 to-transparent" />
-
-            <div className="absolute bottom-6 left-6 text-white">
-              <div className="eyebrow !text-[#61e1af]">
-                Dingsheng Energy
-              </div>
-
-              <div className="mt-2 text-xl font-black">
-                {category.name}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Child categories */}
-      {children.length > 0 && (
+      {children.length >
+        0 && (
         <section className="border-y border-[#e4ebe7] bg-[#f5f8f6] py-14">
           <div className="container-shell">
             <div className="max-w-3xl">
@@ -354,7 +536,8 @@ export default async function RecursiveCategoryPage({
               </div>
 
               <h2 className="h2 mt-3">
-                Explore {category.name}
+                Explore{" "}
+                {category.name}
               </h2>
 
               <p className="mt-4 text-sm leading-7 text-[#687b84]">
@@ -367,9 +550,13 @@ export default async function RecursiveCategoryPage({
 
             <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {children.map(
-                (child) => (
+                (
+                  child,
+                ) => (
                   <Link
-                    key={child.id}
+                    key={
+                      child.id
+                    }
                     href={buildCategoryHref(
                       categories,
                       child.id,
@@ -401,9 +588,7 @@ export default async function RecursiveCategoryPage({
 
                       {child.summary && (
                         <p className="mt-2 line-clamp-3 text-xs leading-6 text-[#687c85]">
-                          {
-                            child.summary
-                          }
+                          {child.summary}
                         </p>
                       )}
 
@@ -419,7 +604,10 @@ export default async function RecursiveCategoryPage({
         </section>
       )}
 
-      {/* Products */}
+      {/* =====================================
+          PRODUCTS
+      ===================================== */}
+
       <section
         id="equipment"
         className="section scroll-mt-24 bg-white"
@@ -445,16 +633,20 @@ export default async function RecursiveCategoryPage({
 
             <span className="pill">
               {products.length}{" "}
-              {products.length === 1
+              {products.length ===
+              1
                 ? "product"
                 : "products"}
             </span>
           </div>
 
-          {products.length > 0 ? (
+          {products.length >
+          0 ? (
             <div className="mt-10 grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {products.map(
-                (product) => (
+                (
+                  product,
+                ) => (
                   <ProductCard
                     key={
                       product.slug
@@ -485,6 +677,10 @@ export default async function RecursiveCategoryPage({
           )}
         </div>
       </section>
+
+      {/* =====================================
+          CTA
+      ===================================== */}
 
       <section className="section-sm bg-[#f5f8f6]">
         <div className="container-shell">

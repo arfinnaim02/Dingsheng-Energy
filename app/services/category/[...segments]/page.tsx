@@ -1,4 +1,5 @@
 import Image from "next/image";
+
 import Link from "next/link";
 
 import {
@@ -28,41 +29,53 @@ import {
 } from "@/lib/publicServiceTree";
 
 import {
+  SERVICE_RICH_TEXT_PREFIX,
   serviceRichTextParagraphs,
+  storedServiceTextToDocument,
   type ServiceRichTextNode,
 } from "@/lib/serviceRichText";
 
 function serviceTextClass(
-  node: ServiceRichTextNode,
+  node:
+    ServiceRichTextNode,
 ) {
   const marks =
-    node.marks ?? [];
+    node.marks ??
+    [];
 
   const isBold =
     marks.some(
-      (mark) =>
+      (
+        mark,
+      ) =>
         mark.type ===
         "bold",
     );
 
   const isItalic =
     marks.some(
-      (mark) =>
+      (
+        mark,
+      ) =>
         mark.type ===
         "italic",
     );
 
   const fontSize =
     marks.find(
-      (mark) =>
+      (
+        mark,
+      ) =>
         mark.type ===
         "textStyle",
     )?.attrs?.fontSize;
 
   const sizeClass =
-    fontSize === "13px"
+    fontSize ===
+    "13px"
       ? "text-[13px]"
-      : fontSize === "18px"
+      : fontSize ===
+          "18px"
         ? "text-[18px]"
         : "text-[15px]";
 
@@ -81,10 +94,18 @@ function renderServiceInline(
   content:
     | ServiceRichTextNode[]
     | undefined,
-  keyPrefix: string,
+
+  keyPrefix:
+    string,
 ) {
-  return (content ?? []).map(
-    (node, index) => {
+  return (
+    content ??
+    []
+  ).map(
+    (
+      node,
+      index,
+    ) => {
       const key =
         `${keyPrefix}-${index}`;
 
@@ -93,12 +114,17 @@ function renderServiceInline(
         "hardBreak"
       ) {
         return (
-          <br key={key} />
+          <br
+            key={
+              key
+            }
+          />
         );
       }
 
       if (
-        node.type !== "text" ||
+        node.type !==
+          "text" ||
         !node.text
       ) {
         return null;
@@ -106,18 +132,74 @@ function renderServiceInline(
 
       return (
         <span
-          key={key}
+          key={
+            key
+          }
           className={
             serviceTextClass(
               node,
             )
           }
         >
-          {node.text}
+          {
+            node.text
+          }
         </span>
       );
     },
   );
+}
+
+/*
+ * Converts both:
+ *
+ * 1. existing plain service
+ *    descriptions
+ *
+ * 2. new serialized rich-text
+ *    descriptions
+ *
+ * into the same document structure.
+ */
+function serviceDescriptionValues(
+  value:
+    | string
+    | null
+    | undefined,
+): string[] {
+  const cleaned =
+    value?.trim() ??
+    "";
+
+  if (
+    !cleaned
+  ) {
+    return [];
+  }
+
+  if (
+    cleaned.startsWith(
+      SERVICE_RICH_TEXT_PREFIX,
+    )
+  ) {
+    return [
+      cleaned,
+    ];
+  }
+
+  return cleaned
+    .split(
+      /\r?\n+/,
+    )
+    .map(
+      (
+        item,
+      ) =>
+        item.trim(),
+    )
+    .filter(
+      Boolean,
+    );
 }
 
 export const dynamic =
@@ -125,7 +207,8 @@ export const dynamic =
 
 type Props = {
   params: Promise<{
-    segments: string[];
+    segments:
+      string[];
   }>;
 };
 
@@ -142,7 +225,9 @@ export async function generateMetadata({
       segments,
     );
 
-  if (!data) {
+  if (
+    !data
+  ) {
     return {
       title:
         "Service | Dingsheng Energy Limited",
@@ -150,7 +235,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${data.service.name} | Dingsheng Energy Limited`,
+    title:
+      `${data.service.name} | Dingsheng Energy Limited`,
 
     description:
       data.service.summary ||
@@ -171,7 +257,9 @@ export default async function ServiceCategoryPage({
       segments,
     );
 
-  if (!data) {
+  if (
+    !data
+  ) {
     notFound();
   }
 
@@ -180,7 +268,8 @@ export default async function ServiceCategoryPage({
     services,
     children,
     breadcrumbs,
-  } = data;
+  } =
+    data;
 
   const heroImage =
     getPublicServiceImage(
@@ -192,6 +281,24 @@ export default async function ServiceCategoryPage({
     getPublicServiceImage(
       service,
       "card",
+    );
+
+  /*
+   * Rich-text Description.
+   *
+   * Existing plain descriptions
+   * continue to work automatically.
+   */
+  const descriptionDocument =
+    storedServiceTextToDocument(
+      serviceDescriptionValues(
+        service.description,
+      ),
+    );
+
+  const descriptionParagraphs =
+    serviceRichTextParagraphs(
+      descriptionDocument,
     );
 
   const scopeParagraphs =
@@ -212,7 +319,9 @@ export default async function ServiceCategoryPage({
   const siblingServices =
     services
       .filter(
-        (item) =>
+        (
+          item,
+        ) =>
           item.parentId ===
             service.parentId &&
           item.id !==
@@ -226,136 +335,139 @@ export default async function ServiceCategoryPage({
   return (
     <PublicShell>
       <section className="bg-[#061f2d] text-white">
+        {/* DESKTOP */}
+        <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+          {heroImage ? (
+            <ResponsiveHeroMedia
+              src={
+                heroImage
+              }
+              alt={
+                service.name
+              }
+              priority
+              position="center"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
+          )}
 
-  {/* DESKTOP */}
-  <div className="relative hidden aspect-[16/9] w-full overflow-hidden lg:block">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
 
-    {heroImage ? (
-      <ResponsiveHeroMedia
-        src={heroImage}
-        alt={service.name}
-        priority
-        position="center"
-      />
-    ) : (
-      <div className="absolute inset-0 bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
-    )}
+          <div className="container-shell absolute inset-0 z-10 flex items-center">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#4ed7a1]">
+                <span className="h-[2px] w-8 bg-[#4ed7a1]" />
 
-    <div className="absolute inset-0 bg-gradient-to-r from-[#061f2d]/94 via-[#061f2d]/58 to-[#061f2d]/5" />
+                Engineering Service
+              </div>
 
-    <div className="container-shell absolute inset-0 z-10 flex items-center">
+              <h1 className="mt-4 text-[58px] font-black leading-[1.03] tracking-[-.04em]">
+                {
+                  service.name
+                }
+              </h1>
 
-      <div className="max-w-3xl">
+              {service.summary && (
+                <p className="mt-6 max-w-[670px] text-base leading-8 text-white/74">
+                  {
+                    service.summary
+                  }
+                </p>
+              )}
 
-        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#4ed7a1]">
-          <span className="h-[2px] w-8 bg-[#4ed7a1]" />
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="#overview"
+                  className="btn btn-primary"
+                >
+                  Explore Service →
+                </Link>
 
-          Engineering Service
+                <Link
+                  href="/contact#rfq"
+                  className="btn border border-white/35 text-white"
+                >
+                  Discuss This Project
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <h1 className="mt-4 text-[58px] font-black leading-[1.03] tracking-[-.04em]">
-          {service.name}
-        </h1>
+        {/* MOBILE */}
+        <div className="lg:hidden">
+          {heroImage ? (
+            <div className="relative aspect-[16/9] w-full overflow-hidden">
+              <ResponsiveHeroMedia
+                src={
+                  heroImage
+                }
+                alt={
+                  service.name
+                }
+                priority
+                position="center"
+              />
+            </div>
+          ) : (
+            <div className="aspect-[16/9] w-full bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
+          )}
 
-        {service.summary && (
-          <p className="mt-6 max-w-[670px] text-base leading-8 text-white/74">
-            {service.summary}
-          </p>
-        )}
+          <div className="container-shell py-10">
+            <div className="text-[10px] font-black uppercase tracking-[.14em] text-[#4ed7a1]">
+              Engineering Service
+            </div>
 
-        <div className="mt-8 flex flex-wrap gap-3">
+            <h1 className="mt-4 text-[38px] font-black leading-[1.03] tracking-[-.04em]">
+              {
+                service.name
+              }
+            </h1>
 
-          <Link
-            href="#overview"
-            className="btn btn-primary"
-          >
-            Explore Service →
-          </Link>
+            {service.summary && (
+              <p className="mt-5 text-[15px] leading-7 text-white/70">
+                {
+                  service.summary
+                }
+              </p>
+            )}
 
-          <Link
-            href="/contact#rfq"
-            className="btn border border-white/35 text-white"
-          >
-            Discuss This Project
-          </Link>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="#overview"
+                className="btn btn-primary"
+              >
+                Explore Service →
+              </Link>
 
+              <Link
+                href="/contact#rfq"
+                className="btn border border-white/35 text-white"
+              >
+                Discuss This Project
+              </Link>
+            </div>
+          </div>
         </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  {/* MOBILE */}
-  <div className="lg:hidden">
-
-    {heroImage ? (
-      <div className="relative aspect-[16/9] w-full overflow-hidden">
-
-        <ResponsiveHeroMedia
-          src={heroImage}
-          alt={service.name}
-          priority
-          position="center"
-        />
-
-      </div>
-    ) : (
-      <div className="aspect-[16/9] w-full bg-gradient-to-br from-[#082d3b] to-[#061f2d]" />
-    )}
-
-    <div className="container-shell py-10">
-
-      <div className="text-[10px] font-black uppercase tracking-[.14em] text-[#4ed7a1]">
-        Engineering Service
-      </div>
-
-      <h1 className="mt-4 text-[38px] font-black leading-[1.03] tracking-[-.04em]">
-        {service.name}
-      </h1>
-
-      {service.summary && (
-        <p className="mt-5 text-[15px] leading-7 text-white/70">
-          {service.summary}
-        </p>
-      )}
-
-      <div className="mt-7 flex flex-wrap gap-3">
-
-        <Link
-          href="#overview"
-          className="btn btn-primary"
-        >
-          Explore Service →
-        </Link>
-
-        <Link
-          href="/contact#rfq"
-          className="btn border border-white/35 text-white"
-        >
-          Discuss This Project
-        </Link>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
+      </section>
 
       {/* Breadcrumb */}
       <div className="border-b border-[#e3ebe7] bg-white">
         <div className="container-shell flex min-h-[58px] flex-wrap items-center gap-2 py-3 text-xs font-semibold text-[#7b8d94]">
-          <Link href="/">
+          <Link
+            href="/"
+          >
             Home
           </Link>
 
-          <span>›</span>
+          <span>
+            ›
+          </span>
 
-          <Link href="/services">
+          <Link
+            href="/services"
+          >
             Services
           </Link>
 
@@ -425,12 +537,26 @@ export default async function ServiceCategoryPage({
                 }
               </h2>
 
-              {service.description && (
-                <p className="mt-4 text-sm leading-8 text-[#687c85]">
-                  {
-                    service.description
-                  }
-                </p>
+              {descriptionParagraphs.length >
+                0 && (
+                <div className="mt-4 space-y-3 text-[#687c85]">
+                  {descriptionParagraphs.map(
+                    (
+                      paragraph,
+                      index,
+                    ) => (
+                      <p
+                        key={`coverage-description-${index}`}
+                        className="leading-8"
+                      >
+                        {renderServiceInline(
+                          paragraph.content,
+                          `coverage-description-${index}`,
+                        )}
+                      </p>
+                    ),
+                  )}
+                </div>
               )}
             </div>
 
@@ -532,11 +658,32 @@ export default async function ServiceCategoryPage({
               Reliable Project Delivery
             </h2>
 
-            <p className="mt-5 text-sm leading-8 text-[#687c85]">
-              {service.description ||
-                service.summary ||
-                `Dingsheng Energy provides ${service.name} technical and engineering support according to project requirements.`}
-            </p>
+            {descriptionParagraphs.length >
+            0 ? (
+              <div className="mt-5 space-y-3 text-[#687c85]">
+                {descriptionParagraphs.map(
+                  (
+                    paragraph,
+                    index,
+                  ) => (
+                    <p
+                      key={`description-${index}`}
+                      className="leading-8"
+                    >
+                      {renderServiceInline(
+                        paragraph.content,
+                        `description-${index}`,
+                      )}
+                    </p>
+                  ),
+                )}
+              </div>
+            ) : (
+              <p className="mt-5 text-sm leading-8 text-[#687c85]">
+                {service.summary ||
+                  `Dingsheng Energy provides ${service.name} technical and engineering support according to project requirements.`}
+              </p>
+            )}
 
             {scopeParagraphs.length >
               0 && (
@@ -750,7 +897,9 @@ export default async function ServiceCategoryPage({
                 )
               ) : (
                 <span className="pill !font-normal">
-                  {service.name}
+                  {
+                    service.name
+                  }
                 </span>
               )}
             </div>

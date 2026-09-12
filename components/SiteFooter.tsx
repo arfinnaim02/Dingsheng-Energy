@@ -107,7 +107,7 @@ export function SiteFooter() {
             </Link>
 
             <Link href="/lpg-trading">
-              LPG Trading
+              Trading
             </Link>
 
             <Link href="/industries">
