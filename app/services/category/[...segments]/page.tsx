@@ -653,11 +653,6 @@ export default async function ServiceCategoryPage({
               Service Overview
             </div>
 
-            <h2 className="h2 mt-3">
-              Structured for Safe,
-              Reliable Project Delivery
-            </h2>
-
             {descriptionParagraphs.length >
             0 ? (
               <div className="mt-5 space-y-3 text-[#687c85]">
