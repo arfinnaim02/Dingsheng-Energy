@@ -154,7 +154,7 @@ export function ProductMegaMenu({
               </div>
 
               <div className="mt-1 text-sm font-black text-[#17313d]">
-                Explore LPG Equipment
+                Explore Energy Equipment
               </div>
             </div>
 

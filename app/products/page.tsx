@@ -92,7 +92,7 @@ export default async function ProductsPage() {
               <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[.17em] text-[#48d49c]">
                 <span className="h-[2px] w-8 bg-[#48d49c]" />
 
-                Premium LPG Equipment
+                Premium Energy Equipment
               </div>
 
               <h1 className="mt-4 text-[64px] font-black leading-[1.03] tracking-[-.04em]">
@@ -138,7 +138,7 @@ We provide reliable, safe, and efficient products and technologies tailored to m
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[.14em] text-[#48d49c]">
               <span className="h-[2px] w-7 bg-[#48d49c]" />
 
-              Premium LPG Equipment
+              Premium Energy Equipment
             </div>
 
             <h1 className="mt-4 text-[40px] font-black leading-[1.03] tracking-[-.04em]">

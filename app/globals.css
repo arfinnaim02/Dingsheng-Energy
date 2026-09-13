@@ -143,3 +143,128 @@ tr:last-child td { border-bottom: 0; }
   .portal-nav { grid-template-columns: repeat(2, 1fr); }
   .portal-main { padding: 18px 14px 36px; }
 }
+/* =========================================
+   TRUSTED SUPPLIERS LOGO MARQUEE
+========================================= */
+
+.supplier-marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 12px 0;
+
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+}
+
+.supplier-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+
+  animation:
+    supplier-marquee-right
+    55s
+    linear
+    infinite;
+}
+
+.supplier-marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 28px;
+  padding-right: 28px;
+}
+
+.supplier-logo-card {
+  display: flex;
+  width: 190px;
+  height: 105px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e1e9e5;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  padding: 20px 24px;
+
+  box-shadow:
+    0 8px 25px
+    rgba(16, 50, 66, 0.035);
+}
+
+.supplier-logo-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+@keyframes supplier-marquee-right {
+  from {
+    transform:
+      translate3d(
+        -50%,
+        0,
+        0
+      );
+  }
+
+  to {
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      );
+  }
+}
+
+@media (max-width: 700px) {
+  .supplier-marquee-track {
+    animation-duration:
+      42s;
+  }
+
+  .supplier-marquee-group {
+    gap: 18px;
+    padding-right: 18px;
+  }
+
+  .supplier-logo-card {
+    width: 150px;
+    height: 88px;
+
+    padding:
+      16px 20px;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .supplier-marquee-track {
+    animation-duration:
+      90s;
+  }
+}

@@ -8,7 +8,6 @@ import { PublicShell } from "@/components/PublicShell";
 import {
   coreValues,
   industries,
-  suppliers,
 } from "@/data/site";
 
 import {
@@ -54,6 +53,45 @@ const coreSolutions = [
     "Inspection, maintenance, troubleshooting, repair, servicing and long-term technical support for energy equipment.",
     "/services",
   ],
+] as const;
+
+const supplierLogos = [
+  {
+    name: "Supplier 01",
+    image: "/media/suppliers/supplier-01.png",
+  },
+  {
+    name: "Supplier 02",
+    image: "/media/suppliers/supplier-02.png",
+  },
+  {
+    name: "Supplier 03",
+    image: "/media/suppliers/supplier-03.png",
+  },
+  {
+    name: "Supplier 04",
+    image: "/media/suppliers/supplier-04.png",
+  },
+  {
+    name: "Supplier 05",
+    image: "/media/suppliers/supplier-05.png",
+  },
+  {
+    name: "Supplier 06",
+    image: "/media/suppliers/supplier-06.png",
+  },
+  {
+    name: "Supplier 07",
+    image: "/media/suppliers/supplier-07.png",
+  },
+  {
+    name: "Supplier 08",
+    image: "/media/suppliers/supplier-08.png",
+  },
+  {
+    name: "Supplier 09",
+    image: "/media/suppliers/supplier-09.png",
+  },
 ] as const;
 
 export default async function HomePage() {
@@ -782,19 +820,52 @@ export default async function HomePage() {
             )}
           </div>
 
-          <div className="mt-12 text-center">
-            <div className="eyebrow">
-              Our Trusted Suppliers
+          <div className="mt-14">
+            <div className="text-center">
+              <div className="eyebrow">
+                Our Trusted Suppliers
+              </div>
             </div>
 
-            <div className="mt-7 flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm font-extrabold text-[#52666f]">
-              {suppliers.map(
-                (supplier) => (
-                  <span key={supplier}>
-                    {supplier}
-                  </span>
-                ),
-              )}
+            <div className="supplier-marquee mt-8">
+              <div className="supplier-marquee-track">
+                {[0, 1].map(
+                  (groupIndex) => (
+                    <div
+                      key={groupIndex}
+                      className="supplier-marquee-group"
+                      aria-hidden={
+                        groupIndex === 1
+                          ? true
+                          : undefined
+                      }
+                    >
+                      {supplierLogos.map(
+                        (supplier) => (
+                          <div
+                            key={`${groupIndex}-${supplier.image}`}
+                            className="supplier-logo-card"
+                          >
+                            <Image
+                              src={
+                                supplier.image
+                              }
+                              alt={
+                                groupIndex === 0
+                                  ? `${supplier.name} logo`
+                                  : ""
+                              }
+                              width={180}
+                              height={80}
+                              className="supplier-logo-image"
+                            />
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
           </div>
         </div>

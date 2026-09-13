@@ -3,7 +3,7 @@ export const company = {
   shortName: "Dingsheng Energy",
   tagline: "Global Energy Trading · Engineering · Complete Energy Solutions",
   phone: "+86 131 4255 0592",
-  email: "arefin@dingsheng-energy.com",
+  email: "sales@dingsheng-energy.com",
   website: "dingsheng-energy.com",
   address:
     "Unit 1405B, 14/F, The Belgian Bank Building, Nos. 721–725 Nathan Road, Mong Kok, Hong Kong",

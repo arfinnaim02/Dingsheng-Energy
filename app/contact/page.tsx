@@ -24,9 +24,9 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Get in touch"
         title="Contact Dingsheng Energy"
-        description="Contact our team for product supply, LPG trading, engineering services, project requirements or dealer access."
+        description="Contact our team for product supply, Energy trading, engineering services, project requirements or dealer access."
         image="/media/hero-contact.jpg"
-        imageAlt="Dingsheng Energy LPG engineering and customer support team"
+        imageAlt="Dingsheng Energy engineering and customer support team"
         imagePosition="right"
       />
 
