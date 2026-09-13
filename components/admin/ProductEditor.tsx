@@ -1213,7 +1213,7 @@ export function ProductEditor({
 
             <div className="field span-2">
               <label>
-                Short summary *
+                Short summary
               </label>
 
               <textarea
@@ -1231,7 +1231,6 @@ export function ProductEditor({
                       .value,
                   )
                 }
-                required
               />
             </div>
 
