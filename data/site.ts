@@ -1,7 +1,7 @@
 export const company = {
   name: "Dingsheng Energy Limited",
   shortName: "Dingsheng Energy",
-  tagline: "Global Trading · Engineering · Complete Energy Solutions",
+  tagline: "Global Energy Trading · Engineering · Complete Energy Solutions",
   phone: "+86 131 4255 0592",
   email: "arefin@dingsheng-energy.com",
   website: "dingsheng-energy.com",

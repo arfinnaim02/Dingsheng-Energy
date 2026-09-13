@@ -106,8 +106,8 @@ export function SiteFooter() {
               Services
             </Link>
 
-            <Link href="/lpg-trading">
-              Trading
+            <Link href="/energy-trading">
+              Energy Trading
             </Link>
 
             <Link href="/industries">

@@ -6,34 +6,34 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { Callout } from "@/components/Callout";
 
 export const metadata = {
-  title: "LPG Trading",
+  title: "Energy Trading & Logistics",
 };
 
 const steps = [
   "Sourcing",
+  "Contract Coordination",
   "Vessel Chartering",
   "Port Coordination",
-  "Loading",
-  "Unloading",
+  "Terminal Handling",
   "Final Delivery",
 ];
 
 const capabilities = [
-  "International LPG import & export",
-  "Vessel chartering",
-  "Port booking & coordination",
-  "Domestic bulk LPG distribution by road tanker & bobtail",
-  "LPG cylinder distribution for household and industry",
-  "Customs, terminal and delivery coordination",
+  "International energy sourcing, import & export",
+  "Energy commodity trading and commercial coordination",
+  "Vessel chartering and marine logistics coordination",
+  "Port, terminal and customs coordination",
+  "Bulk energy distribution and inland transportation",
+  "End-to-end delivery coordination for commercial and industrial customers",
 ];
 
 export default function TradingPage() {
   return (
     <PublicShell>
       <PageHero
-        eyebrow="Global & local LPG distribution"
-        title="LPG Trading & Logistics"
-        description="International LPG sourcing, import and export, vessel chartering, port coordination and domestic distribution."
+        eyebrow="Global & local energy distribution"
+        title="Energy Trading & Logistics"
+        description="International energy sourcing, trading, import and export, vessel chartering, port coordination, terminal handling and domestic distribution."
         image="/media/hero-trading.jpg"
       />
 
@@ -46,8 +46,8 @@ export default function TradingPage() {
           <div>
             <SectionHeading
               eyebrow="End-to-end supply chain"
-              title="Coordinated from sourcing to delivery"
-              copy="Dingsheng Energy manages LPG trading operations across international markets, connecting producing regions in the Middle East and Asia with customers in Bangladesh, India, Sri Lanka, the Maldives and other international markets."
+              title="Coordinated from sourcing to final delivery"
+              copy="Dingsheng Energy manages integrated energy trading and logistics operations across regional and international markets, coordinating sourcing, transportation, port and terminal operations, inland distribution and final delivery for customers across Bangladesh, India, Sri Lanka, the Maldives and other international markets."
             />
 
             <div className="mt-8 flex flex-wrap gap-2">
@@ -69,7 +69,7 @@ export default function TradingPage() {
           <div className="relative min-h-[410px] overflow-hidden rounded-2xl bg-[#071f2c]">
             <Image
               src="/media/trading-terminal.jpg"
-              alt="LPG vessel and terminal"
+              alt="Energy vessel and terminal operations"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover object-center"
@@ -86,7 +86,7 @@ export default function TradingPage() {
         <div className="container-shell">
           <SectionHeading
             eyebrow="Trading capabilities"
-            title="Commercial and logistics coordination across the LPG supply chain"
+            title="Commercial and logistics coordination across the energy supply chain"
           />
 
           <div className="grid-3 mt-9">
@@ -119,15 +119,15 @@ export default function TradingPage() {
           <SectionHeading
             center
             eyebrow="Distribution chain"
-            title="From supply source to customer application"
+            title="From energy source to customer delivery"
           />
 
           <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
             {[
-              "Source / Terminal",
-              "Bulk Transport",
-              "LPG Filling / Storage",
-              "Industrial / Autogas Use",
+              "Source / Supplier",
+              "Marine / Bulk Transport",
+              "Port / Terminal Handling",
+              "Commercial / Industrial Delivery",
             ].map((item, index) => (
               <div
                 className="card p-6 text-center"
@@ -145,7 +145,7 @@ export default function TradingPage() {
           </div>
 
           <div className="mt-10">
-            <Callout title="Discuss your LPG supply requirement" />
+            <Callout title="Discuss your energy supply requirement" />
           </div>
         </div>
       </section>

@@ -34,7 +34,7 @@ const coreSolutions = [
     "globe",
     "Energy Trading & Logistics",
     "International sourcing, import/export coordination, shipping, port support and distribution for energy projects and supply chains.",
-    "/lpg-trading",
+    "/energy-trading",
   ],
   [
     "gear",
@@ -737,7 +737,7 @@ export default async function HomePage() {
             </div>
 
             <Link
-              href="/lpg-trading"
+              href="/energy-trading"
               className="btn btn-primary mt-8"
             >
               Explore Trading & Logistics →

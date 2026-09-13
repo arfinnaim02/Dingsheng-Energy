@@ -50,6 +50,158 @@ import {
   getPublicProductCategories,
 } from "@/lib/publicProductTree";
 
+import {
+  SERVICE_RICH_TEXT_PREFIX,
+  serviceRichTextParagraphs,
+  storedServiceTextToDocument,
+  storedServiceTextToPlainLines,
+  type ServiceRichTextNode,
+} from "@/lib/serviceRichText";
+
+function productDescriptionValues(
+  value:
+    | string
+    | null
+    | undefined,
+): string[] {
+  const cleaned =
+    value?.trim() ?? "";
+
+  if (!cleaned) {
+    return [];
+  }
+
+  if (
+    cleaned.startsWith(
+      SERVICE_RICH_TEXT_PREFIX,
+    )
+  ) {
+    return [
+      cleaned,
+    ];
+  }
+
+  return cleaned
+    .split(
+      /\r?\n+/,
+    )
+    .map(
+      (item) =>
+        item.trim(),
+    )
+    .filter(
+      Boolean,
+    );
+}
+
+function productTextClass(
+  node:
+    ServiceRichTextNode,
+) {
+  const marks =
+    node.marks ?? [];
+
+  const isBold =
+    marks.some(
+      (mark) =>
+        mark.type ===
+        "bold",
+    );
+
+  const isItalic =
+    marks.some(
+      (mark) =>
+        mark.type ===
+        "italic",
+    );
+
+  const fontSize =
+    marks.find(
+      (mark) =>
+        mark.type ===
+        "textStyle",
+    )?.attrs?.fontSize;
+
+  const sizeClass =
+    fontSize ===
+    "13px"
+      ? "text-[13px]"
+      : fontSize ===
+          "18px"
+        ? "text-[18px]"
+        : "text-[15px]";
+
+  return `${sizeClass} ${
+    isBold
+      ? "font-bold"
+      : "font-normal"
+  } ${
+    isItalic
+      ? "italic"
+      : ""
+  }`;
+}
+
+function renderProductInline(
+  content:
+    | ServiceRichTextNode[]
+    | undefined,
+
+  keyPrefix:
+    string,
+) {
+  return (
+    content ??
+    []
+  ).map(
+    (
+      node,
+      index,
+    ) => {
+      const key =
+        `${keyPrefix}-${index}`;
+
+      if (
+        node.type ===
+        "hardBreak"
+      ) {
+        return (
+          <br
+            key={
+              key
+            }
+          />
+        );
+      }
+
+      if (
+        node.type !==
+          "text" ||
+        !node.text
+      ) {
+        return null;
+      }
+
+      return (
+        <span
+          key={
+            key
+          }
+          className={
+            productTextClass(
+              node,
+            )
+          }
+        >
+          {
+            node.text
+          }
+        </span>
+      );
+    },
+  );
+}
+
 export const dynamic =
   "force-dynamic";
 
@@ -280,6 +432,49 @@ export default async function ProductDetail({
       category.id,
     );
 
+  const descriptionValues =
+    productDescriptionValues(
+      product.description,
+    );
+
+  const descriptionDocument =
+    storedServiceTextToDocument(
+      descriptionValues,
+    );
+
+  const descriptionParagraphs =
+    serviceRichTextParagraphs(
+      descriptionDocument,
+    );
+
+  const descriptionPlainText =
+    storedServiceTextToPlainLines(
+      descriptionValues,
+    )
+      .join(" ")
+      .replace(
+        /\s+/g,
+        " ",
+      )
+      .trim();
+
+  const summaryPlainText =
+    (
+      product.summary ??
+      ""
+    )
+      .replace(
+        /\s+/g,
+        " ",
+      )
+      .trim();
+
+  const showDescription =
+    descriptionParagraphs.length >
+      0 &&
+    descriptionPlainText !==
+      summaryPlainText;
+
   return (
     <PublicShell>
       {/* Breadcrumb */}
@@ -374,15 +569,26 @@ export default async function ProductDetail({
               {product.summary}
             </p>
 
-            {product.description &&
-              product.description !==
-                product.summary && (
-                <p className="mt-3 max-w-xl text-[13px] leading-7 text-[#7a8c94]">
-                  {
-                    product.description
-                  }
-                </p>
-              )}
+            {showDescription && (
+              <div className="mt-3 max-w-xl space-y-3 text-[#7a8c94]">
+                {descriptionParagraphs.map(
+                  (
+                    paragraph,
+                    index,
+                  ) => (
+                    <p
+                      key={`product-description-${index}`}
+                      className="leading-7"
+                    >
+                      {renderProductInline(
+                        paragraph.content,
+                        `product-description-${index}`,
+                      )}
+                    </p>
+                  ),
+                )}
+              </div>
+            )}
 
             <div className="mt-7 flex flex-wrap gap-2">
               <span className="rounded-full border border-[#d7e6df] bg-[#eff8f3] px-3 py-1.5 text-[9px] font-black uppercase tracking-[.1em] text-[#197456]">
@@ -483,55 +689,9 @@ export default async function ProductDetail({
 
       {/* Technical information */}
       <section className="bg-[#f5f8f6] py-20">
-        <div className="container-shell grid gap-8 lg:grid-cols-[1.2fr_.8fr]">
-          <div className="space-y-7">
-            <div className="rounded-xl border border-[#dfe8e4] bg-white p-7">
-              <div className="eyebrow">
-                Product Overview
-              </div>
-
-              <h2 className="mt-3 text-2xl font-black">
-                {product.name}
-              </h2>
-
-              <p className="mt-5 text-sm leading-8 text-[#687c85]">
-                {product.description ||
-                  product.summary}
-              </p>
-
-              <div className="mt-7 border-l-4 border-[#0a9c63] bg-[#f2f8f5] px-5 py-4">
-                <div className="text-[10px] font-black uppercase text-[#0a9c63]">
-                  Product Category
-                </div>
-
-                <div className="mt-1 text-sm font-black">
-                  {
-                    category.name
-                  }
-                </div>
-
-                {category.summary && (
-                  <p className="mt-2 text-xs leading-6 text-[#73868d]">
-                    {
-                      category.summary
-                    }
-                  </p>
-                )}
-
-                <Link
-                  href={
-                    categoryHref
-                  }
-                  className="mt-4 inline-flex text-[10px] font-black uppercase tracking-wide text-[#0a9c63]"
-                >
-                  View Category →
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <aside className="space-y-6">
+        <div className="container-shell">
+          {/* Product support information */}
+          <aside className="grid gap-6 md:grid-cols-2">
             {/* Applications */}
             {/* Applications */}
 {sectionVisibility

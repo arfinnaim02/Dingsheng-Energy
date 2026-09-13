@@ -25,6 +25,18 @@ import type {
   ProductCategoryTreeItem,
 } from "@/components/admin/ProductCategoryTreePicker";
 
+import {
+  ServiceRichTextEditor,
+} from "@/components/admin/ServiceRichTextEditor";
+
+import {
+  SERVICE_RICH_TEXT_PREFIX,
+  documentToStoredServiceText,
+  emptyServiceRichTextDocument,
+  storedServiceTextToDocument,
+  type ServiceRichTextDocument,
+} from "@/lib/serviceRichText";
+
 import type {
   ManagedProductDocument,
   ManagedProductImage,
@@ -118,6 +130,41 @@ function parseLines(
         item.trim(),
     )
     .filter(Boolean);
+}
+
+function productDescriptionToDocument(
+  value:
+    | string
+    | null
+    | undefined,
+): ServiceRichTextDocument {
+  const cleaned =
+    value?.trim() ?? "";
+
+  if (!cleaned) {
+    return emptyServiceRichTextDocument();
+  }
+
+  const values =
+    cleaned.startsWith(
+      SERVICE_RICH_TEXT_PREFIX,
+    )
+      ? [cleaned]
+      : cleaned
+          .split(
+            /\r?\n+/,
+          )
+          .map(
+            (item) =>
+              item.trim(),
+          )
+          .filter(
+            Boolean,
+          );
+
+  return storedServiceTextToDocument(
+    values,
+  );
 }
 
 function normalizeManagedImages(
@@ -215,6 +262,16 @@ export function ProductEditor({
             blankProduct,
           ),
     );
+
+  const [
+    description,
+    setDescription,
+  ] = useState<ServiceRichTextDocument>(
+    () =>
+      productDescriptionToDocument(
+        product?.description,
+      ),
+  );
 
   const [
     managedImages,
@@ -761,6 +818,11 @@ export function ProductEditor({
         {
           ...form,
 
+          description:
+            documentToStoredServiceText(
+              description,
+            )[0] ?? "",
+
           showStandards:
             form.showStandards ===
             true,
@@ -1178,24 +1240,24 @@ export function ProductEditor({
                 Full description
               </label>
 
-              <textarea
+              <ServiceRichTextEditor
                 value={
-                  form.description ??
-                  ""
+                  description
                 }
-                onChange={(
-                  event,
-                ) =>
-                  patch(
-                    "description",
-
-                    event
-                      .target
-                      .value,
-                  )
+                disabled={
+                  saving ||
+                  deletingProduct
                 }
-                className="!min-h-[180px]"
+                minHeightClass="min-h-[220px]"
+                onChange={
+                  setDescription
+                }
               />
+
+              <p className="mt-2 text-[11px] leading-5 text-[#7a8c94]">
+                Use multiple paragraphs and select text
+                to apply Bold, Italic or Text Size formatting.
+              </p>
             </div>
           </div>
         </section>
