@@ -621,14 +621,6 @@ export default async function ProductDetail({
                     Technical Specifications
                   </h2>
                 </div>
-
-                <span className="text-[9px] font-bold uppercase tracking-[.08em] text-[#899990]">
-                  {
-                    product.specs
-                      .length
-                  }{" "}
-                  specifications
-                </span>
               </div>
 
               {product.specs.length ? (

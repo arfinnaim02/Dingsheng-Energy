@@ -622,22 +622,7 @@ export default async function RecursiveCategoryPage({
               <h2 className="h2 mt-3">
                 {category.name} Products
               </h2>
-
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#687c84]">
-                Products assigned to this
-                category and its child
-                categories are included
-                automatically.
-              </p>
             </div>
-
-            <span className="pill">
-              {products.length}{" "}
-              {products.length ===
-              1
-                ? "product"
-                : "products"}
-            </span>
           </div>
 
           {products.length >
