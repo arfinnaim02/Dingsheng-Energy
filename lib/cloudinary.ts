@@ -1,6 +1,11 @@
 import "server-only";
 
 import {
+  CloudinaryImageStillReferencedError,
+  isCloudinaryImageReferenced,
+} from "@/lib/cloudinaryImageReferences";
+
+import {
   v2 as cloudinary,
   type UploadApiResponse,
 } from "cloudinary";
@@ -753,6 +758,12 @@ async function deleteImageFromFolder(
     throw new Error(
       "This image does not belong to the expected Cloudinary folder.",
     );
+  }
+
+  // The same asset may be shared by a card image, a hero image,
+  // or a different record. Never delete a live reference.
+  if (await isCloudinaryImageReferenced(cleanedPublicId)) {
+    throw new CloudinaryImageStillReferencedError();
   }
 
   return cloudinary.uploader.destroy(

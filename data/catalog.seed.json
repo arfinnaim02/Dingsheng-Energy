@@ -43,8 +43,8 @@
       "shortName": "Autogas",
       "summary": "Storage, dispensers, pumps, controls, hoses and fittings for autogas refueling stations.",
       "description": "Integrated equipment for LPG autogas refueling stations including storage tanks, dispensers, pumps, hose systems, couplings, safety equipment, control systems and piping.",
-      "image": "/media/hero-services.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "image": "/media/services/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "groups": [
         "LPG Storage Tanks",
         "Tank Accessories",
@@ -2331,7 +2331,7 @@
       "summary": "Complete engineering, procurement and construction solutions for LPG filling plants.",
       "description": "Dingsheng Energy provides complete EPC solutions for LPG Filling Plants, including plant design, LPG storage systems, filling equipment, piping, electrical and instrumentation systems, installation, testing and commissioning. Solutions are customized to operational requirements and applicable safety standards.",
       "image": "/media/service-epc.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "Plant Design",
         "LPG Storage Systems",
@@ -2364,8 +2364,8 @@
       "shortName": "Autogas EPC",
       "summary": "Design, supply, installation and commissioning of complete LPG autogas stations.",
       "description": "Dingsheng Energy designs, supplies, installs and commissions complete LPG Autogas Stations for safe and efficient vehicle refueling, including dispensing systems, storage tanks, pumps, piping, electrical systems, safety equipment and associated civil and mechanical works.",
-      "image": "/media/hero-services.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "image": "/media/services/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "Autogas System Design",
         "Storage Tanks",
@@ -2399,7 +2399,7 @@
       "summary": "Centralized LPG distribution systems for residential buildings, apartments, villas and housing projects.",
       "description": "Household LPG reticulation solutions provide safe and reliable centralized LPG distribution. Dingsheng Energy designs and installs complete cylinder bank, manifold, regulator, piping and safety systems according to site requirements.",
       "image": "/media/service-epc.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "Cylinder Banks",
         "Manifolds",
@@ -2433,7 +2433,7 @@
       "summary": "Engineered LPG reticulation systems for factories, commercial facilities and high-demand applications.",
       "description": "Industrial LPG reticulation systems are engineered for factories, commercial facilities, boilers, kitchens, process equipment and other high-demand applications, supporting reliable gas supply, pressure control, operational safety and efficient LPG utilization.",
       "image": "/media/service-epc.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "System Design",
         "Storage / Cylinder Bank Interface",
@@ -2469,7 +2469,7 @@
       "summary": "Engineered LPG pipeline and skid-mounted systems for safe plant integration.",
       "description": "Dingsheng Energy supports LPG pipeline and skid system engineering, integration, equipment selection, controls, installation and commissioning for applicable LPG projects.",
       "image": "/media/service-epc.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "Engineering",
         "System Integration",
@@ -2501,7 +2501,7 @@
       "summary": "Technical guidance, design support and engineering consultancy across LPG projects.",
       "description": "Engineering consultancy provides technical review, design support, equipment selection, safety review and project coordination for LPG infrastructure and equipment systems.",
       "image": "/media/service-epc.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "Technical Review",
         "Design Support",
@@ -2530,7 +2530,7 @@
       "summary": "Inspection, maintenance, troubleshooting, repair and servicing of LPG machinery and equipment.",
       "description": "Professional servicing covers LPG filling machines, dispensers, pumps, compressors, flow meters, vaporizers and related equipment to maintain safe, reliable and efficient operation.",
       "image": "/media/service-epc.jpg",
-      "heroImage": "/media/hero-services.jpg",
+      "heroImage": "/media/services/hero-services.jpg",
       "scope": [
         "Inspection",
         "Preventive Maintenance",

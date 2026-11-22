@@ -115,11 +115,16 @@ function replacedOrRemovedPublicIds(
     );
   }
 
-  return [
-    ...new Set(
-      publicIds,
-    ),
-  ];
+  // A card image can also be used as the hero (or vice versa).
+  // Replacing one field must not delete the image used by the other.
+  const stillReferenced = new Set([
+    after.imagePublicId,
+    after.heroImagePublicId,
+  ]);
+
+  return [...new Set(publicIds)].filter(
+    (publicId) => !stillReferenced.has(publicId),
+  );
 }
 
 async function cleanupCategoryImages(
