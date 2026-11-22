@@ -7,15 +7,17 @@ type ImageWithFallbackProps = ImageProps & {
   fallbackSrc?: string;
 };
 
+type ImageAttempt = "optimized" | "direct" | "fallback";
+
 const DEFAULT_FALLBACK = "/media/image-unavailable.svg";
 
 /**
- * Keep public pages usable when an admin-managed URL becomes
- * unavailable (missing Cloudinary asset, temporary CDN error,
- * or an unsupported external image host).
+ * First try normal Next.js image optimization. If the optimizer
+ * fails for a remote image, retry its original URL directly.
+ * Only show a local fallback when the source itself fails.
  *
- * This does not replace or alter the saved image URL. Admins
- * can re-upload the original image to repair the actual asset.
+ * This prevents broken public layouts while leaving the stored
+ * Cloudinary URL untouched for an administrator to repair.
  */
 export default function ImageWithFallback({
   src,
@@ -24,32 +26,50 @@ export default function ImageWithFallback({
   unoptimized,
   ...props
 }: ImageWithFallbackProps) {
-  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState<ImageAttempt>("optimized");
 
   useEffect(() => {
-    setFailed(false);
+    setAttempt("optimized");
   }, [src]);
 
-  const displaySrc = failed ? fallbackSrc : src;
+  const isHttpSource =
+    typeof src === "string" && /^https?:\/\//i.test(src);
 
-  // Bypass Next's host allowlist only for non-Cloudinary URLs.
-  // An external admin-supplied URL should not crash the page.
-  const isOtherRemoteSource =
-    typeof displaySrc === "string" &&
-    /^https?:\/\//i.test(displaySrc) &&
-    !/^https:\/\/res\.cloudinary\.com\//i.test(displaySrc);
+  const isCloudinary =
+    typeof src === "string" &&
+    /^https:\/\/res\.cloudinary\.com\//i.test(src);
+
+  // Next.js only allows configured remote hosts. Load other
+  // admin-provided URLs directly instead of crashing the page.
+  const isOtherRemoteSource = isHttpSource && !isCloudinary;
+
+  const displaySrc =
+    attempt === "fallback" ? fallbackSrc : src;
+
+  const loadDirectly =
+    unoptimized === true ||
+    isOtherRemoteSource ||
+    attempt !== "optimized";
 
   return (
     <Image
       {...props}
       src={displaySrc}
-      unoptimized={unoptimized ?? isOtherRemoteSource}
+      unoptimized={loadDirectly}
       onError={(event) => {
-        if (!failed) {
-          setFailed(true);
+        if (
+          attempt === "optimized" &&
+          isHttpSource &&
+          !loadDirectly
+        ) {
+          setAttempt("direct");
+          return;
         }
 
-        onError?.(event);
+        if (attempt !== "fallback") {
+          setAttempt("fallback");
+          onError?.(event);
+        }
       }}
     />
   );
