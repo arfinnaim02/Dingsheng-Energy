@@ -165,11 +165,16 @@ function replacedPublicIds(
     );
   }
 
-  return [
-    ...new Set(
-      publicIds,
-    ),
-  ];
+  // The same asset can serve as both the card and the hero.
+  // Only clean up IDs no longer referenced in either field.
+  const stillReferenced = new Set([
+    after.imagePublicId,
+    after.heroImagePublicId,
+  ]);
+
+  return [...new Set(publicIds)].filter(
+    (publicId) => !stillReferenced.has(publicId),
+  );
 }
 
 async function cleanupServiceImages(
