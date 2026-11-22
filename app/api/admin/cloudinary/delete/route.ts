@@ -6,6 +6,8 @@ import {
   isAdminSession,
 } from "@/lib/adminAuth";
 
+import { CloudinaryImageStillReferencedError } from "@/lib/cloudinaryImageReferences";
+
 import {
   deleteCategoryImage,
   deleteProductDocument,
@@ -170,7 +172,7 @@ export async function DELETE(
             : "Unable to delete the asset.",
       },
       {
-        status: 500,
+        status: error instanceof CloudinaryImageStillReferencedError ? 409 : 500,
       },
     );
   }
