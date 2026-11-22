@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ImageWithFallback";
 
 type ResponsiveHeroMediaProps = {
   src: string;
@@ -26,6 +26,7 @@ export function ResponsiveHeroMedia({
   return (
     <Image
       src={src}
+      fallbackSrc="/media/home/hero-home.jpg"
       alt={alt}
       fill
       priority={priority}
