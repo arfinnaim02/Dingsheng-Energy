@@ -10,6 +10,13 @@ import { prisma } from "@/lib/prisma";
  * If the database cannot be checked, the caller must not delete
  * the asset. Preserving an orphan is safer than breaking a page.
  */
+export class CloudinaryImageStillReferencedError extends Error {
+  constructor() {
+    super("This image is still in use. Remove its remaining references before deleting it.");
+    this.name = "CloudinaryImageStillReferencedError";
+  }
+}
+
 export async function isCloudinaryImageReferenced(
   publicId: string,
 ): Promise<boolean> {
