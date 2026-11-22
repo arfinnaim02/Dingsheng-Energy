@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Callout } from "@/components/Callout";
 import { Icon } from "@/components/Icon";
 import { PublicShell } from "@/components/PublicShell";
+import { TrustedSupplierMarquee } from "@/components/TrustedSupplierMarquee";
 
 import {
   coreValues,
@@ -827,46 +828,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="supplier-marquee mt-8">
-              <div className="supplier-marquee-track">
-                {[0, 1].map(
-                  (groupIndex) => (
-                    <div
-                      key={groupIndex}
-                      className="supplier-marquee-group"
-                      aria-hidden={
-                        groupIndex === 1
-                          ? true
-                          : undefined
-                      }
-                    >
-                      {supplierLogos.map(
-                        (supplier) => (
-                          <div
-                            key={`${groupIndex}-${supplier.image}`}
-                            className="supplier-logo-card"
-                          >
-                            <Image
-                              src={
-                                supplier.image
-                              }
-                              alt={
-                                groupIndex === 0
-                                  ? `${supplier.name} logo`
-                                  : ""
-                              }
-                              width={180}
-                              height={80}
-                              className="supplier-logo-image"
-                            />
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
+            <TrustedSupplierMarquee suppliers={supplierLogos} />
           </div>
         </div>
       </section>
